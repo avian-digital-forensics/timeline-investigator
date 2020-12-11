@@ -16,6 +16,7 @@ import (
 
 // Server holds all the dependencies for the API
 type Server struct {
+	http   *http.Server
 	router *otohttp.Server
 	ctx    context.Context
 }
@@ -58,7 +59,7 @@ func (srv *Server) Run(cfg *configs.MainAPI) error {
 	)
 
 	// Create the http-server
-	httpServer := &http.Server{
+	srv.http = &http.Server{
 		Handler:      corsHandler(srv.router),
 		Addr:         cfg.Network.IP + ":" + cfg.Network.Port,
 		WriteTimeout: time.Duration(cfg.Network.WriteTimeout) * time.Second,
@@ -66,11 +67,14 @@ func (srv *Server) Run(cfg *configs.MainAPI) error {
 	}
 
 	// Start the http-server
-	log.Println("HTTP server @", httpServer.Addr)
-	return httpServer.ListenAndServe()
+	log.Println("HTTP server @", srv.http.Addr)
+	return srv.http.ListenAndServe()
 }
 
 // Stop the server
 func (srv *Server) Stop() error {
-	return nil
+	ctx, cancel := context.WithTimeout(srv.ctx, 2*time.Second)
+	defer cancel()
+
+	return srv.http.Shutdown(ctx)
 }
