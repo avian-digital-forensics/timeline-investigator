@@ -4,10 +4,16 @@ package api
 
 import (
 	"github.com/pacedotdev/oto/otohttp"
+
+	http "net/http"
+
+	context "context"
 )
 
 // Service is the main-service
 type Service interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
 	// Greet sends a polite greeting
 	Greet(context.Context, GreetRequest) (*GreetResponse, error)
 }
@@ -24,6 +30,7 @@ func RegisterService(server *otohttp.Server, service Service) {
 		server:  server,
 		service: service,
 	}
+
 	server.Register("Service", "Greet", handler.handleGreet)
 }
 
@@ -33,7 +40,7 @@ func (s *serviceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	ctx, err := s.service.Authenticate(r.Context(), r, request.Secret)
+	ctx, err := s.service.Authenticate(r.Context(), r)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
