@@ -1,0 +1,60 @@
+# Services
+
+| Service | Description |
+| ------- | ----------- |<%= for (service) in def.Services { %>
+| <%= service.Name %> | <%= format_comment_line(service.Comment) %> |<% } %>
+<%= for (service) in def.Services { %>
+## <%= service.Name %>
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |<%= for (method) in service.Methods { %>
+| <%= method.Name %> | /<%= service.Name %>.<%= method.Name %> | <%= format_comment_line(method.Comment) %> | <%= method.InputObject.TypeName %> | <%= method.OutputObject.TypeName %> |<% } %>
+<%= for (method) in service.Methods { %>
+#### <%= method.Name %>
+
+<%= method.Comment %>
+
+##### Endpoint
+
+POST `/<%= service.Name %>.<%= method.Name %>`
+
+##### Request
+<%= for (object) in def.Objects { %><%= if (object.Name == method.InputObject.TypeName) { %>
+_<%= object.Comment %>_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |<%= for (field) in object.Fields { %>
+| <%= field.NameLowerCamel %> | <%= if (field.Type.Multiple) { %>[]<% } %><%= field.Type.TypeName %> | <%= format_comment_line(field.Comment) %> | <%= field.Example %> |<% } %>
+
+```json
+<%= jsonPretty(object.Example) %>
+```
+<% } %><% } %>
+##### Response
+<%= for (object) in def.Objects { %><%= if (object.Name == method.OutputObject.TypeName) { %>
+_<%= object.Comment %>_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |<%= for (field) in object.Fields { %>
+| <%= field.NameLowerCamel %> | <%= if (field.Type.Multiple) { %>[]<% } %><%= field.Type.TypeName %> | <%= format_comment_line(field.Comment) %> | <%= field.Example %> |<% } %>
+
+`200 OK`
+
+```json
+<%= jsonPretty(object.Example) %>
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+<% } %><% } %>
