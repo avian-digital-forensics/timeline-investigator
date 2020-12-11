@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	context "context"
 	"github.com/pkg/errors"
+	http "net/http"
 )
 
 // Client is used to access Pace services.
@@ -52,7 +54,6 @@ func NewService(client *Client, token string) *Service {
 
 // Greet sends a polite greeting
 func (s *Service) Greet(ctx context.Context, r GreetRequest) (*GreetResponse, error) {
-	r.Secret = s.token
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "Service.Greet: marshal GreetRequest")
