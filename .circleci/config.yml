@@ -1,0 +1,55 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: ...
+    working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
+    steps:
+      - checkout
+      - run:
+          name: Start local test environment
+          command: |
+            - cd .local && docker-compose up -d && cd ../
+            - for i in `seq 1 10`;
+            - do
+            -   nc -z localhost 5432 && echo Success && exit 0
+            -   echo -n .
+            -   sleep 1
+            - done
+            - echo Failed waiting for Postgress && exit 1
+      - run:
+          name: Run tests
+          command: |
+            - go test ./...
+
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
+    steps:
+      - checkout
+      - run: 
+          name: Build and push image
+          command: | 
+            - echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCLOUD_KEY_FILE}
+            - docker login -u _json_key -p "$(cat $GCLOUD_KEY_FILE)" https://eu.gcr.io
+            - docker build . -t ${PROD_CONTAINER_IMAGE}
+            - docker tag ${PROD_CONTAINER_IMAGE} ${PROD_CONTAINER_IMAGE_LATEST}
+            - docker push ${PROD_CONTAINER_IMAGE}
+            - docker push ${PROD_CONTAINER_IMAGE_LATEST}
+
+    deploy-job:
+      docker:
+      - image: simonjansson/gcloud-kubectl
+      environment:
+            CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
+            CLOUDSDK_COMPUTE_ZONE: europe-north1-a
+            CLOUDSDK_CONTAINER_CLUSTER: cluster-1
+            CLOUDSDK_CORE_PROJECT: ${GCP_PROJECT_ID}
+      steps:
+        - run:
+            name: Deploy to GKE
+            command: |
+              - echo ${GCR_CONTAINER_IMAGE}
+              - kubectl set image deployment/main-api-service -n prod main-api-service=${PROD_CONTAINER_IMAGE}
