@@ -12,7 +12,7 @@ import (
 
 <%= for (service) in def.Services { %>
 <%= format_comment_text(service.Comment) %>type <%= service.Name %> interface {<%= for (method) in service.Methods { %>
-	<%= format_comment_text(method.Comment) %><%= method.Name %>(context.Context, <%= method.InputObject.TypeName %><%= if (method.Name == "Authenticate") { %>, string) (<% } else { %>) (*<% } %><%= method.OutputObject.TypeName %>, error)<% } %>
+	<%= format_comment_text(method.Comment) %><%= method.Name %>(context.Context, <%= method.InputObject.TypeName %><%= if (method.Name == "Authenticate") { %>) (<% } else { %>) (*<% } %><%= method.OutputObject.TypeName %>, error)<% } %>
 }
 <% } %>
 
@@ -38,7 +38,7 @@ func (s *<%= camelize_down(service.Name) %>Server) handle<%= method.Name %>(w ht
 		s.server.OnErr(w, r, err)
 		return
 	}
-	<%= if (service.Name != "TestService") { %>ctx, err := s.<%= camelize_down(service.Name) %>.Authenticate(r.Context(), r, request.Secret)
+	<%= if (service.Name != "TestService") { %>ctx, err := s.<%= camelize_down(service.Name) %>.Authenticate(r.Context(), r)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return

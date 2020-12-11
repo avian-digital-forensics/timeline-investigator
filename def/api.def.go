@@ -1,9 +1,20 @@
 package def
 
+import (
+	"context"
+	"net/http"
+)
+
 // Service is the main-service
 type Service interface {
 	// Greet sends a polite greeting
 	Greet(GreetRequest) GreetResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
 }
 
 // GreetRequest is the request object for GreeterService.Greet.

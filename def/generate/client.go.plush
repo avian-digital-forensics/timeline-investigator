@@ -55,7 +55,6 @@ func New<%= service.Name %>(client *Client, token string) *<%= service.Name %> {
 <%= for (method) in service.Methods { %>
 <%= if (method.Name != "Authenticate") { %>
 <%= format_comment_text(method.Comment) %>func (s *<%= service.Name %>) <%= method.Name %>(ctx context.Context, r <%= method.InputObject.TypeName %>) (*<%= method.OutputObject.TypeName %>, error) {
-	r.Secret = s.token
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "<%= service.Name %>.<%= method.Name %>: marshal <%= method.InputObject.TypeName %>")

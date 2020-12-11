@@ -2,16 +2,16 @@
 
 | Service | Description |
 | ------- | ----------- |<%= for (service) in def.Services { %>
-| <%= service.Name %> | <%= format_comment_line(service.Comment) %> |<% } %>
-<%= for (service) in def.Services { %>
+| <%= service.Name %> | <%= format_comment_line(service.Comment) %> |<% } %><% } %>
+<%= for (service) in def.Services { %><%= if (service.Name != "Authenticate") { %>
 ## <%= service.Name %>
 
 ### Methods
 
 | Method | Endpoint | Description | Request | Response |
-| ------ | -------- | ----------- | ------- | -------- |<%= for (method) in service.Methods { %>
-| <%= method.Name %> | /<%= service.Name %>.<%= method.Name %> | <%= format_comment_line(method.Comment) %> | <%= method.InputObject.TypeName %> | <%= method.OutputObject.TypeName %> |<% } %>
-<%= for (method) in service.Methods { %>
+| ------ | -------- | ----------- | ------- | -------- |<%= for (method) in service.Methods { %><%= if (method.Name != "Authenticate") { %>
+| <%= method.Name %> | /<%= service.Name %>.<%= method.Name %> | <%= format_comment_line(method.Comment) %> | <%= method.InputObject.TypeName %> | <%= method.OutputObject.TypeName %> |<% } %><% } %>
+<%= for (method) in service.Methods { %><%= if (method.Name != "Authenticate") { %>
 #### <%= method.Name %>
 
 <%= method.Comment %>
@@ -57,4 +57,4 @@ _<%= object.Comment %>_
     "error": "something went wrong"
 }
 ```
-<% } %><% } %>
+<% } %><% } %><% } %>
