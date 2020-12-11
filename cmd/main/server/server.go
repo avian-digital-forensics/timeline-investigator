@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/configs"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/services"
 
 	"github.com/gorilla/handlers"
 	"github.com/pacedotdev/oto/otohttp"
@@ -28,7 +30,13 @@ func New(ctx context.Context) *Server {
 
 // Initialize the server
 func (srv *Server) Initialize(cfg *configs.MainAPI) error {
-	http.Handle("/oto/", srv.router)
+	// Set the base-path for the oto-server
+	srv.router.Basepath = "/api/"
+	http.Handle("/api/", srv.router)
+
+	// Register the services
+	api.RegisterService(srv.router, &services.Service{})
+
 	return nil
 }
 
