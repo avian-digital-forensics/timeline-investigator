@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Start local test environment
           command: |
-            cd .local && ls -l && docker-compose up -d && cd ../
+            cd .local && pwd && ls -l && docker-compose up -d && cd ../
             for i in `seq 1 10`;
             do
               nc -z localhost 5432 && echo Success && exit 0
