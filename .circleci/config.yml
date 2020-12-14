@@ -37,7 +37,7 @@ jobs:
             
       - run:
           name: Run tests
-          command: go test ./tests/...
+          command: go test ./tests
 
       - run: 
           name: Build and push image
