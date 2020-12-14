@@ -3,18 +3,15 @@ parameters:
   gcr-ci-reg:
     type: string
     default: "https://eu.gcr.io"
-  gcp-project-id:
-    type: string
-    default: "timeline-investigator"
   gcp-key-file:
     type: string
     default: "/tmp/gcloud-api-key.json"
   container-image-staging:
     type: string
-    default: "<< pipeline.parameters.gcr-ci-reg- >>/<< pipeline.parameters.gcp-project-id >>/ti-rest-api:staging-<< pipeline.id >>"
+    default: "eu.gcr.io/timeline-investigator/ti-rest-api:staging-<< pipeline.id >>"
   container-image-staging-latest:
     type: string
-    default: "<< pipeline.parameters.gcr-ci-reg- >>/<< pipeline.parameters.gcp-project-id >>/ti-rest-api:staging-latest"
+    default: "eu.gcr.io/timeline-investigator/ti-rest-api:staging-latest"
 
 jobs:
   test:
