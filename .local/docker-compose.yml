@@ -7,5 +7,5 @@ services:
         - "8080:8080"
       volumes:
         - type: bind
-          source: ./config.test.yml
+          source: ./config.yml
           target: /app/config.yml
