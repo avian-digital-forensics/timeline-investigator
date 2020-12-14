@@ -39,6 +39,7 @@ jobs:
           command: |
             cd .local
             docker-compose up
+            ls -l
             mkdir -p $TEST_RESULTS
             cd ../tests
             PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
