@@ -1,11 +1,48 @@
 version: 2
+parameters:
+  gcr-ci-reg:
+    type: string
+    default: "https://eu.gcr.io"
+  gcp-project-id:
+    type: string
+    default: "timeline-investigator"
+  gcp-key-file:
+    type: string
+    default: "/tmp/gcloud-api-key.json"
+  container-image-staging:
+    type: string
+    default: "<< pipeline.parameters.gcr-ci-reg- >>/<< pipeline.parameters.gcp-project-id >>/ti-rest-api:staging-<< pipeline.id >>"
+  container-image-staging-latest:
+    type: string
+    default: "<< pipeline.parameters.gcr-ci-reg- >>/<< pipeline.parameters.gcp-project-id >>/ti-rest-api:staging-latest"
+
 jobs:
   test:
     docker:
-      - image: ...
+      # FIX ME : create custom-image with golang + docker-compose
+      - image: circleci/golang:1.9
     working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
     steps:
       - checkout
+
+      # FIX ME : add this step to the custom-image
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.03.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      
+      # FIX ME : add this step to the custom-image
+      - run:
+          name: Install Docker Compose
+          command: |
+            set -x
+            curl -L https://github.com/docker/compose/releases/download/1.11.2/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+
       - run:
           name: Start local test environment
           command: |
@@ -17,10 +54,10 @@ jobs:
             -   sleep 1
             - done
             - echo Failed waiting for Postgress && exit 1
+            
       - run:
           name: Run tests
-          command: |
-            - go test ./...
+          command: go test ./...
 
   build:
     docker:
@@ -32,12 +69,12 @@ jobs:
       - run: 
           name: Build and push image
           command: | 
-            - echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCLOUD_KEY_FILE}
-            - docker login -u _json_key -p "$(cat $GCLOUD_KEY_FILE)" https://eu.gcr.io
-            - docker build . -t ${PROD_CONTAINER_IMAGE}
-            - docker tag ${PROD_CONTAINER_IMAGE} ${PROD_CONTAINER_IMAGE_LATEST}
-            - docker push ${PROD_CONTAINER_IMAGE}
-            - docker push ${PROD_CONTAINER_IMAGE_LATEST}
+            - echo `echo ${GCLOUD_API_KEY} | base64 -d` > << pipeline.parameters.gcp-key-file >>
+            - docker login -u _json_key -p "$(cat << pipeline.parameters.gcp-key-file >>)" https://eu.gcr.io
+            - docker build . -t << pipeline.parameters.container-image-staging >>
+            - docker tag << pipeline.parameters.container-image-staging >> << pipeline.parameters.container-image-staging-latest >>
+            - docker push << pipeline.parameters.container-image-staging >>
+            - docker push << pipeline.parameters.container-image-staging-latest >>
 
     deploy-job:
       docker:
@@ -46,10 +83,10 @@ jobs:
             CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
             CLOUDSDK_COMPUTE_ZONE: europe-north1-a
             CLOUDSDK_CONTAINER_CLUSTER: cluster-1
-            CLOUDSDK_CORE_PROJECT: ${GCP_PROJECT_ID}
+            CLOUDSDK_CORE_PROJECT: << pipeline.parameters.gcp-project-id >>
       steps:
         - run:
             name: Deploy to GKE
             command: |
-              - echo ${GCR_CONTAINER_IMAGE}
-              - kubectl set image deployment/main-api-service -n prod main-api-service=${PROD_CONTAINER_IMAGE}
+              - echo << pipeline.parameters.container-image-staging >>
+              - kubectl set image deployment/main-api-service -n prod main-api-service=<< pipeline.parameters.container-image-staging >>
