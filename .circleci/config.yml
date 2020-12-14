@@ -49,11 +49,11 @@ jobs:
             gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
 
       - run: 
-          name: Build and push image
+          name: Tag and push image
           command: | 
             echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCP_KEY_FILE}
             docker login -u _json_key -p "$(cat ${GCP_KEY_FILE})" ${GCR_CI_REG}
-            docker build . -t ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
+            docker tag timeline-investigator:latest ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker tag ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1} ${CONTAINER_IMAGE_STAGING}-latest
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker push ${CONTAINER_IMAGE_STAGING}-latest
