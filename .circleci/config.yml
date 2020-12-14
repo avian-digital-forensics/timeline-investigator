@@ -32,11 +32,12 @@ jobs:
       - run:
           name: Start local test environment
           command: |
-            cd .local && docker-compose up -d
+            cd .local
+            docker-compose up -d
             
       - run:
           name: Run tests
-          command: cd tests && go test
+          command: cd tests && go test --run=.
 
       - run: 
           name: Build and push image
