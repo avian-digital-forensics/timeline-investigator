@@ -58,7 +58,7 @@ jobs:
 
   build:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.9 # NOTE: golang image can perform docker commands
     working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
     environment:
       GCP_KEY_FILE: /tmp/gcloud-api-key.json
@@ -66,6 +66,11 @@ jobs:
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-rest-api:staging
     steps:
       - checkout
+
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
+          
       - run: 
           name: Build and push image
           command: | 
@@ -74,7 +79,7 @@ jobs:
             docker build . -t ${CONTAINER_IMAGE_STAGING}
             docker tag ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1} ${CONTAINER_IMAGE_STAGING}-latest
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
-            docker push ${CONTAINER_IMAGE_STAGING_LATEST}-latest
+            docker push ${CONTAINER_IMAGE_STAGING}-latest
 
     deploy-job:
       docker:
