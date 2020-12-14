@@ -61,20 +61,24 @@ jobs:
 
   build:
     docker:
-      # specify the version
       - image: docker:dind
     working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
+    environment:
+      GCP_KEY_FILE: << pipeline.parameters.gcp-key-file >>
+      GCR_CI_REG: << pipeline.parameters.gcr-ci-reg >>
+      CONTAINER_IMAGE_STAGING: << pipeline.parameters.container-image-staging >>
+      CONTAINER_IMAGE_STAGING_LATEST: << pipeline.parameters.container-image-staging-latest >>
     steps:
       - checkout
       - run: 
           name: Build and push image
           command: | 
-            echo `echo ${GCLOUD_API_KEY} | base64 -d` > << pipeline.parameters.gcp-key-file >>
-            docker login -u _json_key -p "$(cat << pipeline.parameters.gcp-key-file >>)" https://eu.gcr.io
-            docker build . -t << pipeline.parameters.container-image-staging >>
-            docker tag << pipeline.parameters.container-image-staging >> << pipeline.parameters.container-image-staging-latest >>
-            docker push << pipeline.parameters.container-image-staging >>
-            docker push << pipeline.parameters.container-image-staging-latest >>
+            echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCP_KEY_FILE}
+            docker login -u _json_key -p "$(cat ${GCP_KEY_FILE})" ${GCR_CI_REG}
+            docker build . -t ${CONTAINER_IMAGE_STAGING}
+            docker tag ${CONTAINER_IMAGE_STAGING} ${CONTAINER_IMAGE_STAGING_LATEST}
+            docker push ${CONTAINER_IMAGE_STAGING}
+            docker push ${CONTAINER_IMAGE_STAGING_LATEST}
 
     deploy-job:
       docker:
