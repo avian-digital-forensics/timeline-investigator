@@ -12,7 +12,8 @@ parameters:
   container-image-staging-latest:
     type: string
     default: "eu.gcr.io/timeline-investigator/ti-rest-api:staging-latest"
-
+environment:
+  TEST: "hello"
 jobs:
   test:
     docker:
@@ -72,6 +73,7 @@ jobs:
           command: | 
             echo ${GCLOUD_API_KEY}
             echo "<< pipeline.parameters.gcp-key-file >>"
+            echo ${TEST}
 
     deploy-job:
       docker:
