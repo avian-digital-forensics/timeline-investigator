@@ -8,4 +8,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api ./cmd/main/ma
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /tmp/app_build/api ./api
-CMD ./api --cfg=./config.yml
+RUN mkdir /configs
+CMD ./api --cfg=/configs/config.yml

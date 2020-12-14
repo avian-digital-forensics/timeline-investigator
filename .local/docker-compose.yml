@@ -8,4 +8,4 @@ services:
       volumes:
         - type: bind
           source: ./config.yml
-          target: /app/config.yml
+          target: /configs/config.yml
