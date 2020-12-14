@@ -70,12 +70,7 @@ jobs:
       - run: 
           name: Build and push image
           command: | 
-            echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCP_KEY_FILE}
-            docker login -u _json_key -p "$(cat ${GCP_KEY_FILE})" ${GCR_CI_REG}
-            docker build . -t ${CONTAINER_IMAGE_STAGING}
-            docker tag ${CONTAINER_IMAGE_STAGING} ${CONTAINER_IMAGE_STAGING_LATEST}
-            docker push ${CONTAINER_IMAGE_STAGING}
-            docker push ${CONTAINER_IMAGE_STAGING_LATEST}
+            echo ${GCP_KEY_FILE}
 
     deploy-job:
       docker:
