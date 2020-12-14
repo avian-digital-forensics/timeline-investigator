@@ -31,14 +31,7 @@ jobs:
       - run:
           name: Start local test environment
           command: |
-            cd .local && pwd && ls -l && docker-compose up -d && cd ../
-            for i in `seq 1 10`;
-            do
-              nc -z localhost 8080 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for API && exit 1
+            cd .local && docker-compose up -d
             
       - run:
           name: Run tests
