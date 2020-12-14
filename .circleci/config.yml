@@ -16,7 +16,7 @@ parameters:
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.12
     #working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
     environment:
       GCP_KEY_FILE: /tmp/gcloud-api-key.json
