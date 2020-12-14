@@ -58,7 +58,7 @@ jobs:
 
   build:
     docker:
-      - image: circleci/golang:1.9 # NOTE: golang image can perform docker commands
+      - image: docker:latest # use docker-image to perform cli commands
     working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
     environment:
       GCP_KEY_FILE: /tmp/gcloud-api-key.json
@@ -66,15 +66,6 @@ jobs:
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-rest-api:staging
     steps:
       - checkout
-
-      - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="17.03.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
 
       - run: 
           name: Build and push image
