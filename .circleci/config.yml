@@ -23,6 +23,7 @@ jobs:
       GCR_CI_REG: https://eu.gcr.io
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-rest-api:staging
       TEST_URL: http://localhost:8080/api/
+      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
 
     steps:
       - checkout
