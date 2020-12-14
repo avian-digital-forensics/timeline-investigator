@@ -46,14 +46,14 @@ jobs:
       - run:
           name: Start local test environment
           command: |
-            - cd .local && docker-compose up -d && cd ../
-            - for i in `seq 1 10`;
-            - do
-            -   nc -z localhost 5432 && echo Success && exit 0
-            -   echo -n .
-            -   sleep 1
-            - done
-            - echo Failed waiting for Postgress && exit 1
+            cd .local && docker-compose up -d && cd ../
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgress && exit 1
             
       - run:
           name: Run tests
@@ -69,12 +69,12 @@ jobs:
       - run: 
           name: Build and push image
           command: | 
-            - echo `echo ${GCLOUD_API_KEY} | base64 -d` > << pipeline.parameters.gcp-key-file >>
-            - docker login -u _json_key -p "$(cat << pipeline.parameters.gcp-key-file >>)" https://eu.gcr.io
-            - docker build . -t << pipeline.parameters.container-image-staging >>
-            - docker tag << pipeline.parameters.container-image-staging >> << pipeline.parameters.container-image-staging-latest >>
-            - docker push << pipeline.parameters.container-image-staging >>
-            - docker push << pipeline.parameters.container-image-staging-latest >>
+            echo `echo ${GCLOUD_API_KEY} | base64 -d` > << pipeline.parameters.gcp-key-file >>
+            docker login -u _json_key -p "$(cat << pipeline.parameters.gcp-key-file >>)" https://eu.gcr.io
+            docker build . -t << pipeline.parameters.container-image-staging >>
+            docker tag << pipeline.parameters.container-image-staging >> << pipeline.parameters.container-image-staging-latest >>
+            docker push << pipeline.parameters.container-image-staging >>
+            docker push << pipeline.parameters.container-image-staging-latest >>
 
     deploy-job:
       docker:
@@ -88,5 +88,5 @@ jobs:
         - run:
             name: Deploy to GKE
             command: |
-              - echo << pipeline.parameters.container-image-staging >>
-              - kubectl set image deployment/main-api-service -n prod main-api-service=<< pipeline.parameters.container-image-staging >>
+              echo << pipeline.parameters.container-image-staging >>
+              kubectl set image deployment/main-api-service -n prod main-api-service=<< pipeline.parameters.container-image-staging >>
