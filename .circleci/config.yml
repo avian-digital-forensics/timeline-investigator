@@ -62,7 +62,7 @@ jobs:
   build:
     docker:
       # specify the version
-      - image: circleci/golang:1.9
+      - image: docker:dind
     working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
     steps:
       - checkout
