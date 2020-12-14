@@ -22,6 +22,7 @@ jobs:
       GCP_KEY_FILE: /tmp/gcloud-api-key.json
       GCR_CI_REG: https://eu.gcr.io
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-rest-api:staging
+      TEST_URL: http://localhost:8080/api/
 
     steps:
       - checkout
@@ -35,7 +36,7 @@ jobs:
             
       - run:
           name: Run tests
-          command: go test ./...
+          command: go test ./tests
 
       - run: 
           name: Build and push image

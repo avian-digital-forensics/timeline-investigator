@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/avian-digital-forensics/timeline-investigator/tests/client"
@@ -10,11 +11,15 @@ import (
 	"github.com/matryer/is"
 )
 
+var (
+	URL = os.Getenv("TEST_URL")
+)
+
 // TestGreet test the greet-method
 func TestGreet(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
-	httpClient := client.New("http://localhost:8080/api/")
+	httpClient := client.New(URL)
 	httpClient.Debug = func(s string) {
 		log.Println(s)
 	}
