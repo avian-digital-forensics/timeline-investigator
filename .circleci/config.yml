@@ -70,7 +70,8 @@ jobs:
       - run: 
           name: Build and push image
           command: | 
-            echo ${GCP_KEY_FILE}
+            echo ${GCLOUD_API_KEY}
+            echo "<< pipeline.parameters.gcp-key-file >>"
 
     deploy-job:
       docker:
