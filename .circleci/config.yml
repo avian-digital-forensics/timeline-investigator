@@ -1,0 +1,52 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.12
+    #working_directory: /go/src/github.com/avian-digital-forensics/timeline-investigator
+    environment:
+      GCP_KEY_FILE: /tmp/gcloud-api-key.json
+      GCR_CI_REG: https://eu.gcr.io
+      CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-api:staging
+      TEST_URL: http://localhost:8080/api/
+      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+
+      - run:
+          name: Build image and test environment
+          command: cd .local && docker-compose build
+
+      - run:
+          name: Run tests
+          command: cd .local && docker-compose run ti-test
+
+      - run: 
+          name: Tag and push image
+          command: | 
+            echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCP_KEY_FILE}
+            docker login -u _json_key -p "$(cat ${GCP_KEY_FILE})" ${GCR_CI_REG}
+            docker tag timeline-investigator:local ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
+            docker tag ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1} ${CONTAINER_IMAGE_STAGING}-latest
+            docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
+            docker push ${CONTAINER_IMAGE_STAGING}-latest
+
+    deploy-job:
+      docker:
+      - image: simonjansson/gcloud-kubectl
+      environment:
+            CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
+            CLOUDSDK_COMPUTE_ZONE: europe-north1-a
+            CLOUDSDK_CONTAINER_CLUSTER: cluster-1
+            CLOUDSDK_CORE_PROJECT: timeline-investigator
+            IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging-${CIRCLE_SHA1}
+      steps:
+        - run:
+            name: Deploy to GKE
+            command: |
+              echo ${IMAGE}
+              kubectl set image deployment/main-api-service -n prod main-api-service=${IMAGE}
