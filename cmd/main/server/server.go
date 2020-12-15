@@ -79,7 +79,7 @@ func (srv *Server) Run(cfg *configs.MainAPI) error {
 
 // Stop the server
 func (srv *Server) Stop() error {
-	ctx, cancel := context.WithTimeout(srv.ctx, 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	return srv.http.Shutdown(ctx)

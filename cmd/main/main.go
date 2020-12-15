@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/cmd"
 	"github.com/avian-digital-forensics/timeline-investigator/cmd/main/server"
@@ -17,7 +18,7 @@ import (
 func main() {
 	ctx := cmd.ContextWithSignal(context.Background())
 	if err := run(ctx, os.Args, os.Stdout); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		fmt.Fprintf(os.Stderr, "%v - %s\n", time.Now(), err)
 		os.Exit(1)
 	}
 }
@@ -41,7 +42,6 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	var wg sync.WaitGroup
 
 	apiErrCh := make(chan error, 1)
-	ctrlErrCh := make(chan error, 1)
 
 	// Start the API server.
 	wg.Add(1)
@@ -62,14 +62,8 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	select {
 	case <-ctx.Done():
 		if err := apiServer.Stop(); err != nil {
-			return fmt.Errorf("unable to stop the API server: %v", err)
+			return fmt.Errorf("context done - unable to stop the API server: %v", err)
 		}
-
-	case err := <-ctrlErrCh:
-		if err := apiServer.Stop(); err != nil {
-			log.Printf("unable to stop the API server: %v", err)
-		}
-		return err
 
 	case err := <-apiErrCh:
 		if err := apiServer.Stop(); err != nil {
