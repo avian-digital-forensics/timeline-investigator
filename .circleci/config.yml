@@ -37,6 +37,7 @@ jobs:
       - run:
           name: Build image and test environment
           command: cd .local && docker-compose up -d
+          background: true
             
       - run:
           name: Run tests
