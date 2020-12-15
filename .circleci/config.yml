@@ -36,9 +36,13 @@ jobs:
 
       - run:
           name: Build image and test environment
-          command: cd .local && docker-compose up -d
-          background: true
-            
+          command: | 
+            cd .local && docker-compose up -d
+            mkdir -p $TEST_RESULTS
+            cd ./tests
+            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
+            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
+
       - run:
           name: Run tests
           command: |
