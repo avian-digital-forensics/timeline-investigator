@@ -35,6 +35,12 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	srv.router.Basepath = "/api/"
 	http.Handle("/api/", srv.router)
 
+	// endpoint for for gke-healthchecks
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("ok"))
+	})
+
 	// Register the services
 	api.RegisterService(srv.router, &services.Service{})
 
