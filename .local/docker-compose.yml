@@ -1,7 +1,19 @@
 version: '3.3'
 services:
     ti-api:
-      build: ../
-      image: timeline-investigator:local
-      ports:
-        - "8080:8080"
+      build:
+        context: ../
+        dockerfile: build.Dockerfile
+      image: timeline-investigator:build
+      entrypoint: ./api --cfg=.local/config.local.yml
+    
+    ti-test:
+      image: timeline-investigator:build
+      container_name: ti-test
+      depends_on: 
+        - ti-api
+      stdin_open: true
+      tty: true    
+      #environment:
+      #  - TEST_URL=http://ti-api:8080/api/
+      entrypoint: go test ./tests
