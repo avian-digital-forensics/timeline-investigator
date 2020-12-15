@@ -1,9 +1,7 @@
 version: '3.3'
 services:
-    rest-ti-api:
+    ti-api:
       build: ../
-      image: timeline-investigator:latest
+      image: timeline-investigator:local
       ports:
         - "8080:8080"
-      volumes:
-        - ${PWD}:/configs/
