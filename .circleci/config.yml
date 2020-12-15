@@ -36,20 +36,13 @@ jobs:
 
       - run:
           name: Build image and test environment
-          command: |
-            cd .local
-            docker-compose up -d
-            ls -l
-            mkdir -p $TEST_RESULTS
-            cd ../tests
-            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
-            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
+          command: cd .local && docker-compose up -d
             
       - run:
           name: Run tests
           command: |
-            mkdir -p $TEST_RESULTS &&
-            cd tests &&
+            mkdir -p $TEST_RESULTS
+            cd ./tests
             PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
             gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
 
@@ -58,7 +51,7 @@ jobs:
           command: | 
             echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCP_KEY_FILE}
             docker login -u _json_key -p "$(cat ${GCP_KEY_FILE})" ${GCR_CI_REG}
-            docker tag timeline-investigator:latest ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
+            docker tag timeline-investigator:local ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker tag ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1} ${CONTAINER_IMAGE_STAGING}-latest
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker push ${CONTAINER_IMAGE_STAGING}-latest
