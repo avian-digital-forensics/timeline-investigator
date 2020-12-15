@@ -40,7 +40,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: docker-compose run ti-test
+          command: cd .local && docker-compose run ti-test
 
       # - run: 
       #     name: Tag and push image
