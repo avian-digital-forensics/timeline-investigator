@@ -1,16 +1,20 @@
-version: '3.3'
+version: '3.4'
 services:
     ti-api:
       build:
         context: ../
-        dockerfile: build.Dockerfile
-      image: timeline-investigator:build
+        dockerfile: Dockerfile
+      image: timeline-investigator:local
       container_name: ti-api
       ports:
         - "8080:8080"
       entrypoint: ./api --cfg=.local/config.local.yml
     
     ti-test:
+      build:
+        context: ../
+        dockerfile: Dockerfile
+        target: builder
       image: timeline-investigator:build
       container_name: ti-test
       depends_on: 

@@ -1,8 +1,7 @@
 FROM golang:latest as builder
 WORKDIR /tmp/app_build
-COPY go.mod go.sum ./
-RUN go mod download
 COPY . .
+RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o api ./cmd/main/main.go
 
 FROM alpine:latest
