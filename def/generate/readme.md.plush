@@ -30,6 +30,10 @@ _<%= object.Comment %>_
 | ---- | ---- | ----------- | ------- |<%= for (field) in object.Fields { %>
 | <%= field.NameLowerCamel %> | <%= if (field.Type.Multiple) { %>[]<% } %><%= field.Type.TypeName %> | <%= format_comment_line(field.Comment) %> | <%= field.Example %> |<% } %>
 
+```sh
+curl -H "Content-Type: application/json" -X POST -d '<%= json(object.Example) %>' http://localhost:8080/api/<%= service.Name %>.<%= method.Name %>
+```
+
 ```json
 <%= jsonPretty(object.Example) %>
 ```

@@ -30,6 +30,10 @@ _GreetRequest is the request object for GreeterService.Greet._
 | ---- | ---- | ----------- | ------- |
 | name | string | Namee of the person to greet | Simon |
 
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"name":"Simon"}' http://localhost:8080/api/Service.Greet
+```
+
 ```json
 {
     "name": "Simon"
