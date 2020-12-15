@@ -1,17 +1,4 @@
 version: 2
-parameters:
-  gcr-ci-reg:
-    type: string
-    default: "https://eu.gcr.io"
-  gcp-key-file:
-    type: string
-    default: "/tmp/gcloud-api-key.json"
-  container-image-staging:
-    type: string
-    default: "eu.gcr.io/timeline-investigator/ti-rest-api:staging-<< pipeline.id >>"
-  container-image-staging-latest:
-    type: string
-    default: "eu.gcr.io/timeline-investigator/ti-rest-api:staging-latest"
 
 jobs:
   build:
