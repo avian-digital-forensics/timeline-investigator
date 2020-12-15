@@ -30,10 +30,6 @@ jobs:
       - setup_remote_docker:
           version: 19.03.13
 
-      - restore_cache: # restores saved cache if no changes are detected since last run
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
-
       - run:
           name: Build image and test environment
           command: cd .local && docker-compose build
@@ -52,18 +48,6 @@ jobs:
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker push ${CONTAINER_IMAGE_STAGING}-latest
 
-      - save_cache:
-          key: go-mod-v4-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
-      
-      - store_artifacts: # upload test summary for display in Artifacts
-          path: /tmp/test-results
-          destination: raw-test-output
-
-      - store_test_results: # upload test results for display in Test Summary
-          path: /tmp/test-results
-
     deploy-job:
       docker:
       - image: simonjansson/gcloud-kubectl
@@ -71,10 +55,11 @@ jobs:
             CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
             CLOUDSDK_COMPUTE_ZONE: europe-north1-a
             CLOUDSDK_CONTAINER_CLUSTER: cluster-1
-            CLOUDSDK_CORE_PROJECT: << pipeline.parameters.gcp-project-id >>
+            CLOUDSDK_CORE_PROJECT: timeline-investigator
+            IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging-${CIRCLE_SHA1}
       steps:
         - run:
             name: Deploy to GKE
             command: |
-              echo << pipeline.parameters.container-image-staging >>
-              kubectl set image deployment/main-api-service -n prod main-api-service=<< pipeline.parameters.container-image-staging >>
+              echo ${IMAGE}
+              kubectl set image deployment/main-api-service -n prod main-api-service=${IMAGE}
