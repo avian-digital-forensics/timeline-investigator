@@ -19,7 +19,4 @@ services:
       tty: true    
       environment:
         - TEST_URL=http://ti-api:8080/api/
-        - PACKAGE_NAMES=${PACKAGE_NAMES}
-        - TEST_RESULTS=${TEST_RESULTS}
-      command: sh -c mkdir -p ${TEST_RESULTS} && cd tests
-      entrypoint: go get -u gotest.tools/gotestsum && gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
+      entrypoint: go test ./tests

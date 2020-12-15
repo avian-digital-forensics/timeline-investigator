@@ -40,11 +40,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: |
-            cd ./tests
-            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
-            cd ../.local
-            docker-compose run ti-test
+          command: cd .local && docker-compose run ti-test
 
       # - run: 
       #     name: Tag and push image
