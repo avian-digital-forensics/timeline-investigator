@@ -21,7 +21,7 @@ jobs:
     environment:
       GCP_KEY_FILE: /tmp/gcloud-api-key.json
       GCR_CI_REG: https://eu.gcr.io
-      CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-rest-api:staging
+      CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-api:staging
       TEST_URL: http://localhost:8080/api/
       TEST_RESULTS: /tmp/test-results # path to where test results will be saved
 
@@ -38,7 +38,7 @@ jobs:
           name: Build image and test environment
           command: |
             cd .local
-            docker-compose up
+            docker-compose up -d
             ls -l
             mkdir -p $TEST_RESULTS
             cd ../tests
