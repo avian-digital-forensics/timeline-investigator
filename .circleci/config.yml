@@ -9,6 +9,9 @@ workflows:
       - deploy:
           requires:
             - build
+        filters:
+          branches:
+            only: main
 
 jobs:
   build:
@@ -20,7 +23,7 @@ jobs:
       GCR_CI_REG: https://eu.gcr.io
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-api:staging
       TEST_URL: http://localhost:8080/api/
-      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+      #TEST_RESULTS: /tmp/test-results # path to where test results will be saved
 
     steps:
       - checkout
@@ -48,9 +51,9 @@ jobs:
   deploy:
     executor: gcp-gke/default
     environment:
-      #GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
       GOOGLE_PROJECT_ID: timeline-investigator
       GOOGLE_COMPUTE_ZONE: europe-north1-a
+      CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-api:staging
     steps:
       - setup_remote_docker
       - checkout
@@ -61,6 +64,5 @@ jobs:
       - run:
           name: Deploy to GKE
           command: |
-            echo Tag ${CIRCLE_TAG}
-            echo Tag ${CIRCLE_SHA1}
-            kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
+            echo ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
+            kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
