@@ -48,7 +48,7 @@ jobs:
   deploy:
     executor: gcp-gke/default
     environment:
-      GCLOUD_SERVICE_KEY: /tmp/gcloud-api-key.json
+      GCLOUD_SERVICE_KEY: /home/circleci/gcloud-service-key.json
       GOOGLE_PROJECT_ID: timeline-investigator
       GOOGLE_COMPUTE_ZONE: europe-north-1a
     steps:
