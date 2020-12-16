@@ -10,7 +10,6 @@ import (
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/services"
 
-	"github.com/gorilla/handlers"
 	"github.com/pacedotdev/oto/otohttp"
 )
 
@@ -49,24 +48,8 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 
 // Run the server
 func (srv *Server) Run(cfg *configs.MainAPI) error {
-	// Create a cors-handler
-	corsHandler := handlers.CORS(
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowedMethods([]string{"HEAD", "POST", "OPTIONS"}),
-		handlers.AllowedHeaders([]string{
-			"Accept",
-			"Accept-Language",
-			"Authorization",
-			"Content-Language",
-			"Content-Type",
-			"Origin",
-			"X-Requested-With",
-		}),
-	)
-
 	// Create the http-server
 	srv.http = &http.Server{
-		Handler:      corsHandler(srv.router),
 		Addr:         cfg.Network.IP + ":" + cfg.Network.Port,
 		WriteTimeout: time.Duration(cfg.Network.WriteTimeout) * time.Second,
 		ReadTimeout:  time.Duration(cfg.Network.ReadTimeout) * time.Second,
@@ -79,7 +62,7 @@ func (srv *Server) Run(cfg *configs.MainAPI) error {
 
 // Stop the server
 func (srv *Server) Stop() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(srv.ctx, 2*time.Second)
 	defer cancel()
 
 	return srv.http.Shutdown(ctx)

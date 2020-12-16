@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/cmd"
 	"github.com/avian-digital-forensics/timeline-investigator/cmd/main/server"
@@ -18,7 +17,7 @@ import (
 func main() {
 	ctx := cmd.ContextWithSignal(context.Background())
 	if err := run(ctx, os.Args, os.Stdout); err != nil {
-		fmt.Fprintf(os.Stderr, "%v - %s\n", time.Now(), err)
+		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
