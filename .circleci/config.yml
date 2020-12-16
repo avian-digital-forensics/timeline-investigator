@@ -47,10 +47,10 @@ jobs:
 
   deploy:
     executor: gcp-gke/default
-    environment:
-      GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
-      GOOGLE_PROJECT_ID: timeline-investigator
-      GOOGLE_COMPUTE_ZONE: europe-north1-a
+    #environment:
+      #GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
+      #GOOGLE_PROJECT_ID: timeline-investigator
+      #GOOGLE_COMPUTE_ZONE: europe-north1-a
     steps:
       - setup_remote_docker
       - checkout
