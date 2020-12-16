@@ -3,7 +3,9 @@ workflows:
   main:
     jobs:
       - build
-      - deploy
+      - deploy:
+          requires:
+            - build
 
 jobs:
   build:
@@ -48,10 +50,10 @@ jobs:
         CLOUDSDK_COMPUTE_ZONE: europe-north1-a
         CLOUDSDK_CONTAINER_CLUSTER: cluster-1
         CLOUDSDK_CORE_PROJECT: timeline-investigator
-        IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging-${CIRCLE_SHA1}
+        CONTAINER_IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging
     steps:
       - run:
           name: Deploy to GKE
           command: |
-            echo ${IMAGE}
-            kubectl set image deployment/ti-api -n staging ti-api=${IMAGE}
+            echo ${CONTAINER_IMAGE}-${CIRCLE_SHA1}
+            kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
