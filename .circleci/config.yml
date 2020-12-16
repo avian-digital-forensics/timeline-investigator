@@ -48,15 +48,15 @@ jobs:
   deploy:
     executor: gcp-gke/default
     environment:
-      #GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
+      GCLOUD_SERVICE_KEY: ${GCLOUD_SERVICE_KEY}
       GOOGLE_PROJECT_ID: timeline-investigator
-      GOOGLE_COMPUTE_ZONE: europe-north-1a
+      GOOGLE_COMPUTE_ZONE: europe-north1-a
     steps:
       - setup_remote_docker
       - checkout
       - gcp-gke/update-kubeconfig-with-credentials:
-          #cluster: cluster-1
-          #perform-login: true
+          cluster: cluster-1
+          perform-login: true
           install-kubectl: true
       - run:
           name: Deploy to GKE
