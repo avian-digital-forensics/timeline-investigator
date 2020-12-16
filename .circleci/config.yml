@@ -55,7 +55,7 @@ jobs:
       - setup_remote_docker
       - checkout
       - gcp-gke/update-kubeconfig-with-credentials:
-          cluster: cluster-1
+          #cluster: cluster-1
           #perform-login: true
           install-kubectl: true
       - run:
