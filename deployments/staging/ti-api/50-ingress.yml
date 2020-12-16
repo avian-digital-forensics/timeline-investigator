@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ti-api-ingress
+  namespace: staging
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: static-ip-staging
+    networking.gke.io/managed-certificates: ti-api-ingress-cert
+  labels:
+    app: ti-api-service
+    env: staging
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/
+        backend:
+          serviceName: ti-api
+          servicePort: 80
+

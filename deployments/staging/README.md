@@ -1,0 +1,3 @@
+# staging
+
+The staging environment
