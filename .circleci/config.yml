@@ -54,6 +54,4 @@ jobs:
     steps:
       - run:
           name: Deploy to GKE
-          command: |
-            echo ${CONTAINER_IMAGE}-${CIRCLE_SHA1}
-            kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
+          command: kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
