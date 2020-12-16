@@ -56,7 +56,7 @@ jobs:
       - checkout
       - gcp-gke/update-kubeconfig-with-credentials:
           cluster: cluster-1
-          perform-login: true
+          #perform-login: true
           install-kubectl: true
       - run:
           name: Deploy to GKE
