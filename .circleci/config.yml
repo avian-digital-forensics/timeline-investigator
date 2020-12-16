@@ -44,7 +44,7 @@ jobs:
 
   deploy:
     docker:
-    - image: simonjansson/gcloud-kubectl
+    - image: simonjansson/gcloud-kubectl:latest
       environment:
         CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
         CLOUDSDK_COMPUTE_ZONE: europe-north1-a
