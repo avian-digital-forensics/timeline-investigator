@@ -1,4 +1,7 @@
 version: 2.1
+orbs:
+  gcp-gke: circleci/gcp-gke@1.1.0
+
 workflows:
   main:
     jobs:
@@ -43,15 +46,22 @@ jobs:
             docker push ${CONTAINER_IMAGE_STAGING}-latest
 
   deploy:
-    docker:
-    - image: simonjansson/gcloud-kubectl:latest
-      environment:
-        CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
-        CLOUDSDK_COMPUTE_ZONE: europe-north1-a
-        CLOUDSDK_CONTAINER_CLUSTER: cluster-1
-        CLOUDSDK_CORE_PROJECT: timeline-investigator
-        CONTAINER_IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging
+    executor: gcp-gke/default
+    environment:
+      GCLOUD_SERVICE_KEY: /tmp/gcloud-api-key.json
+      GOOGLE_PROJECT_ID: timeline-investigator
+      GOOGLE_COMPUTE_ZONE: europe-north-1a
     steps:
+      - setup_remote_docker
+      - checkout
+      - gcp-gke/update-kubeconfig-with-credentials:
+          cluster: cluster-1
+          perform-login: true
+          install-kubectl: true
       - run:
           name: Deploy to GKE
-          command: kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
+          command: |
+            echo `echo ${GCLOUD_API_KEY} | base64 -d` > ${GCLOUD_SERVICE_KEY}
+            echo Tag ${CIRCLE_TAG}
+            echo Tag ${CIRCLE_SHA1}
+            kubectl set image deployment/ti-api -n staging ti-api=${CONTAINER_IMAGE}-${CIRCLE_SHA1}
