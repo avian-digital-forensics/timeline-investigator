@@ -1,4 +1,9 @@
 version: 2
+workflows:
+  main:
+    jobs:
+      - build
+      - deploy
 
 jobs:
   build:
@@ -35,7 +40,7 @@ jobs:
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker push ${CONTAINER_IMAGE_STAGING}-latest
 
-    deploy-job:
+    deploy:
       docker:
       - image: simonjansson/gcloud-kubectl
       environment:
@@ -49,4 +54,4 @@ jobs:
             name: Deploy to GKE
             command: |
               echo ${IMAGE}
-              kubectl set image deployment/main-api-service -n prod main-api-service=${IMAGE}
+              kubectl set image deployment/ti-api -n staging ti-api=${IMAGE}
