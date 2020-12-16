@@ -40,18 +40,18 @@ jobs:
             docker push ${CONTAINER_IMAGE_STAGING}-${CIRCLE_SHA1}
             docker push ${CONTAINER_IMAGE_STAGING}-latest
 
-    deploy:
-      docker:
-      - image: simonjansson/gcloud-kubectl
+  deploy:
+    docker:
+    - image: simonjansson/gcloud-kubectl
       environment:
-            CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
-            CLOUDSDK_COMPUTE_ZONE: europe-north1-a
-            CLOUDSDK_CONTAINER_CLUSTER: cluster-1
-            CLOUDSDK_CORE_PROJECT: timeline-investigator
-            IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging-${CIRCLE_SHA1}
-      steps:
-        - run:
-            name: Deploy to GKE
-            command: |
-              echo ${IMAGE}
-              kubectl set image deployment/ti-api -n staging ti-api=${IMAGE}
+        CLOUDSDK_API_KEY: ${GCLOUD_API_KEY}
+        CLOUDSDK_COMPUTE_ZONE: europe-north1-a
+        CLOUDSDK_CONTAINER_CLUSTER: cluster-1
+        CLOUDSDK_CORE_PROJECT: timeline-investigator
+        IMAGE: eu.gcr.io/timeline-investigator/ti-api:staging-${CIRCLE_SHA1}
+    steps:
+      - run:
+          name: Deploy to GKE
+          command: |
+            echo ${IMAGE}
+            kubectl set image deployment/ti-api -n staging ti-api=${IMAGE}
