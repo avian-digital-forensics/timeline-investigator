@@ -15,8 +15,8 @@ var (
 	URL = os.Getenv("TEST_URL")
 )
 
-// TestGreet test the greet-method
-func TestGreet(t *testing.T) {
+// TestCaseNew test the New-method
+func TestCaseNew(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	httpClient := client.New(URL)
@@ -24,8 +24,7 @@ func TestGreet(t *testing.T) {
 		log.Println(s)
 	}
 
-	service := client.NewService(httpClient, "")
-	resp, err := service.Greet(ctx, client.GreetRequest{Name: "Simon"})
-	is.NoErr(err)
-	is.Equal(resp.Greeting, "Hello Simon")
+	service := client.NewCaseService(httpClient, "")
+	_, err := service.New(ctx, client.CaseNewRequest{Name: "Simon"})
+	is.Equal(err.Error(), "Not implemented yet")
 }

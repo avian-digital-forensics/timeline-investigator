@@ -38,32 +38,32 @@ func New(remoteHost string) *Client {
 	return c
 }
 
-// Service is the main-service
-type Service struct {
+// CaseService is the API to handle cases
+type CaseService struct {
 	client *Client
 	token  string
 }
 
-// NewService makes a new client for accessing Service services.
-func NewService(client *Client, token string) *Service {
-	return &Service{
+// NewCaseService makes a new client for accessing CaseService services.
+func NewCaseService(client *Client, token string) *CaseService {
+	return &CaseService{
 		client: client,
 		token:  token,
 	}
 }
 
-// Greet sends a polite greeting
-func (s *Service) Greet(ctx context.Context, r GreetRequest) (*GreetResponse, error) {
+// Delete deletes the specified case
+func (s *CaseService) Delete(ctx context.Context, r CaseDeleteRequest) (*CaseDeleteResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "Service.Greet: marshal GreetRequest")
+		return nil, errors.Wrap(err, "CaseService.Delete: marshal CaseDeleteRequest")
 	}
-	url := s.client.RemoteHost + "Service.Greet"
+	url := s.client.RemoteHost + "CaseService.Delete"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "Service.Greet: NewRequest")
+		return nil, errors.Wrap(err, "CaseService.Delete: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -71,47 +71,899 @@ func (s *Service) Greet(ctx context.Context, r GreetRequest) (*GreetResponse, er
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "Service.Greet")
+		return nil, errors.Wrap(err, "CaseService.Delete")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		GreetResponse
+		CaseDeleteResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "Service.Greet: new gzip reader")
+			return nil, errors.Wrap(err, "CaseService.Delete: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "Service.Greet: read response body")
+		return nil, errors.Wrap(err, "CaseService.Delete: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("Service.Greet: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("CaseService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.GreetResponse, nil
+	return &response.CaseDeleteResponse, nil
 }
 
-// GreetRequest is the request object for GreeterService.Greet.
-type GreetRequest struct {
-	// Namee of the person to greet
+// Get returns the requested case
+func (s *CaseService) Get(ctx context.Context, r CaseGetRequest) (*CaseGetResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Get: marshal CaseGetRequest")
+	}
+	url := s.client.RemoteHost + "CaseService.Get"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Get: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Get")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		CaseGetResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "CaseService.Get: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Get: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("CaseService.Get: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.CaseGetResponse, nil
+}
+
+// List the cases for a specified user
+func (s *CaseService) List(ctx context.Context, r CaseListRequest) (*CaseListResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.List: marshal CaseListRequest")
+	}
+	url := s.client.RemoteHost + "CaseService.List"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.List: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.List")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		CaseListResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "CaseService.List: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.List: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("CaseService.List: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.CaseListResponse, nil
+}
+
+// New creates a new case
+func (s *CaseService) New(ctx context.Context, r CaseNewRequest) (*CaseNewResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.New: marshal CaseNewRequest")
+	}
+	url := s.client.RemoteHost + "CaseService.New"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.New: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.New")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		CaseNewResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "CaseService.New: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.New: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("CaseService.New: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.CaseNewResponse, nil
+}
+
+// Update updates the specified case
+func (s *CaseService) Update(ctx context.Context, r CaseUpdateRequest) (*CaseUpdateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Update: marshal CaseUpdateRequest")
+	}
+	url := s.client.RemoteHost + "CaseService.Update"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Update: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Update")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		CaseUpdateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "CaseService.Update: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Update: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("CaseService.Update: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.CaseUpdateResponse, nil
+}
+
+// FileService is the API for handling files
+type FileService struct {
+	client *Client
+	token  string
+}
+
+// NewFileService makes a new client for accessing FileService services.
+func NewFileService(client *Client, token string) *FileService {
+	return &FileService{
+		client: client,
+		token:  token,
+	}
+}
+
+// Delete deletes the specified file
+func (s *FileService) Delete(ctx context.Context, r FileDeleteRequest) (*FileDeleteResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Delete: marshal FileDeleteRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Delete"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Delete: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Delete")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileDeleteResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Delete: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Delete: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileDeleteResponse, nil
+}
+
+// New uploads a file to the backend
+func (s *FileService) New(ctx context.Context, r FileNewRequest) (*FileNewResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.New: marshal FileNewRequest")
+	}
+	url := s.client.RemoteHost + "FileService.New"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.New: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.New")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileNewResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.New: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.New: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.New: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileNewResponse, nil
+}
+
+// Update updates the information for a file
+func (s *FileService) Update(ctx context.Context, r FileUpdateRequest) (*FileUpdateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Update: marshal FileUpdateRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Update"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Update: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Update")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileUpdateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Update: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Update: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Update: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileUpdateResponse, nil
+}
+
+// ProcessService is the API - that handles evidence-processing
+type ProcessService struct {
+	client *Client
+	token  string
+}
+
+// NewProcessService makes a new client for accessing ProcessService services.
+func NewProcessService(client *Client, token string) *ProcessService {
+	return &ProcessService{
+		client: client,
+		token:  token,
+	}
+}
+
+// Abort aborts the specified processing-job
+func (s *ProcessService) Abort(ctx context.Context, r ProcessAbortRequest) (*ProcessAbortResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Abort: marshal ProcessAbortRequest")
+	}
+	url := s.client.RemoteHost + "ProcessService.Abort"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Abort: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Abort")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		ProcessAbortResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "ProcessService.Abort: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Abort: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("ProcessService.Abort: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.ProcessAbortResponse, nil
+}
+
+// Jobs returns the status of all processing-jobs in the specified case
+func (s *ProcessService) Jobs(ctx context.Context, r ProcessJobsRequest) (*ProcessJobsResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Jobs: marshal ProcessJobsRequest")
+	}
+	url := s.client.RemoteHost + "ProcessService.Jobs"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Jobs: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Jobs")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		ProcessJobsResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "ProcessService.Jobs: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Jobs: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("ProcessService.Jobs: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.ProcessJobsResponse, nil
+}
+
+// Pause pauses the specified processing-job
+func (s *ProcessService) Pause(ctx context.Context, r ProcessPauseRequest) (*ProcessPauseResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Pause: marshal ProcessPauseRequest")
+	}
+	url := s.client.RemoteHost + "ProcessService.Pause"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Pause: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Pause")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		ProcessPauseResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "ProcessService.Pause: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Pause: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("ProcessService.Pause: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.ProcessPauseResponse, nil
+}
+
+// Start starts a processing with the specified files
+func (s *ProcessService) Start(ctx context.Context, r ProcessStartRequest) (*ProcessStartResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Start: marshal ProcessStartRequest")
+	}
+	url := s.client.RemoteHost + "ProcessService.Start"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Start: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Start")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		ProcessStartResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "ProcessService.Start: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "ProcessService.Start: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("ProcessService.Start: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.ProcessStartResponse, nil
+}
+
+// Base model for the database
+type Base struct {
+	// ID is the identifier for the object
+	ID string `json:"id"`
+
+	// CreatedAt - when the object was created
+	CreatedAt int64 `json:"createdAt"`
+
+	// UpdatedAt - when the object was updated
+	UpdatedAt int64 `json:"updatedAt"`
+
+	// DeletedAt - when the object was deleted
+	DeletedAt int64 `json:"deletedAt"`
+}
+
+// File holds information about an uploaded file
+type File struct {
+	Base
+
+	// Name of the file
+	Name string `json:"name"`
+
+	// Mime is the mime-type of the file
+	Mime string `json:"mime"`
+
+	// Description of the file
+	Description string `json:"description"`
+
+	// Path to where the file is stored
+	Path string `json:"path"`
+
+	// Size of the file in bytes
+	Size int `json:"size"`
+
+	// Processed is if the file has been processed or not
+	Processed bool `json:"processed"`
+}
+
+// Process holds information about a job that processes data to app
+type Process struct {
+	Base
+}
+
+// Case is an object to hold data for a specific investigation
+type Case struct {
+	Base
+
+	// CreatorID is the user-id of the user who created the case (super admin)
+	CreatorID string `json:"creatorID"`
+
+	// Name of the case
+	Name string `json:"name"`
+
+	// Description of the case
+	Description string `json:"description"`
+
+	// FromDate is the unix-date for the start of the primary timespan for the case
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-date for the end of the primary timespan for the case
+	ToDate int64 `json:"toDate"`
+
+	// Investigators of the case (users who has access to the case)
+	Investigators []string `json:"investigators"`
+
+	// Files that exists in the case
+	Files []File `json:"files"`
+
+	// Processes that exists in the case
+	Processes []Process `json:"processes"`
+}
+
+// CaseDeleteRequest is the input-object for deleting an existing case
+type CaseDeleteRequest struct {
+	// ID of the case to delete
+	ID string `json:"id"`
+}
+
+// CaseDeleteResponse is the output-object for deleting an existing case
+type CaseDeleteResponse struct {
+}
+
+// CaseGetRequest is the input-object for getting a specified case
+type CaseGetRequest struct {
+	// ID of the case to get
+	ID string `json:"id"`
+}
+
+// CaseGetResponse is the output-object for getting a specified case
+type CaseGetResponse struct {
+	Case Case `json:"case"`
+}
+
+// CaseListRequest is the input-object for listing cases for a specified user
+type CaseListRequest struct {
+	// UserID of the user to list cases for
+	UserID string `json:"userID"`
+}
+
+// CaseListResponse is the output-object for listing cases for a specified user
+type CaseListResponse struct {
+	Cases []Case `json:"cases"`
+}
+
+// CaseNewRequest is the input-object for creating a new case
+type CaseNewRequest struct {
+	// Name of the case
+	Name string `json:"name"`
+
+	// description of the case to create
+	Description string `json:"description"`
+
+	// FromDate is the unix-date for the start of the primary timespan for the case
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-date for the end of the primary timespan for the case
+	ToDate int64 `json:"toDate"`
+}
+
+// CaseNewResponse is the output-object for creating a new case
+type CaseNewResponse struct {
+	Case Case `json:"case"`
+}
+
+// CaseUpdateRequest is the input-object for updating an existing case
+type CaseUpdateRequest struct {
+	// ID of the case to update
+	ID string `json:"id"`
+
+	// Name of the case
+	Name string `json:"name"`
+
+	// description of the case to create
+	Description string `json:"description"`
+
+	// FromDate is the unix-date for the start of the primary timespan for the case
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-date for the end of the primary timespan for the case
+	ToDate int64 `json:"toDate"`
+}
+
+// CaseUpdateResponse is the output-object for updating an existing case
+type CaseUpdateResponse struct {
+	Case Case `json:"case"`
+}
+
+// CaseUploadRequest is the input-object for uploading an evidence to the case
+type CaseUploadRequest struct {
+	// ID of the case to upload
+	ID string `json:"id"`
+
+	// Name of the item to upload
 	Name string `json:"name"`
 }
 
-// GreetResponse is the response object containing a person's greeting.
-type GreetResponse struct {
-	// Greeting is a nice message welcoming somebody.
-	Greeting string `json:"greeting"`
+// FileDeleteRequest is the input-object for deleting a file
+type FileDeleteRequest struct {
+	// ID of the file to delete
+	ID string `json:"id"`
+
+	// CaseID of the case where the file to delete belongs
+	CaseID string `json:"caseID"`
+}
+
+// FileDeleteResponse is the output-object for deleting a file
+type FileDeleteResponse struct {
+}
+
+// FileNewRequest is the input-object for creating a new file
+type FileNewRequest struct {
+	// CaseID of the case to upload the file
+	CaseID string `json:"caseID"`
+
+	// Name of the file
+	Name string `json:"name"`
+
+	// Description of the file
+	Description string `json:"description"`
+
+	// Mime is the mime-type of the file
+	Mime string `json:"mime"`
+
+	// Data of the file (base64 encoded)
+	Data string `json:"data"`
+}
+
+// FileNewResponse is the output-object for creating a new file
+type FileNewResponse struct {
+	File File `json:"file"`
+}
+
+// FileUpdateRequest is the input-object for updating a files information
+type FileUpdateRequest struct {
+	// ID of the file to update
+	ID string `json:"id"`
+
+	// CaseID of the case where the file to update belongs
+	CaseID string `json:"caseID"`
+
+	// Description of the file
+	Description string `json:"description"`
+}
+
+// FileUpdateResponse is the output-object for updating a files information
+type FileUpdateResponse struct {
+	File File `json:"file"`
+}
+
+// ProcessAbortRequest is the input-object for aborting a processing-job
+type ProcessAbortRequest struct {
+	// ID of the processing-job to abort
+	ID string `json:"id"`
+
+	// CaseID of the case the processing-job belongs to
+	CaseID string `json:"caseID"`
+}
+
+// ProcessAbortResponse is the output-object for aborting a processing-job
+type ProcessAbortResponse struct {
+	Aborted Process `json:"aborted"`
+}
+
+// ProcessJobsRequest is the input-object for getting all processing-jobs for a
+// case
+type ProcessJobsRequest struct {
+	// CaseID of the case to get the processing-jobs for
+	CaseID string `json:"caseID"`
+}
+
+// ProcessJobsResponse is the output-object for getting all processing-jobs for a
+// case
+type ProcessJobsResponse struct {
+	Processes []Process `json:"processes"`
+}
+
+// ProcessPauseRequest is the input-object for pausing a processing-job
+type ProcessPauseRequest struct {
+	// ID of the processing-job to pause
+	ID string `json:"id"`
+
+	// CaseID of the case the processing-job belongs to
+	CaseID string `json:"caseID"`
+}
+
+// ProcessPauseResponse is the output-object for pausing a processing-job
+type ProcessPauseResponse struct {
+	Paused Process `json:"paused"`
+}
+
+// ProcessStartRequest is the input-object for starting a processing-job
+type ProcessStartRequest struct {
+	// CaseID of the case to start the processing for
+	CaseID string `json:"caseID"`
+
+	// FileIDs of the files to process
+	FileIDs []string `json:"fileIDs"`
+}
+
+// ProcessStartResponse is the output-object for starting a processing-job
+type ProcessStartResponse struct {
+	Started Process `json:"started"`
 }
