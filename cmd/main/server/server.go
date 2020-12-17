@@ -41,7 +41,9 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	})
 
 	// Register the services
-	api.RegisterService(srv.router, &services.Service{})
+	api.RegisterCaseService(srv.router, &services.CaseService{})
+	api.RegisterFileService(srv.router, &services.FileService{})
+	api.RegisterProcessService(srv.router, &services.ProcessService{})
 
 	return nil
 }
