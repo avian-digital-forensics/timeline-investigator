@@ -480,7 +480,7 @@ type CaseNewRequest struct {
 
 // CaseNewResponse is the output-object for creating a new case
 type CaseNewResponse struct {
-	Case Case `json:"case"`
+	New Case `json:"new"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
@@ -501,7 +501,7 @@ type CaseUpdateRequest struct {
 
 // CaseUpdateResponse is the output-object for updating an existing case
 type CaseUpdateResponse struct {
-	Case Case `json:"case"`
+	Updated Case `json:"updated"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
@@ -544,7 +544,7 @@ type FileNewRequest struct {
 
 // FileNewResponse is the output-object for creating a new file
 type FileNewResponse struct {
-	File File `json:"file"`
+	New File `json:"new"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
@@ -561,7 +561,7 @@ type FileUpdateRequest struct {
 
 // FileUpdateResponse is the output-object for updating a files information
 type FileUpdateResponse struct {
-	File File `json:"file"`
+	Updated File `json:"updated"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

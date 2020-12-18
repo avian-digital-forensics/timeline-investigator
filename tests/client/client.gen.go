@@ -825,7 +825,7 @@ type CaseNewRequest struct {
 
 // CaseNewResponse is the output-object for creating a new case
 type CaseNewResponse struct {
-	Case Case `json:"case"`
+	New Case `json:"new"`
 }
 
 // CaseUpdateRequest is the input-object for updating an existing case
@@ -848,7 +848,7 @@ type CaseUpdateRequest struct {
 
 // CaseUpdateResponse is the output-object for updating an existing case
 type CaseUpdateResponse struct {
-	Case Case `json:"case"`
+	Updated Case `json:"updated"`
 }
 
 // CaseUploadRequest is the input-object for uploading an evidence to the case
@@ -893,7 +893,7 @@ type FileNewRequest struct {
 
 // FileNewResponse is the output-object for creating a new file
 type FileNewResponse struct {
-	File File `json:"file"`
+	New File `json:"new"`
 }
 
 // FileUpdateRequest is the input-object for updating a files information
@@ -910,7 +910,7 @@ type FileUpdateRequest struct {
 
 // FileUpdateResponse is the output-object for updating a files information
 type FileUpdateResponse struct {
-	File File `json:"file"`
+	Updated File `json:"updated"`
 }
 
 // ProcessAbortRequest is the input-object for aborting a processing-job

@@ -316,14 +316,14 @@ for creating a new case_
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| case | Case |  |  |
+| new | Case |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "case": {
+    "new": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,
@@ -423,14 +423,14 @@ for updating an existing case_
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| case | Case |  |  |
+| updated | Case |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "case": {
+    "updated": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,
@@ -596,14 +596,14 @@ for creating a new file_
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| file | File |  |  |
+| new | File |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "file": {
+    "new": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,
@@ -670,14 +670,14 @@ for updating a files information_
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| file | File |  |  |
+| updated | File |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "file": {
+    "updated": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,

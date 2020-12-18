@@ -147,7 +147,7 @@ type CaseNewRequest struct {
 // CaseNewResponse is the output-object
 // for creating a new case
 type CaseNewResponse struct {
-	Case Case
+	New Case
 }
 
 // CaseGetRequest is the input-object
@@ -200,7 +200,7 @@ type CaseUpdateRequest struct {
 // CaseUpdateResponse is the output-object
 // for updating an existing case
 type CaseUpdateResponse struct {
-	Case Case
+	Updated Case
 }
 
 // CaseDeleteRequest is the input-object
@@ -311,7 +311,7 @@ type FileNewRequest struct {
 // FileNewResponse is the output-object
 // for creating a new file
 type FileNewResponse struct {
-	File File
+	New File
 }
 
 // FileUpdateRequest is the input-object
@@ -337,7 +337,7 @@ type FileUpdateRequest struct {
 // FileUpdateResponse is the output-object
 // for updating a files information
 type FileUpdateResponse struct {
-	File File
+	Updated File
 }
 
 // FileDeleteRequest is the input-object
