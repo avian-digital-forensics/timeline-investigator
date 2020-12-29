@@ -29,9 +29,23 @@ spec:
             limits:
               memory: "64Mi"
               cpu: "250m"
+          env:
+            - name: AUTH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: auth
+                  key: api-key
+            # TODO: Add secret for tests
+            # - name: TEST_SECRET
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: test
+            #       key: secret
           volumeMounts:
           - name: config-volume
             mountPath: /configs
+          - name: secrets
+            mountPath: /etc/secret-volume
           ports:
             - containerPort: 8080
           livenessProbe:
@@ -48,3 +62,11 @@ spec:
           configMap:
             # ConfigMap specified in 30-config.yml
             name: ti-api
+        - name: secrets
+          projected:
+            sources:
+            - secret:
+                name: auth
+                items:
+                - key: credentials-file
+                  path: auth-service-account.json
