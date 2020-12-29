@@ -8,6 +8,7 @@ import (
 
 	"github.com/avian-digital-forensics/timeline-investigator/configs"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/authentication"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/services"
 
 	"github.com/pacedotdev/oto/otohttp"
@@ -30,6 +31,11 @@ func New(ctx context.Context) *Server {
 
 // Initialize the server
 func (srv *Server) Initialize(cfg *configs.MainAPI) error {
+	auth, err := authentication.New(srv.ctx, cfg.Authentication.CredentialsFile, cfg.Authentication.APIKey)
+	if err != nil {
+		return err
+	}
+
 	// Set the base-path for the oto-server
 	srv.router.Basepath = "/api/"
 	http.Handle("/api/", srv.router)
@@ -44,6 +50,11 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	api.RegisterCaseService(srv.router, &services.CaseService{})
 	api.RegisterFileService(srv.router, &services.FileService{})
 	api.RegisterProcessService(srv.router, &services.ProcessService{})
+
+	// Only create the TestService if it is a test-run
+	if cfg.Test.Run {
+		api.RegisterTestService(srv.router, services.NewTestService(auth, cfg.Test.Secret))
+	}
 
 	return nil
 }
