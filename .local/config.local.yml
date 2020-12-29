@@ -1,6 +1,13 @@
 config:
+  test:
+    run: true
+    secret: ${TEST_SECRET}
   network:
     ip: 0.0.0.0
     port: 8080
     write_timeout: 15
     read_timeout: 15
+  authentication:
+    api_key: ${AUTH_API_KEY} # AIzaSyBwFLX52DkG69GNO7weXVQCXdoU0wAaneY
+    credentials_file: ${AUTH_CREDENTIALS_FILE} 
+  
