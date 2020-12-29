@@ -5,6 +5,7 @@
 | CaseService | CaseService is the API to handle cases |
 | FileService | FileService is the API for handling files |
 | ProcessService | ProcessService is the API - that handles evidence-processing |
+| TestService | TestService is used for testing-purposes |
 
 ## CaseService
 
@@ -971,6 +972,136 @@ for starting a processing-job_
         }
     }
 }
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+## TestService
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |
+| CreateUser | /TestService.CreateUser | CreateUser creates a test-user in Firebase | TestCreateUserRequest | TestCreateUserResponse |
+| DeleteUser | /TestService.DeleteUser | DeleteUser deletes a test-user in Firebase | TestDeleteUserRequest | TestDeleteUserResponse |
+
+#### CreateUser
+
+CreateUser creates a test-user in Firebase
+
+##### Endpoint
+
+POST `/TestService.CreateUser`
+
+##### Request
+
+_TestCreateUserRequest is the input-object
+for creating a test-user_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| name | string | Name of the user to create | Simon |
+| id | string | ID of the user to create | aaef42k4t2 |
+| email | string | Email of the user to create | sja@avian.dk |
+| password | string | Password for the new user | supersecret |
+| secret | string | Secret for using the test-service | supersecret |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"email":"sja@avian.dk","id":"aaef42k4t2","name":"Simon","password":"supersecret","secret":"supersecret"}' http://localhost:8080/api/TestService.CreateUser
+```
+
+```json
+{
+    "email": "sja@avian.dk",
+    "id": "aaef42k4t2",
+    "name": "Simon",
+    "password": "supersecret",
+    "secret": "supersecret"
+}
+```
+
+##### Response
+
+_TestCreateUserResponse is the output-object
+for creating a test-user_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| token | string | Token for the created user | er324235tt.... |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "token": "er324235tt...."
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### DeleteUser
+
+DeleteUser deletes a test-user in Firebase
+
+##### Endpoint
+
+POST `/TestService.DeleteUser`
+
+##### Request
+
+_TestDeleteUserRequest is the input-object
+for deleting a test-user_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the user to delete | aaef42k4t2 |
+| secret | string | Secret for using the test-service | supersecret |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"id":"aaef42k4t2","secret":"supersecret"}' http://localhost:8080/api/TestService.DeleteUser
+```
+
+```json
+{
+    "id": "aaef42k4t2",
+    "secret": "supersecret"
+}
+```
+
+##### Response
+
+_TestDeleteUserResponse is the output-object
+for deleting a test-user_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
 ```
 
 `500 Internal Server Error`
