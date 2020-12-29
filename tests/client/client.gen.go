@@ -704,6 +704,124 @@ func (s *ProcessService) Start(ctx context.Context, r ProcessStartRequest) (*Pro
 	return &response.ProcessStartResponse, nil
 }
 
+// TestService is used for testing-purposes
+type TestService struct {
+	client *Client
+	token  string
+}
+
+// NewTestService makes a new client for accessing TestService services.
+func NewTestService(client *Client, token string) *TestService {
+	return &TestService{
+		client: client,
+		token:  token,
+	}
+}
+
+// CreateUser creates a test-user in Firebase
+func (s *TestService) CreateUser(ctx context.Context, r TestCreateUserRequest) (*TestCreateUserResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.CreateUser: marshal TestCreateUserRequest")
+	}
+	url := s.client.RemoteHost + "TestService.CreateUser"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.CreateUser: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.CreateUser")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		TestCreateUserResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "TestService.CreateUser: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.CreateUser: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("TestService.CreateUser: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.TestCreateUserResponse, nil
+}
+
+// DeleteUser deletes a test-user in Firebase
+func (s *TestService) DeleteUser(ctx context.Context, r TestDeleteUserRequest) (*TestDeleteUserResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.DeleteUser: marshal TestDeleteUserRequest")
+	}
+	url := s.client.RemoteHost + "TestService.DeleteUser"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.DeleteUser: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.DeleteUser")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		TestDeleteUserResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "TestService.DeleteUser: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "TestService.DeleteUser: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("TestService.DeleteUser: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.TestDeleteUserResponse, nil
+}
+
 // Base model for the database
 type Base struct {
 	// ID is the identifier for the object
@@ -966,4 +1084,41 @@ type ProcessStartRequest struct {
 // ProcessStartResponse is the output-object for starting a processing-job
 type ProcessStartResponse struct {
 	Started Process `json:"started"`
+}
+
+// TestCreateUserRequest is the input-object for creating a test-user
+type TestCreateUserRequest struct {
+	// Name of the user to create
+	Name string `json:"name"`
+
+	// ID of the user to create
+	ID string `json:"id"`
+
+	// Email of the user to create
+	Email string `json:"email"`
+
+	// Password for the new user
+	Password string `json:"password"`
+
+	// Secret for using the test-service
+	Secret string `json:"secret,omitempty"`
+}
+
+// TestCreateUserResponse is the output-object for creating a test-user
+type TestCreateUserResponse struct {
+	// Token for the created user
+	Token string `json:"token"`
+}
+
+// TestDeleteUserRequest is the input-object for deleting a test-user
+type TestDeleteUserRequest struct {
+	// ID of the user to delete
+	ID string `json:"id"`
+
+	// Secret for using the test-service
+	Secret string `json:"secret,omitempty"`
+}
+
+// TestDeleteUserResponse is the output-object for deleting a test-user
+type TestDeleteUserResponse struct {
 }

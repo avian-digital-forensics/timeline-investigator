@@ -70,6 +70,21 @@ type ProcessService interface {
 	Authenticate(*http.Request) context.Context
 }
 
+// TestService is used for testing-purposes
+type TestService interface {
+	// CreateUser creates a test-user in Firebase
+	CreateUser(TestCreateUserRequest) TestCreateUserResponse
+
+	// DeleteUser deletes a test-user in Firebase
+	DeleteUser(TestDeleteUserRequest) TestDeleteUserResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
+}
+
 // Case is an object to hold
 // data for a specific investigation
 type Case struct {
@@ -469,3 +484,59 @@ type Base struct {
 	// example: 0
 	DeletedAt int64
 }
+
+// TestCreateUserRequest is the input-object
+// for creating a test-user
+type TestCreateUserRequest struct {
+	// Name of the user to create
+	//
+	// example: "Simon"
+	Name string
+
+	// ID of the user to create
+	//
+	// example: "aaef42k4t2"
+	ID string
+
+	// Email of the user to create
+	//
+	// example: "sja@avian.dk"
+	Email string
+
+	// Password for the new user
+	//
+	// example: "supersecret"
+	Password string
+
+	// Secret for using the test-service
+	//
+	// example: "supersecret"
+	Secret string
+}
+
+// TestCreateUserResponse is the output-object
+// for creating a test-user
+type TestCreateUserResponse struct {
+	// Token for the created user
+	//
+	// example: "er324235tt...."
+	Token string
+}
+
+// TestDeleteUserRequest is the input-object
+// for deleting a test-user
+type TestDeleteUserRequest struct {
+	// ID of the user to delete
+	//
+	// example: "aaef42k4t2"
+	ID string
+
+	// Secret for using the test-service
+	//
+	// example: "supersecret"
+	Secret string
+}
+
+// TestDeleteUserResponse is the output-object
+// for deleting a test-user
+type TestDeleteUserResponse struct{}

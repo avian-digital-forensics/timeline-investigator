@@ -52,6 +52,16 @@ type ProcessService interface {
 	Start(context.Context, ProcessStartRequest) (*ProcessStartResponse, error)
 }
 
+// TestService is used for testing-purposes
+type TestService interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
+	// CreateUser creates a test-user in Firebase
+	CreateUser(context.Context, TestCreateUserRequest) (*TestCreateUserResponse, error)
+	// DeleteUser deletes a test-user in Firebase
+	DeleteUser(context.Context, TestDeleteUserRequest) (*TestDeleteUserResponse, error)
+}
+
 type caseServiceServer struct {
 	server      *otohttp.Server
 	caseService CaseService
@@ -373,6 +383,59 @@ func (s *processServiceServer) handleStart(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+type testServiceServer struct {
+	server      *otohttp.Server
+	testService TestService
+	test        bool
+}
+
+// Register adds the TestService to the otohttp.Server.
+func RegisterTestService(server *otohttp.Server, testService TestService) {
+	handler := &testServiceServer{
+		server:      server,
+		testService: testService,
+	}
+
+	server.Register("TestService", "CreateUser", handler.handleCreateUser)
+	server.Register("TestService", "DeleteUser", handler.handleDeleteUser)
+}
+
+func (s *testServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+	var request TestCreateUserRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx := r.Context()
+	response, err := s.testService.CreateUser(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *testServiceServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	var request TestDeleteUserRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx := r.Context()
+	response, err := s.testService.DeleteUser(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
 // Base model for the database
 type Base struct {
 	// ID is the identifier for the object
@@ -622,6 +685,42 @@ type ProcessStartRequest struct {
 // ProcessStartResponse is the output-object for starting a processing-job
 type ProcessStartResponse struct {
 	Started Process `json:"started"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// TestCreateUserRequest is the input-object for creating a test-user
+type TestCreateUserRequest struct {
+	// Name of the user to create
+	Name string `json:"name"`
+	// ID of the user to create
+	ID string `json:"id"`
+	// Email of the user to create
+	Email string `json:"email"`
+	// Password for the new user
+	Password string `json:"password"`
+	// Secret for using the test-service
+	Secret string `json:"secret,omitempty"`
+}
+
+// TestCreateUserResponse is the output-object for creating a test-user
+type TestCreateUserResponse struct {
+	// Token for the created user
+	Token string `json:"token"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// TestDeleteUserRequest is the input-object for deleting a test-user
+type TestDeleteUserRequest struct {
+	// ID of the user to delete
+	ID string `json:"id"`
+	// Secret for using the test-service
+	Secret string `json:"secret,omitempty"`
+}
+
+// TestDeleteUserResponse is the output-object for deleting a test-user
+type TestDeleteUserResponse struct {
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
