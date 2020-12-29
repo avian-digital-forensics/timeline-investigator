@@ -13,8 +13,11 @@ spec:
   rules:
   - http:
       paths:
-      - path: /api/
+      - path: /api/*
         backend:
           serviceName: ti-api
           servicePort: 80
-
+      - path: /test
+        backend:
+          serviceName: test-console
+          servicePort: 80

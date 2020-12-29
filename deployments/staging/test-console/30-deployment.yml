@@ -1,26 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ti-api
+  name: test-console
   namespace: staging
   labels:
-    app: ti-api
+    app: test-console
     env: staging
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ti-api
+      app: test-console
   template:
     metadata:
       labels:
-        app: ti-api
+        app: test-console
         env: staging
     spec:
       containers:
-        - name: ti-api
-          # subsequent releases will use image version staging-{PIPELINE_ID}
-          image: eu.gcr.io/timeline-investigator/ti-api:staging-latest
+        - name: test-console
+          image: eu.gcr.io/timeline-investigator/test-console:staging-latest
           imagePullPolicy: Always
           resources:
             requests:
@@ -29,9 +28,6 @@ spec:
             limits:
               memory: "64Mi"
               cpu: "250m"
-          volumeMounts:
-          - name: config-volume
-            mountPath: /configs
           ports:
             - containerPort: 8080
           livenessProbe:
@@ -43,8 +39,3 @@ spec:
                 value: Awesome
             initialDelaySeconds: 3
             periodSeconds: 3
-      volumes:
-        - name: config-volume
-          configMap:
-            # ConfigMap specified in 30-config.yml
-            name: ti-api
