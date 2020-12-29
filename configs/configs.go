@@ -15,8 +15,10 @@ type Config struct {
 
 // MainAPI holds the specified configuration for the main api
 type MainAPI struct {
-	Network *NetworkConfig `yaml:"network"`
-	DB      *DBConfig      `yaml:"db"`
+	Test           *TestConfig    `yaml:"test"`
+	Network        *NetworkConfig `yaml:"network"`
+	DB             *DBConfig      `yaml:"db"`
+	Authentication *AuthConfig    `yaml:"authentication"`
 }
 
 // NetworkConfig has the http-configuration
@@ -32,6 +34,19 @@ type NetworkConfig struct {
 // DBConfig holds information for the DB
 type DBConfig struct {
 	URLs []string `yaml:"urls"`
+}
+
+// AuthConfig holds information for accessing
+// the firebase authentication-service
+type AuthConfig struct {
+	CredentialsFile string `yaml:"credentials_file" envconfig:"AUTH_CREDENTIALS_FILE"`
+	APIKey          string `yaml:"api_key" envconfig:"AUTH_API_KEY"`
+}
+
+// TestConfig holds the settings for testing the TI-API
+type TestConfig struct {
+	Run    bool   `yaml:"run"`
+	Secret string `yaml:"secret" envconfig:"TEST_SECRET"`
 }
 
 func readYAML(path string, cfg *Config) error {
