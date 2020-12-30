@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Build image and test environment
           command: |
-            echo ${AUTH_CREDENTIALS} >> ${AUTH_CREDENTIALS_FILE}
+            echo `echo ${AUTH_CREDENTIALS} | base64 -d` > ${AUTH_CREDENTIALS_FILE}
             cd .local
             docker-compose build
 
