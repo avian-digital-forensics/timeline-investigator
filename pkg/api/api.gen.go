@@ -5,9 +5,9 @@ package api
 import (
 	"github.com/pacedotdev/oto/otohttp"
 
-	http "net/http"
-
 	context "context"
+
+	http "net/http"
 )
 
 // CaseService is the API to handle cases
@@ -54,8 +54,6 @@ type ProcessService interface {
 
 // TestService is used for testing-purposes
 type TestService interface {
-	// Authenticate is a middleware in the http-handler
-	Authenticate(context.Context, *http.Request) (context.Context, error)
 	// CreateUser creates a test-user in Firebase
 	CreateUser(context.Context, TestCreateUserRequest) (*TestCreateUserResponse, error)
 	// DeleteUser deletes a test-user in Firebase
@@ -395,7 +393,6 @@ func RegisterTestService(server *otohttp.Server, testService TestService) {
 		server:      server,
 		testService: testService,
 	}
-
 	server.Register("TestService", "CreateUser", handler.handleCreateUser)
 	server.Register("TestService", "DeleteUser", handler.handleDeleteUser)
 }

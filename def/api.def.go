@@ -77,12 +77,6 @@ type TestService interface {
 
 	// DeleteUser deletes a test-user in Firebase
 	DeleteUser(TestDeleteUserRequest) TestDeleteUserResponse
-
-	// Authenticate is a middleware
-	// in the http-handler
-	//
-	// NOTE : Only for Go-servers
-	Authenticate(*http.Request) context.Context
 }
 
 // Case is an object to hold
