@@ -7,6 +7,9 @@ config:
     port: 8080
     write_timeout: 15
     read_timeout: 15
+  db:
+    urls:
+      - http://elasticsearch:9200
   authentication:
     api_key: ${AUTH_API_KEY}
     credentials_file: ${AUTH_CREDENTIALS_FILE}

@@ -6,15 +6,17 @@ import (
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/datastore"
 )
 
 // CaseService handles cases
 type CaseService struct {
+	db datastore.Service
 }
 
 // NewCaseService creates a new case-service
-func NewCaseService() *CaseService {
-	return &CaseService{}
+func NewCaseService(db datastore.Service) *CaseService {
+	return &CaseService{db: db}
 }
 
 // New creates a new case

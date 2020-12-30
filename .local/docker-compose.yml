@@ -6,10 +6,13 @@ services:
       dockerfile: Dockerfile
     image: timeline-investigator:local
     container_name: ti-api
+    depends_on: 
+      - elasticsearch
     environment:
       - AUTH_CREDENTIALS=${AUTH_CREDENTIALS}
       - AUTH_CREDENTIALS_FILE=${AUTH_CREDENTIALS_FILE}
       - AUTH_API_KEY=${AUTH_API_KEY}
+      - TEST_SECRET=super-secret
     ports:
       - "8080:8080"
     command: |
@@ -31,7 +34,8 @@ services:
     tty: true    
     environment:
       - TEST_URL=http://ti-api:8080/api/
-    entrypoint: go test ./tests
+      - TEST_SECRET=super-secret
+    entrypoint: go test ./tests -v
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
