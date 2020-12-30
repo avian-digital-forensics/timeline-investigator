@@ -7,13 +7,16 @@ services:
     image: timeline-investigator:local
     container_name: ti-api
     environment:
+      - AUTH_CREDENTIALS=${AUTH_CREDENTIALS}
       - AUTH_CREDENTIALS_FILE=${AUTH_CREDENTIALS_FILE}
       - AUTH_API_KEY=${AUTH_API_KEY}
     ports:
       - "8080:8080"
-    volumes:
-      - ${AUTH_CREDENTIALS_FILE}:${AUTH_CREDENTIALS_FILE}
-    entrypoint: ./api --cfg=/configs/config.yml
+    command: |
+      sh -c "
+        echo `echo ${AUTH_CREDENTIALS} | base64 -d` > ${AUTH_CREDENTIALS_FILE}
+        ./api --cfg=/configs/config.yml
+      "
   
   ti-test:
     build:
