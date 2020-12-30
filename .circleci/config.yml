@@ -23,6 +23,7 @@ jobs:
       GCR_CI_REG: https://eu.gcr.io
       CONTAINER_IMAGE_STAGING: eu.gcr.io/timeline-investigator/ti-api:staging
       TEST_URL: http://localhost:8080/api/
+      AUTH_CREDENTIALS_FILE: /tmp/auth-credentials-file.json
       #TEST_RESULTS: /tmp/test-results # path to where test results will be saved
 
     steps:
@@ -32,7 +33,10 @@ jobs:
 
       - run:
           name: Build image and test environment
-          command: cd .local && docker-compose build
+          command: |
+            echo ${AUTH_CREDENTIALS} >> ${AUTH_CREDENTIALS_FILE}
+            cd .local
+            docker-compose build
 
       - run:
           name: Run tests
