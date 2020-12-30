@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/avian-digital-forensics/timeline-investigator/tests/client"
@@ -11,15 +10,11 @@ import (
 	"github.com/matryer/is"
 )
 
-var (
-	URL = os.Getenv("TEST_URL")
-)
-
 // TestCaseNew test the New-method
 func TestCaseNew(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
-	httpClient := client.New(URL)
+	httpClient := client.New(testURL)
 	httpClient.Debug = func(s string) {
 		log.Println(s)
 	}
