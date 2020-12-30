@@ -35,6 +35,7 @@ type svc struct {
 
 // New authentication service
 func New(ctx context.Context, credentialsFile, apiKey string) (Service, error) {
+	return svc{}, nil
 	firebase, err := firebase.NewApp(ctx, nil, option.WithCredentialsFile(credentialsFile))
 	if err != nil {
 		return nil, err
@@ -44,6 +45,8 @@ func New(ctx context.Context, credentialsFile, apiKey string) (Service, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO : Validate the apiKey
 
 	return svc{auth: auth, apiKey: apiKey}, nil
 }
