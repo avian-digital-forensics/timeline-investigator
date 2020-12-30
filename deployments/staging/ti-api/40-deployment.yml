@@ -70,3 +70,4 @@ spec:
                 items:
                 - key: credentials-file
                   path: auth-service-account.json
+                  mode: 511
