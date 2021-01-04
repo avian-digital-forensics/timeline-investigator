@@ -1122,3 +1122,18 @@ type TestDeleteUserRequest struct {
 // TestDeleteUserResponse is the output-object for deleting a test-user
 type TestDeleteUserResponse struct {
 }
+
+// User holds information for a user in the timeline-investigator
+type User struct {
+	DisplayName string `json:"displayName"`
+
+	Email string `json:"email"`
+
+	PhoneNumber string `json:"phoneNumber"`
+
+	PhotoURL string `json:"photoURL"`
+
+	ProviderID string `json:"providerID"`
+
+	UID string `json:"uID"`
+}
