@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -24,8 +25,10 @@ func NewCaseService(db datastore.Service, auth authentication.Service) *CaseServ
 
 // New creates a new case
 func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseNewResponse, error) {
+	log.Println("getting user from context")
 	currentUser := utils.GetUser(ctx)
 
+	log.Println("creating new case")
 	caze := api.Case{
 		CreatorID:     currentUser.UID,
 		Name:          r.Name,
@@ -38,6 +41,8 @@ func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseN
 	if err := s.db.CreateCase(ctx, &caze); err != nil {
 		return nil, err
 	}
+
+	log.Println("returning new case")
 	return &api.CaseNewResponse{New: caze}, nil
 }
 
@@ -81,11 +86,13 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 //
 // NOTE : Only for Go-servers
 func (s *CaseService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
+	log.Println("getting user by token")
 	usr, err := s.auth.GetUserByToken(ctx, utils.GetToken(r))
 	if err != nil {
 		return nil, err
 	}
 
+	log.Println("setting user to context")
 	return utils.SetUser(ctx, api.User{
 		DisplayName: usr.DisplayName,
 		Email:       usr.Email,
