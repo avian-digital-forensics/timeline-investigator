@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  namespace: staging
+  labels:
+    app: elasticsearch
+    env: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+        namespace: staging
+    spec:
+      initContainers:
+      - name: init-sysctl
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+        resources:
+          requests:
+            memory: 32Mi
+        securityContext:
+          privileged: true
+          runAsUser: 1000
+          capabilities:
+            add:
+            - IPC_LOCK
+            - SYS_RESOURCE
+        env:
+        - name: ES_JAVA_OPTS
+          valueFrom:
+              configMapKeyRef:
+                  name: elasticsearch
+                  key: ES_JAVA_OPTS
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /_cluster/health?local=true
+            port: 9200
+          initialDelaySeconds: 5
+        volumeMounts:
+        - name: elasticsearch-config
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          subPath: elasticsearch.yml
+      
+      volumes:
+        - name: elasticsearch-config
+          configMap:
+            name: elasticsearch
+            items:
+              - key: elasticsearch.yml
+                path: elasticsearch.yml
