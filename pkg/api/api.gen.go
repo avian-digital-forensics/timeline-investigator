@@ -5,9 +5,9 @@ package api
 import (
 	"github.com/pacedotdev/oto/otohttp"
 
-	context "context"
-
 	http "net/http"
+
+	context "context"
 )
 
 // CaseService is the API to handle cases
@@ -720,4 +720,14 @@ type TestDeleteUserRequest struct {
 type TestDeleteUserResponse struct {
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
+}
+
+// User holds information for a user in the timeline-investigator
+type User struct {
+	DisplayName string `json:"displayName"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phoneNumber"`
+	PhotoURL    string `json:"photoURL"`
+	ProviderID  string `json:"providerID"`
+	UID         string `json:"uID"`
 }
