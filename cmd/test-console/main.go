@@ -11,8 +11,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/cmd"
+	"github.com/avian-digital-forensics/timeline-investigator/tests/client"
+	"github.com/google/uuid"
 )
 
 const tpl = `
@@ -34,6 +37,7 @@ const tpl = `
 				<div class="col-lg-12 text-center">
 					<h1 class="mt-5">Timeline Investigator</h1>
 					<p class="lead">Test-console</p>
+					<p class="lead">{{ .User.Email }}</p>
 				</div>
 			</div>
 		</div>
@@ -93,6 +97,7 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 	flags := flag.NewFlagSet(args[0], flag.ExitOnError)
 	address := flags.String("address", ":8080", "address to listen on")
 	testURL := flags.String("ti-url", "http://localhost:8000/api/", "URL for testing Timeline Investigator")
+	testSecret := flags.String("test-secret", "super-secret", "Secret for testing Timeline Investigator")
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -103,9 +108,17 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		return err
 	}
 
+	httpClient := client.New(*testURL)
+	testService := client.NewTestService(httpClient, "")
+
 	// Create the page-struct
 	// for displaying data
-	var page struct {
+	type page struct {
+		Token string
+		User  struct {
+			ID    string
+			Email string
+		}
 		Request struct {
 			Endpoint string
 			Body     string
@@ -117,45 +130,115 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		Error string
 	}
 
-	// Set an example-endpoint for placeholder
-	page.Request.Endpoint = "CaseService.New"
+	var pages = make(map[string]*page)
 
 	// Handle the requests @ "/test"
 	http.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		// Return the template immidieatly if it isn't a POST-request
+		var page page
+
+		query := r.URL.Query()
+		user := query.Get("user")
+		if len(user) == 0 {
+			page.Error = "Please specify username in url: /test?user={username}"
+			tmpl.Execute(w, page)
+			return
+		}
+
+		// Create a new test-user if it isn't a POST-request
 		if r.Method != http.MethodPost {
+			// First check if the user already exists in the cookie
+			if cookie, err := r.Cookie(user); err == nil {
+				if savedPage, ok := pages[cookie.Value]; ok {
+					tmpl.Execute(w, savedPage)
+					return
+				}
+			}
+
+			// Generate ID for the new user
+			uid := uuid.New().String()
+
+			request := client.TestCreateUserRequest{
+				Name:     user,
+				ID:       uid,
+				Email:    user + "@" + uid + ".com",
+				Password: uuid.New().String(),
+				Secret:   *testSecret,
+			}
+
+			created, err := testService.CreateUser(ctx, request)
+			if err != nil {
+				page.Error = fmt.Sprintf("Failed to create test-user: %s", err.Error())
+				tmpl.Execute(w, page)
+				return
+			}
+
+			// Set the data to the page
+			page.User.Email = request.Email
+			page.User.ID = uid
+			page.Token = created.Token
+
+			// Create a cookie for the user
+			//r.AddCookie(&http.Cookie{Name: user, Value: uid, Expires: time.Now().AddDate(0, 0, 1)})
+			http.SetCookie(w, &http.Cookie{Name: user, Value: uid, Expires: time.Now().AddDate(0, 0, 1)})
+
+			// Save the page to the hashmap
+			pages[uid] = &page
+
+			// return the template
+			tmpl.Execute(w, page)
+			return
+		}
+
+		cookie, err := r.Cookie(user)
+		if err != nil {
+			page.Error = err.Error()
+			tmpl.Execute(w, page)
+			return
+		}
+		savedPage, ok := pages[cookie.Value]
+		if !ok {
+			page.Error = "No cookie found"
 			tmpl.Execute(w, page)
 			return
 		}
 
 		// Set the request-information to the page (store in-memory)
-		page.Request.Endpoint = r.FormValue("endpoint")
-		page.Request.Body = r.FormValue("body")
+		savedPage.Request.Endpoint = r.FormValue("endpoint")
+		savedPage.Request.Body = r.FormValue("body")
 
 		// Send request to the testURL and return error if it failed
-		resp, err := http.Post(*testURL+page.Request.Endpoint, "application/json", bytes.NewBuffer([]byte(page.Request.Body)))
+		req, err := http.NewRequest(http.MethodPost, *testURL+savedPage.Request.Endpoint, bytes.NewBuffer([]byte(savedPage.Request.Body)))
 		if err != nil {
-			page.Error = fmt.Sprintf("Failed to send request: %s", err.Error())
-			tmpl.Execute(w, page)
+			savedPage.Error = fmt.Sprintf("Failed to create request: %s", err.Error())
+			tmpl.Execute(w, savedPage)
+			return
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", savedPage.Token)
+		resp, err := httpClient.HTTPClient.Do(req)
+		if err != nil {
+			savedPage.Error = fmt.Sprintf("Failed to send request: %s", err.Error())
+			tmpl.Execute(w, savedPage)
 			return
 		}
 		defer resp.Body.Close()
 
 		// Set the status-code to the page (store in-memory)
-		page.Response.StatusCode = resp.StatusCode
+		savedPage.Response.StatusCode = resp.StatusCode
 
 		// Decode the response-body and return the error if it failed
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			page.Error = fmt.Sprintf("Failed to decode response: %s", err.Error())
-			tmpl.Execute(w, page)
+			savedPage.Error = fmt.Sprintf("Failed to decode response: %s", err.Error())
+			tmpl.Execute(w, savedPage)
 			return
 		}
 
-		// Set the response-body to the page (store in-memory)
-		page.Response.Body = string(body)
-		// Return the page
-		tmpl.Execute(w, page)
+		// Set the response-body to the savedPage (store in-memory)
+		savedPage.Response.Body = string(body)
+		// Return the savedPage
+		tmpl.Execute(w, savedPage)
 	})
 
 	// endpoint for for gke-healthchecks
