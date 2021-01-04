@@ -15,11 +15,15 @@ import (
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 )
 
+const (
+	indexCase = "cases"
+)
+
 // Service is the interface for the datastore
 type Service interface {
 	CreateCase(ctx context.Context, caze *api.Case) error
 	UpdateCase(ctx context.Context, caze *api.Case) error
-	GetCases(ctx context.Context) ([]api.Case, error)
+	GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error)
 	GetCase(ctx context.Context, id string) (*api.Case, error)
 	// CreateFile(ctx context.Context, file *api.File) error
 	// CreateProcess(ctx context.Context, process *api.Process) error
@@ -46,40 +50,44 @@ func NewService(elasticURLs ...string) (Service, error) {
 func (s svc) CreateCase(ctx context.Context, caze *api.Case) error {
 	caze.ID = internal.NewID()
 	caze.CreatedAt = time.Now().Unix()
-	return s.save(ctx, "Cases", caze.ID, caze)
+	return s.save(ctx, indexCase, caze.ID, caze)
 }
 
 func (s svc) UpdateCase(ctx context.Context, caze *api.Case) error {
 	caze.UpdatedAt = time.Now().Unix()
-	return s.save(ctx, "Cases", caze.ID, caze)
+	return s.save(ctx, indexCase, caze.ID, caze)
 }
 
-func (s svc) GetCases(ctx context.Context) ([]api.Case, error) {
-	search, err := s.search(ctx, "Cases")
+func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error) {
+	search, err := s.search(ctx, indexCase)
 	if err != nil {
 		return nil, err
 	}
 
-	var Cases []api.Case
+	var cases []api.Case
 	for _, hit := range search.Hits.Hits {
 		source, err := json.Marshal(hit.Source)
 		if err != nil {
 			return nil, err
 		}
 
-		var Case api.Case
-		if err := json.Unmarshal(source, &Case); err != nil {
+		var caze api.Case
+		if err := json.Unmarshal(source, &caze); err != nil {
 			return nil, err
 		}
 
-		Cases = append(Cases, Case)
+		for _, investigator := range caze.Investigators {
+			if investigator == email {
+				cases = append(cases, caze)
+			}
+		}
 	}
 
-	return Cases, nil
+	return cases, nil
 }
 
 func (s svc) GetCase(ctx context.Context, id string) (*api.Case, error) {
-	resp, err := s.searchByID(ctx, "Cases", id)
+	resp, err := s.searchByID(ctx, indexCase, id)
 	if err != nil {
 		return nil, err
 	}
