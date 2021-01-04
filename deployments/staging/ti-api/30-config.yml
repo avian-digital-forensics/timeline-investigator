@@ -7,11 +7,12 @@ metadata:
     app: ti-api
     env: staging
 data:
+  # TODO: Change test-secret to use env-variable
   config.yml: |
     config:
       test:
         run: true
-        secret: ${TEST_SECRET}
+        secret: super-secret
       network:
         ip: 0.0.0.0
         port: 8080
