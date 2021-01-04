@@ -6,27 +6,49 @@ import (
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/authentication"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/datastore"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/utils"
 )
 
 // CaseService handles cases
 type CaseService struct {
-	db datastore.Service
+	db   datastore.Service
+	auth authentication.Service
 }
 
 // NewCaseService creates a new case-service
-func NewCaseService(db datastore.Service) *CaseService {
-	return &CaseService{db: db}
+func NewCaseService(db datastore.Service, auth authentication.Service) *CaseService {
+	return &CaseService{db: db, auth: auth}
 }
 
 // New creates a new case
 func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseNewResponse, error) {
-	return nil, errors.New("Not implemented yet")
+	currentUser := utils.GetUser(ctx)
+
+	caze := api.Case{
+		CreatorID:     currentUser.UID,
+		Name:          r.Name,
+		Description:   r.Description,
+		FromDate:      r.FromDate,
+		ToDate:        r.ToDate,
+		Investigators: []string{currentUser.Email},
+	}
+
+	if err := s.db.CreateCase(ctx, &caze); err != nil {
+		return nil, err
+	}
+	return &api.CaseNewResponse{New: caze}, nil
 }
 
 // Get returns the requested case
 func (s *CaseService) Get(ctx context.Context, r api.CaseGetRequest) (*api.CaseGetResponse, error) {
-	return nil, errors.New("Not implemented yet")
+	caze, err := s.db.GetCase(ctx, r.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.CaseGetResponse{Case: *caze}, nil
 }
 
 // Update updates the specified case
@@ -41,7 +63,17 @@ func (s *CaseService) Delete(ctx context.Context, r api.CaseDeleteRequest) (*api
 
 // List the cases for a specified user
 func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.CaseListResponse, error) {
-	return nil, errors.New("Not implemented yet")
+	user, err := s.auth.GetUserByID(ctx, r.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	cases, err := s.db.GetCasesByEmail(ctx, user.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.CaseListResponse{Cases: cases}, nil
 }
 
 // Authenticate is a middleware
@@ -49,5 +81,17 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 //
 // NOTE : Only for Go-servers
 func (s *CaseService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	return ctx, nil
+	usr, err := s.auth.GetUserByToken(ctx, utils.GetToken(r))
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.SetUser(ctx, api.User{
+		DisplayName: usr.DisplayName,
+		Email:       usr.Email,
+		PhoneNumber: usr.PhoneNumber,
+		PhotoURL:    usr.PhotoURL,
+		ProviderID:  usr.ProviderID,
+		UID:         usr.UID,
+	}), nil
 }
