@@ -24,11 +24,11 @@ spec:
           imagePullPolicy: Always
           resources:
             requests:
+              memory: "16Mi"
+              cpu: "64m"
+            limits:
               memory: "32Mi"
               cpu: "128m"
-            limits:
-              memory: "64Mi"
-              cpu: "250m"
           env:
             - name: AUTH_API_KEY
               valueFrom:
@@ -45,7 +45,9 @@ spec:
           - name: config-volume
             mountPath: /configs
           - name: secrets
-            mountPath: /etc/secret-volume
+            mountPath: /etc/secret-volume/auth-credentials-file.json
+            subPath: auth-credentials-file.json
+            readOnly: true
           ports:
             - containerPort: 8080
           livenessProbe:
@@ -69,5 +71,4 @@ spec:
                 name: auth
                 items:
                 - key: credentials-file
-                  path: auth-service-account.json
-                  mode: 511
+                  path: auth-credentials-file.json
