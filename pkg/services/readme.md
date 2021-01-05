@@ -3,6 +3,7 @@
 | Service | Description |
 | ------- | ----------- |
 | CaseService | CaseService is the API to handle cases |
+| EventService | EventService is the API to handle events |
 | FileService | FileService is the API for handling files |
 | ProcessService | ProcessService is the API - that handles evidence-processing |
 | TestService | TestService is used for testing-purposes |
@@ -472,6 +473,368 @@ for updating an existing case_
                 }
             }
         ],
+        "toDate": 1257894000
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+## EventService
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |
+| Create | /EventService.Create | Create creates a new event | EventCreateRequest | EventCreateResponse |
+| Delete | /EventService.Delete | Delete deletes an existing event | EventDeleteRequest | EventDeleteResponse |
+| Get | /EventService.Get | Get the specified event | EventGetRequest | EventGetResponse |
+| List | /EventService.List | List all events | EventListRequest | EventListResponse |
+| Update | /EventService.Update | Update updates an existing event | EventUpdateRequest | EventUpdateResponse |
+
+#### Create
+
+Create creates a new event
+
+##### Endpoint
+
+POST `/EventService.Create`
+
+##### Request
+
+_EventCreateRequest is the input-object
+for creating an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case to create the event for | 7a1713b0249d477d92f5e10124a59861 |
+| importance | int | Set the importance of the event, defined by a number between 1 - 5. | 3 |
+| description | string | Desription of the event. | This needs investigation. |
+| fromDate | int64 | FromDate is the unix-timestamp of when the event started | 1.1001276e+09 |
+| toDate | int64 | ToDate is the unix-timestamp of when the event finished | 1.257894e+09 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","description":"This needs investigation.","fromDate":1100127600,"importance":3,"toDate":1257894000}' http://localhost:8080/api/EventService.Create
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "description": "This needs investigation.",
+    "fromDate": 1100127600,
+    "importance": 3,
+    "toDate": 1257894000
+}
+```
+
+##### Response
+
+_EventCreateResponse is the output-object
+for creating an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| created | Event |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "created": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "description": "This needs investigation.",
+        "fromDate": 1100127600,
+        "importance": 3,
+        "toDate": 1257894000
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Delete
+
+Delete deletes an existing event
+
+##### Endpoint
+
+POST `/EventService.Delete`
+
+##### Request
+
+_EventDeleteRequest is the input-object
+for deleting an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the event to Delete | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the event | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EventService.Delete
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EventDeleteResponse is the output-object
+for deleting an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Get
+
+Get the specified event
+
+##### Endpoint
+
+POST `/EventService.Get`
+
+##### Request
+
+_EventGetRequest is the input-object
+for getting an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the event to get | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the event | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EventService.Get
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EventGetResponse is the output-object
+for deleting an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| event | Event |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "event": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "description": "This needs investigation.",
+        "fromDate": 1100127600,
+        "importance": 3,
+        "toDate": 1257894000
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### List
+
+List all events
+
+##### Endpoint
+
+POST `/EventService.List`
+
+##### Request
+
+_EventListRequest is the input-object
+for listing all existing events for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID to list the events for | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EventService.List
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EventListResponse is the output-object
+for listing all existing events for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| events | []Event |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "events": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "toDate": 1257894000
+        }
+    ]
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Update
+
+Update updates an existing event
+
+##### Endpoint
+
+POST `/EventService.Update`
+
+##### Request
+
+_EventUpdateRequest is the input-object
+for updating an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the event to update | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the event | 7a1713b0249d477d92f5e10124a59861 |
+| importance | int | Set the importance of the event, defined by a number between 1 - 5. | 3 |
+| description | string | Desription of the event. | This needs investigation. |
+| fromDate | int64 | FromDate is the unix-timestamp of when the event started | 1.1001276e+09 |
+| toDate | int64 | ToDate is the unix-timestamp of when the event finished | 1.257894e+09 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","description":"This needs investigation.","fromDate":1100127600,"id":"7a1713b0249d477d92f5e10124a59861","importance":3,"toDate":1257894000}' http://localhost:8080/api/EventService.Update
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "description": "This needs investigation.",
+    "fromDate": 1100127600,
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "importance": 3,
+    "toDate": 1257894000
+}
+```
+
+##### Response
+
+_EventUpdateResponse is the output-object
+for updating an existing event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| updated | Event |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "updated": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "description": "This needs investigation.",
+        "fromDate": 1100127600,
+        "importance": 3,
         "toDate": 1257894000
     }
 }

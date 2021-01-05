@@ -312,6 +312,280 @@ func (s *CaseService) Update(ctx context.Context, r CaseUpdateRequest) (*CaseUpd
 	return &response.CaseUpdateResponse, nil
 }
 
+// EventService is the API to handle events
+type EventService struct {
+	client *Client
+	token  string
+}
+
+// NewEventService makes a new client for accessing EventService services.
+func NewEventService(client *Client, token string) *EventService {
+	return &EventService{
+		client: client,
+		token:  token,
+	}
+}
+
+// Create creates a new event
+func (s *EventService) Create(ctx context.Context, r EventCreateRequest) (*EventCreateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Create: marshal EventCreateRequest")
+	}
+	url := s.client.RemoteHost + "EventService.Create"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Create: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Create")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EventCreateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.Create: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Create: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.Create: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EventCreateResponse, nil
+}
+
+// Delete deletes an existing event
+func (s *EventService) Delete(ctx context.Context, r EventDeleteRequest) (*EventDeleteResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Delete: marshal EventDeleteRequest")
+	}
+	url := s.client.RemoteHost + "EventService.Delete"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Delete: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Delete")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EventDeleteResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.Delete: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Delete: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EventDeleteResponse, nil
+}
+
+// Get the specified event
+func (s *EventService) Get(ctx context.Context, r EventGetRequest) (*EventGetResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Get: marshal EventGetRequest")
+	}
+	url := s.client.RemoteHost + "EventService.Get"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Get: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Get")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EventGetResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.Get: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Get: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.Get: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EventGetResponse, nil
+}
+
+// List all events
+func (s *EventService) List(ctx context.Context, r EventListRequest) (*EventListResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.List: marshal EventListRequest")
+	}
+	url := s.client.RemoteHost + "EventService.List"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.List: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.List")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EventListResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.List: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.List: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.List: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EventListResponse, nil
+}
+
+// Update updates an existing event
+func (s *EventService) Update(ctx context.Context, r EventUpdateRequest) (*EventUpdateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Update: marshal EventUpdateRequest")
+	}
+	url := s.client.RemoteHost + "EventService.Update"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Update: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Update")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EventUpdateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.Update: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.Update: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.Update: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EventUpdateResponse, nil
+}
+
 // FileService is the API for handling files
 type FileService struct {
 	client *Client
@@ -976,6 +1250,111 @@ type CaseUploadRequest struct {
 
 	// Name of the item to upload
 	Name string `json:"name"`
+}
+
+// Event is an important happening that needs investigation.
+type Event struct {
+	Base
+
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+
+	// Desription of the event.
+	Description string `json:"description"`
+
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventCreateRequest is the input-object for creating an event
+type EventCreateRequest struct {
+	// CaseID of the case to create the event for
+	CaseID string `json:"caseID"`
+
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+
+	// Desription of the event.
+	Description string `json:"description"`
+
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventCreateResponse is the output-object for creating an event
+type EventCreateResponse struct {
+	Created Event `json:"created"`
+}
+
+// EventDeleteRequest is the input-object for deleting an existing event
+type EventDeleteRequest struct {
+	// ID of the event to Delete
+	ID string `json:"id"`
+
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+}
+
+// EventDeleteResponse is the output-object for deleting an existing event
+type EventDeleteResponse struct {
+}
+
+// EventGetRequest is the input-object for getting an existing event
+type EventGetRequest struct {
+	// ID of the event to get
+	ID string `json:"id"`
+
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+}
+
+// EventGetResponse is the output-object for deleting an existing event
+type EventGetResponse struct {
+	Event Event `json:"event"`
+}
+
+// EventListRequest is the input-object for listing all existing events for a case
+type EventListRequest struct {
+	// CaseID to list the events for
+	CaseID string `json:"caseID"`
+}
+
+// EventListResponse is the output-object for listing all existing events for a
+// case
+type EventListResponse struct {
+	Events []Event `json:"events"`
+}
+
+// EventUpdateRequest is the input-object for updating an existing event
+type EventUpdateRequest struct {
+	// ID of the event to update
+	ID string `json:"id"`
+
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+
+	// Desription of the event.
+	Description string `json:"description"`
+
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventUpdateResponse is the output-object for updating an existing event
+type EventUpdateResponse struct {
+	Updated Event `json:"updated"`
 }
 
 // FileDeleteRequest is the input-object for deleting a file

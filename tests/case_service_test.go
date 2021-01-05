@@ -11,18 +11,17 @@ import (
 	"github.com/matryer/is"
 )
 
-// TestCaseNew test the New-method
-func TestCaseNew(t *testing.T) {
+// TestCaseService tests the CaseService
+func TestCaseService(t *testing.T) {
 	is := is.New(t)
 	ctx := context.Background()
 	httpClient := client.New(testURL)
 	httpClient.Debug = func(s string) {
 		log.Println(s)
 	}
-	testService := client.NewTestService(httpClient, "")
-	testUser, err := newTestUser(ctx, testService)
+	testUser, err := newTestUser(ctx, client.NewTestService(httpClient, ""))
 	is.NoErr(err)
-	defer testUser.delete(ctx, testService)
+	defer testUser.delete(ctx)
 
 	// Create a new CaseService
 	service := client.NewCaseService(httpClient, testUser.Token)
