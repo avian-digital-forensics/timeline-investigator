@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -25,10 +24,12 @@ func NewCaseService(db datastore.Service, auth authentication.Service) *CaseServ
 
 // New creates a new case
 func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseNewResponse, error) {
-	log.Println("getting user from context")
+	if r.FromDate > r.ToDate {
+		return nil, api.ErrInvalidDates
+	}
+
 	currentUser := utils.GetUser(ctx)
 
-	log.Println("creating new case")
 	caze := api.Case{
 		CreatorID:     currentUser.UID,
 		Name:          r.Name,
@@ -42,7 +43,6 @@ func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseN
 		return nil, err
 	}
 
-	log.Println("returning new case")
 	return &api.CaseNewResponse{New: caze}, nil
 }
 
@@ -51,6 +51,10 @@ func (s *CaseService) Get(ctx context.Context, r api.CaseGetRequest) (*api.CaseG
 	caze, err := s.db.GetCase(ctx, r.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !isAllowed(caze, utils.GetUser(ctx).Email) {
+		return nil, api.ErrNotAllowed
 	}
 
 	return &api.CaseGetResponse{Case: *caze}, nil
@@ -68,12 +72,19 @@ func (s *CaseService) Delete(ctx context.Context, r api.CaseDeleteRequest) (*api
 
 // List the cases for a specified user
 func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.CaseListResponse, error) {
-	user, err := s.auth.GetUserByID(ctx, r.UserID)
-	if err != nil {
-		return nil, err
+	currentUser := utils.GetUser(ctx)
+	if currentUser.UID != r.UserID {
+		// TODO : Check if user is system-admin (?)
+		/*
+			user, err := s.auth.GetUserByID(ctx, r.UserID)
+			if err != nil {
+				return nil, err
+			}
+		*/
+		return nil, api.ErrNotAllowed
 	}
 
-	cases, err := s.db.GetCasesByEmail(ctx, user.Email)
+	cases, err := s.db.GetCasesByEmail(ctx, currentUser.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +97,11 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 //
 // NOTE : Only for Go-servers
 func (s *CaseService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	log.Println("getting user by token")
 	usr, err := s.auth.GetUserByToken(ctx, utils.GetToken(r))
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("setting user to context")
 	return utils.SetUser(ctx, api.User{
 		DisplayName: usr.DisplayName,
 		Email:       usr.Email,
@@ -101,4 +110,21 @@ func (s *CaseService) Authenticate(ctx context.Context, r *http.Request) (contex
 		ProviderID:  usr.ProviderID,
 		UID:         usr.UID,
 	}), nil
+}
+
+func isAllowed(caze *api.Case, email string) bool {
+	for _, investigator := range caze.Investigators {
+		if investigator == email {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *CaseService) isAllowed(ctx context.Context, caseID, email string) (bool, error) {
+	caze, err := s.db.GetCase(ctx, caseID)
+	if err != nil {
+		return false, err
+	}
+	return isAllowed(caze, email), nil
 }
