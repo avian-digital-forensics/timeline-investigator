@@ -13,6 +13,12 @@ var (
 	// ErrCannotPerformOperation is used to return an error
 	// when a operation is not possible to perform for some reason
 	ErrCannotPerformOperation = errors.New("cannot perform this operation")
+
+	// ErrInvalidDates is used when fromDate and toDate is invalid
+	ErrInvalidDates = errors.New("from-date must be before the to-date")
+
+	// ErrInvalidImportance is when the importance for an event is invalid
+	ErrInvalidImportance = errors.New("importance must be a number between 1 - 5")
 )
 
 // Error wraps an error with an internal-error

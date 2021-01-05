@@ -29,6 +29,30 @@ type CaseService interface {
 	Authenticate(*http.Request) context.Context
 }
 
+// EventService is the API to handle events
+type EventService interface {
+	// Create creates a new event
+	Create(EventCreateRequest) EventCreateResponse
+
+	// Update updates an existing event
+	Update(EventUpdateRequest) EventUpdateResponse
+
+	// Delete deletes an existing event
+	Delete(EventDeleteRequest) EventDeleteResponse
+
+	// Get the specified event
+	Get(EventGetRequest) EventGetResponse
+
+	// List all events
+	List(EventListRequest) EventListResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
+}
+
 // FileService is the API for handling files
 type FileService interface {
 	// New uploads a file to the backend
@@ -249,6 +273,170 @@ type CaseUploadRequest struct {
 
 	// Name of the item to upload
 	Name string
+}
+
+// Event is an important happening
+// that needs investigation.
+type Event struct {
+	Base
+
+	// Set the importance of the event,
+	// defined by a number between 1 - 5.
+	//
+	// example: 3
+	Importance int
+
+	// Desription of the event.
+	//
+	// example: "This needs investigation."
+	Description string
+
+	// FromDate is the unix-timestamp of when
+	// the event started
+	//
+	// example: 1100127600
+	FromDate int64
+
+	// ToDate is the unix-timestamp of when
+	// the event finished
+	//
+	// example: 1257894000
+	ToDate int64
+}
+
+// EventCreateRequest is the input-object
+// for creating an event
+type EventCreateRequest struct {
+	// CaseID of the case to create
+	// the event for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// Set the importance of the event,
+	// defined by a number between 1 - 5.
+	//
+	// example: 3
+	Importance int
+
+	// Desription of the event.
+	//
+	// example: "This needs investigation."
+	Description string
+
+	// FromDate is the unix-timestamp of when
+	// the event started
+	//
+	// example: 1100127600
+	FromDate int64
+
+	// ToDate is the unix-timestamp of when
+	// the event finished
+	//
+	// example: 1257894000
+	ToDate int64
+}
+
+// EventCreateResponse is the output-object
+// for creating an event
+type EventCreateResponse struct {
+	Created Event
+}
+
+// EventUpdateRequest is the input-object
+// for updating an existing event
+type EventUpdateRequest struct {
+	// ID of the event to update
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// Set the importance of the event,
+	// defined by a number between 1 - 5.
+	//
+	// example: 3
+	Importance int
+
+	// Desription of the event.
+	//
+	// example: "This needs investigation."
+	Description string
+
+	// FromDate is the unix-timestamp of when
+	// the event started
+	//
+	// example: 1100127600
+	FromDate int64
+
+	// ToDate is the unix-timestamp of when
+	// the event finished
+	//
+	// example: 1257894000
+	ToDate int64
+}
+
+// EventUpdateResponse is the output-object
+// for updating an existing event
+type EventUpdateResponse struct {
+	Updated Event
+}
+
+// EventDeleteRequest is the input-object
+// for deleting an existing event
+type EventDeleteRequest struct {
+	// ID of the event to Delete
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EventDeleteResponse is the output-object
+// for deleting an existing event
+type EventDeleteResponse struct{}
+
+// EventGetRequest is the input-object
+// for getting an existing event
+type EventGetRequest struct {
+	// ID of the event to get
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EventGetResponse is the output-object
+// for deleting an existing event
+type EventGetResponse struct {
+	Event Event
+}
+
+// EventListRequest is the input-object
+// for listing all existing events for a case
+type EventListRequest struct {
+	// CaseID to list the events for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EventListResponse is the output-object
+// for listing all existing events for a case
+type EventListResponse struct {
+	Events []Event
 }
 
 // File holds information

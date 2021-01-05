@@ -26,6 +26,22 @@ type CaseService interface {
 	Update(context.Context, CaseUpdateRequest) (*CaseUpdateResponse, error)
 }
 
+// EventService is the API to handle events
+type EventService interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
+	// Create creates a new event
+	Create(context.Context, EventCreateRequest) (*EventCreateResponse, error)
+	// Delete deletes an existing event
+	Delete(context.Context, EventDeleteRequest) (*EventDeleteResponse, error)
+	// Get the specified event
+	Get(context.Context, EventGetRequest) (*EventGetResponse, error)
+	// List all events
+	List(context.Context, EventListRequest) (*EventListResponse, error)
+	// Update updates an existing event
+	Update(context.Context, EventUpdateRequest) (*EventUpdateResponse, error)
+}
+
 // FileService is the API for handling files
 type FileService interface {
 	// Authenticate is a middleware in the http-handler
@@ -180,6 +196,136 @@ func (s *caseServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response, err := s.caseService.Update(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+type eventServiceServer struct {
+	server       *otohttp.Server
+	eventService EventService
+	test         bool
+}
+
+// Register adds the EventService to the otohttp.Server.
+func RegisterEventService(server *otohttp.Server, eventService EventService) {
+	handler := &eventServiceServer{
+		server:       server,
+		eventService: eventService,
+	}
+
+	server.Register("EventService", "Create", handler.handleCreate)
+	server.Register("EventService", "Delete", handler.handleDelete)
+	server.Register("EventService", "Get", handler.handleGet)
+	server.Register("EventService", "List", handler.handleList)
+	server.Register("EventService", "Update", handler.handleUpdate)
+}
+
+func (s *eventServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var request EventCreateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.Create(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *eventServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+	var request EventDeleteRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.Delete(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *eventServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
+	var request EventGetRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *eventServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
+	var request EventListRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.List(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *eventServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	var request EventUpdateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.Update(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -572,6 +718,106 @@ type CaseUploadRequest struct {
 	ID string `json:"id"`
 	// Name of the item to upload
 	Name string `json:"name"`
+}
+
+// Event is an important happening that needs investigation.
+type Event struct {
+	Base
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+	// Desription of the event.
+	Description string `json:"description"`
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventCreateRequest is the input-object for creating an event
+type EventCreateRequest struct {
+	// CaseID of the case to create the event for
+	CaseID string `json:"caseID"`
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+	// Desription of the event.
+	Description string `json:"description"`
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventCreateResponse is the output-object for creating an event
+type EventCreateResponse struct {
+	Created Event `json:"created"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EventDeleteRequest is the input-object for deleting an existing event
+type EventDeleteRequest struct {
+	// ID of the event to Delete
+	ID string `json:"id"`
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+}
+
+// EventDeleteResponse is the output-object for deleting an existing event
+type EventDeleteResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EventGetRequest is the input-object for getting an existing event
+type EventGetRequest struct {
+	// ID of the event to get
+	ID string `json:"id"`
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+}
+
+// EventGetResponse is the output-object for deleting an existing event
+type EventGetResponse struct {
+	Event Event `json:"event"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EventListRequest is the input-object for listing all existing events for a case
+type EventListRequest struct {
+	// CaseID to list the events for
+	CaseID string `json:"caseID"`
+}
+
+// EventListResponse is the output-object for listing all existing events for a
+// case
+type EventListResponse struct {
+	Events []Event `json:"events"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EventUpdateRequest is the input-object for updating an existing event
+type EventUpdateRequest struct {
+	// ID of the event to update
+	ID string `json:"id"`
+	// CaseID of the event
+	CaseID string `json:"caseID"`
+	// Set the importance of the event, defined by a number between 1 - 5.
+	Importance int `json:"importance"`
+	// Desription of the event.
+	Description string `json:"description"`
+	// FromDate is the unix-timestamp of when the event started
+	FromDate int64 `json:"fromDate"`
+	// ToDate is the unix-timestamp of when the event finished
+	ToDate int64 `json:"toDate"`
+}
+
+// EventUpdateResponse is the output-object for updating an existing event
+type EventUpdateResponse struct {
+	Updated Event `json:"updated"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 // FileDeleteRequest is the input-object for deleting a file
