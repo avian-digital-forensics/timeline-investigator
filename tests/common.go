@@ -18,8 +18,11 @@ var (
 // development to use for testing
 // the system of the Timeline-Investigator
 type testUser struct {
-	ID    string
-	Token string
+	ID          string
+	Token       string
+	caseIDs     []string
+	testService *client.TestService
+	caseService *client.CaseService
 }
 
 // newTestUser creates a test-user
@@ -37,13 +40,32 @@ func newTestUser(ctx context.Context, testService *client.TestService) (*testUse
 		return nil, err
 	}
 
-	return &testUser{ID: uid, Token: created.Token}, nil
+	return &testUser{ID: uid, Token: created.Token, testService: testService}, nil
 }
 
-func (u *testUser) delete(ctx context.Context, testService *client.TestService) error {
+func (u *testUser) delete(ctx context.Context) error {
+	/*
+		for _, caseID := range u.caseIDs {
+			deleteRequest := client.CaseDeleteRequest{ID: caseID}
+			if _, err := u.caseService.Delete(ctx, deleteRequest); err != nil {
+				return err
+			}
+		}
+	*/
+
 	request := client.TestDeleteUserRequest{ID: u.ID, Secret: testSecret}
-	if _, err := testService.DeleteUser(ctx, request); err != nil {
+	if _, err := u.testService.DeleteUser(ctx, request); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (u *testUser) newTestCase(ctx context.Context, caseService *client.CaseService) (*client.Case, error) {
+	resp, err := caseService.New(ctx, client.CaseNewRequest{Name: uuid.New().String()})
+	if err != nil {
+		return nil, err
+	}
+	u.caseIDs = append(u.caseIDs, resp.New.ID)
+	u.caseService = caseService
+	return &resp.New, nil
 }
