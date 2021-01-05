@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	indexCase = "cases"
+	indexCase  = "cases"
+	indexEvent = "events"
 )
 
 // Service is the interface for the datastore
@@ -25,6 +26,11 @@ type Service interface {
 	UpdateCase(ctx context.Context, caze *api.Case) error
 	GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error)
 	GetCase(ctx context.Context, id string) (*api.Case, error)
+	CreateEvent(ctx context.Context, caseID string, event *api.Event) error
+	UpdateEvent(ctx context.Context, caseID string, event *api.Event) error
+	DeleteEvent(ctx context.Context, caseID, eventID string) error
+	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
+	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
 	// CreateFile(ctx context.Context, file *api.File) error
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
@@ -92,12 +98,67 @@ func (s svc) GetCase(ctx context.Context, id string) (*api.Case, error) {
 		return nil, err
 	}
 
-	var Case api.Case
-	if err := json.Unmarshal(resp, &Case); err != nil {
+	var caze api.Case
+	if err := json.Unmarshal(resp, &caze); err != nil {
 		return nil, err
 	}
 
-	return &Case, nil
+	return &caze, nil
+}
+
+func (s svc) CreateEvent(ctx context.Context, caseID string, event *api.Event) error {
+	event.ID = internal.NewID()
+	event.CreatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
+	return s.save(ctx, index, event.ID, event)
+}
+
+func (s svc) UpdateEvent(ctx context.Context, caseID string, event *api.Event) error {
+	event.UpdatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
+	return s.save(ctx, index, event.ID, event)
+}
+
+func (s svc) GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error) {
+	resp, err := s.searchByID(ctx, indexEvent+"-"+caseID, eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	var event api.Event
+	if err := json.Unmarshal(resp, &event); err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+}
+
+func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) {
+	search, err := s.search(ctx, indexEvent+"-"+caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []api.Event
+	for _, hit := range search.Hits.Hits {
+		source, err := json.Marshal(hit.Source)
+		if err != nil {
+			return nil, err
+		}
+
+		var event api.Event
+		if err := json.Unmarshal(source, &event); err != nil {
+			return nil, err
+		}
+
+		events = append(events, event)
+	}
+	return events, nil
+}
+
+func (s svc) DeleteEvent(ctx context.Context, caseID, eventID string) error {
+	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
+	return s.delete(ctx, index, eventID)
 }
 
 func (s svc) CreateFile(ctx context.Context, file *api.File) error {
@@ -141,6 +202,33 @@ func (s svc) save(ctx context.Context, index, id string, data interface{}) error
 		Index:      index,
 		DocumentID: id,
 		Body:       bytes.NewReader(dataJSON),
+		Refresh:    "true",
+	}
+
+	// Perform the request with the client.
+	res, err := req.Do(ctx, s.es)
+	if err != nil {
+		return fmt.Errorf("Cannot get response: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return decodeError(res)
+	}
+
+	// Deserialize the response into a map.
+	var r internal.Response
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		return fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+
+	return nil
+}
+
+func (s svc) delete(ctx context.Context, index, id string) error {
+	req := esapi.DeleteRequest{
+		Index:      index,
+		DocumentID: id,
 		Refresh:    "true",
 	}
 
