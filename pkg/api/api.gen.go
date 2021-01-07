@@ -54,6 +54,20 @@ type FileService interface {
 	Update(context.Context, FileUpdateRequest) (*FileUpdateResponse, error)
 }
 
+// LinkService is a API for creating links between objects
+type LinkService interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
+	// CreateEvent creates a link for an event with multiple objects
+	CreateEvent(context.Context, LinkEventCreateRequest) (*LinkEventCreateResponse, error)
+	// DeleteEvent deletes all links to the specified event
+	DeleteEvent(context.Context, LinkEventDeleteRequest) (*LinkEventDeleteResponse, error)
+	// GetEvent gets an event with its links
+	GetEvent(context.Context, LinkEventCreateRequest) (*LinkEventCreateResponse, error)
+	// UpdateEvent updates links for the specified event
+	UpdateEvent(context.Context, LinkEventUpdateRequest) (*LinkEventUpdateResponse, error)
+}
+
 // ProcessService is the API - that handles evidence-processing
 type ProcessService interface {
 	// Abort aborts the specified processing-job
@@ -410,6 +424,113 @@ func (s *fileServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response, err := s.fileService.Update(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+type linkServiceServer struct {
+	server      *otohttp.Server
+	linkService LinkService
+	test        bool
+}
+
+// Register adds the LinkService to the otohttp.Server.
+func RegisterLinkService(server *otohttp.Server, linkService LinkService) {
+	handler := &linkServiceServer{
+		server:      server,
+		linkService: linkService,
+	}
+
+	server.Register("LinkService", "CreateEvent", handler.handleCreateEvent)
+	server.Register("LinkService", "DeleteEvent", handler.handleDeleteEvent)
+	server.Register("LinkService", "GetEvent", handler.handleGetEvent)
+	server.Register("LinkService", "UpdateEvent", handler.handleUpdateEvent)
+}
+
+func (s *linkServiceServer) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
+	var request LinkEventCreateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.linkService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.linkService.CreateEvent(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *linkServiceServer) handleDeleteEvent(w http.ResponseWriter, r *http.Request) {
+	var request LinkEventDeleteRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.linkService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.linkService.DeleteEvent(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *linkServiceServer) handleGetEvent(w http.ResponseWriter, r *http.Request) {
+	var request LinkEventCreateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.linkService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.linkService.GetEvent(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *linkServiceServer) handleUpdateEvent(w http.ResponseWriter, r *http.Request) {
+	var request LinkEventUpdateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.linkService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.linkService.UpdateEvent(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -868,6 +989,85 @@ type FileUpdateRequest struct {
 // FileUpdateResponse is the output-object for updating a files information
 type FileUpdateResponse struct {
 	Updated File `json:"updated"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkEvent is a link for an event between different objects
+type LinkEvent struct {
+	Base
+	// From which event has been linked
+	From Event `json:"from"`
+	// Events that has been linked
+	Events []Event `json:"events"`
+}
+
+// LinkEventCreateRequest is the input-object for linking objects with an event
+type LinkEventCreateRequest struct {
+	// CaseID for the event
+	CaseID string `json:"caseID"`
+	// FromID is the ID of the event to hold the link
+	FromID string `json:"fromID"`
+	// EventIDs of the events to be linked
+	EventIDs []string `json:"eventIDs"`
+	// Bidirectional means that he link also should be created for the "ToID"
+	Bidirectional bool `json:"bidirectional"`
+}
+
+// LinkEventCreateResponse is the output-object for linking objects with an event
+type LinkEventCreateResponse struct {
+	Linked LinkEvent `json:"linked"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkEventDeleteRequest is the input-object for removing a linked event
+type LinkEventDeleteRequest struct {
+	// CaseID of the case where the event belongs
+	CaseID string `json:"caseID"`
+	// EventID of the Event to get all links for
+	EventID string `json:"eventID"`
+	// Bidirectional - if bidirectional links also should get deleted
+	Bidirectional bool `json:"bidirectional"`
+}
+
+// LinkEventDeleteResponse is the output-object for removing a linked event
+type LinkEventDeleteResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkEventGetRequest is the input-object for getting a linked Event
+type LinkEventGetRequest struct {
+	// CaseID of the case where the event belongs
+	CaseID string `json:"caseID"`
+	// EventID of the Event to get all links for
+	EventID string `json:"eventID"`
+}
+
+// LinkEventGetResponse is the output-object for getting a linked Event
+type LinkEventGetResponse struct {
+	Link LinkEvent `json:"link"`
+}
+
+// LinkEventUpdateRequest is the input-object for updating linked objects with an
+// event
+type LinkEventUpdateRequest struct {
+	// ID of the linked event
+	ID string `json:"id"`
+	// CaseID for the event
+	CaseID string `json:"caseID"`
+	// FromID is the ID of the event to hold the link
+	FromID string `json:"fromID"`
+	// EventAddIDs of the events to be linked
+	EventAddIDs []string `json:"eventAddIDs"`
+	// EventRemoveIDs of the events to be removed
+	EventRemoveIDs []string `json:"eventRemoveIDs"`
+}
+
+// LinkEventUpdateResponse is the output-object for linking objects with an event
+type LinkEventUpdateResponse struct {
+	Updated LinkEvent `json:"updated"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

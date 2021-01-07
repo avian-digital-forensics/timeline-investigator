@@ -53,7 +53,10 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	})
 
 	// Register the services
-	api.RegisterCaseService(srv.router, services.NewCaseService(db, auth))
+	caseService := services.NewCaseService(db, auth)
+	api.RegisterCaseService(srv.router, caseService)
+	api.RegisterEventService(srv.router, services.NewEventService(db, caseService))
+	api.RegisterLinkService(srv.router, services.NewLinkService(db, caseService))
 	api.RegisterFileService(srv.router, &services.FileService{})
 	api.RegisterProcessService(srv.router, &services.ProcessService{})
 

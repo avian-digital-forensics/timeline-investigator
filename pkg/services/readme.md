@@ -5,6 +5,7 @@
 | CaseService | CaseService is the API to handle cases |
 | EventService | EventService is the API to handle events |
 | FileService | FileService is the API for handling files |
+| LinkService | LinkService is a API for creating links between objects |
 | ProcessService | ProcessService is the API - that handles evidence-processing |
 | TestService | TestService is used for testing-purposes |
 
@@ -1054,6 +1055,374 @@ for updating a files information_
         "path": "/filestore/text-file.txt",
         "processed": false,
         "size": 450060
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+## LinkService
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |
+| CreateEvent | /LinkService.CreateEvent | CreateEvent creates a link for an event with multiple objects | LinkEventCreateRequest | LinkEventCreateResponse |
+| DeleteEvent | /LinkService.DeleteEvent | DeleteEvent deletes all links to the specified event | LinkEventDeleteRequest | LinkEventDeleteResponse |
+| GetEvent | /LinkService.GetEvent | GetEvent gets an event with its links | LinkEventCreateRequest | LinkEventCreateResponse |
+| UpdateEvent | /LinkService.UpdateEvent | UpdateEvent updates links for the specified event | LinkEventUpdateRequest | LinkEventUpdateResponse |
+
+#### CreateEvent
+
+CreateEvent creates a link for an event
+with multiple objects
+
+##### Endpoint
+
+POST `/LinkService.CreateEvent`
+
+##### Request
+
+_LinkEventCreateRequest is the input-object
+for linking objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID for the event | 7a1713b0249d477d92f5e10124a59861 |
+| fromID | string | FromID is the ID of the event to hold the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventIDs | []string | EventIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| bidirectional | bool | Bidirectional means that he link also should be created for the "ToID" | true |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"bidirectional":true,"caseID":"7a1713b0249d477d92f5e10124a59861","eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fromID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.CreateEvent
+```
+
+```json
+{
+    "bidirectional": true,
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "eventIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fromID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_LinkEventCreateResponse is the output-object
+for linking objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| linked | LinkEvent |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "linked": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "events": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This needs investigation.",
+                "fromDate": 1100127600,
+                "importance": 3,
+                "toDate": 1257894000
+            }
+        ],
+        "from": {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "toDate": 1257894000
+        }
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### DeleteEvent
+
+DeleteEvent deletes all links to the specified event
+
+##### Endpoint
+
+POST `/LinkService.DeleteEvent`
+
+##### Request
+
+_LinkEventDeleteRequest is the input-object
+for removing a linked event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case where the event belongs | 7a1713b0249d477d92f5e10124a59861 |
+| eventID | string | EventID of the Event to get all links for | 7a1713b0249d477d92f5e10124a59861 |
+| bidirectional | bool | Bidirectional - if bidirectional links also should get deleted | false |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"bidirectional":false,"caseID":"7a1713b0249d477d92f5e10124a59861","eventID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.DeleteEvent
+```
+
+```json
+{
+    "bidirectional": false,
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "eventID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_LinkEventDeleteResponse is the output-object
+for removing a linked event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### GetEvent
+
+GetEvent gets an event with its links
+
+##### Endpoint
+
+POST `/LinkService.GetEvent`
+
+##### Request
+
+_LinkEventCreateRequest is the input-object
+for linking objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID for the event | 7a1713b0249d477d92f5e10124a59861 |
+| fromID | string | FromID is the ID of the event to hold the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventIDs | []string | EventIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| bidirectional | bool | Bidirectional means that he link also should be created for the "ToID" | true |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"bidirectional":true,"caseID":"7a1713b0249d477d92f5e10124a59861","eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fromID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.GetEvent
+```
+
+```json
+{
+    "bidirectional": true,
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "eventIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fromID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_LinkEventCreateResponse is the output-object
+for linking objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| linked | LinkEvent |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "linked": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "events": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This needs investigation.",
+                "fromDate": 1100127600,
+                "importance": 3,
+                "toDate": 1257894000
+            }
+        ],
+        "from": {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "toDate": 1257894000
+        }
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### UpdateEvent
+
+UpdateEvent updates links for the specified event
+
+##### Endpoint
+
+POST `/LinkService.UpdateEvent`
+
+##### Request
+
+_LinkEventUpdateRequest is the input-object
+for updating linked objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the linked event | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID for the event | 7a1713b0249d477d92f5e10124a59861 |
+| fromID | string | FromID is the ID of the event to hold the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventAddIDs | []string | EventAddIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| eventRemoveIDs | []string | EventRemoveIDs of the events to be removed | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","eventAddIDs":["7a1713b0249d477d92f5e10124a59861"],"eventRemoveIDs":["7a1713b0249d477d92f5e10124a59861"],"fromID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.UpdateEvent
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "eventAddIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "eventRemoveIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fromID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_LinkEventUpdateResponse is the output-object
+for linking objects with an event_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| updated | LinkEvent |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "updated": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "events": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This needs investigation.",
+                "fromDate": 1100127600,
+                "importance": 3,
+                "toDate": 1257894000
+            }
+        ],
+        "from": {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "toDate": 1257894000
+        }
     }
 }
 ```

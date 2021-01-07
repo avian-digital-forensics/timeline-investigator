@@ -71,6 +71,29 @@ type FileService interface {
 	Authenticate(*http.Request) context.Context
 }
 
+// LinkService is a API for creating links
+// between objects
+type LinkService interface {
+	// CreateEvent creates a link for an event
+	// with multiple objects
+	CreateEvent(LinkEventCreateRequest) LinkEventCreateResponse
+
+	// GetEvent gets an event with its links
+	GetEvent(LinkEventCreateRequest) LinkEventCreateResponse
+
+	// DeleteEvent deletes all links to the specified event
+	DeleteEvent(LinkEventDeleteRequest) LinkEventDeleteResponse
+
+	// UpdateEvent updates links for the specified event
+	UpdateEvent(LinkEventUpdateRequest) LinkEventUpdateResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
+}
+
 // ProcessService is the API -
 // that handles evidence-processing
 type ProcessService interface {
@@ -555,6 +578,131 @@ type FileDeleteRequest struct {
 // FileDeleteResponse is the output-object
 // for deleting a file
 type FileDeleteResponse struct{}
+
+// LinkEvent is a link for an event between different objects
+type LinkEvent struct {
+	Base
+
+	// From which event has been linked
+	From Event
+
+	// Events that has been linked
+	Events []Event
+}
+
+// LinkEventCreateRequest is the input-object
+// for linking objects with an event
+type LinkEventCreateRequest struct {
+	// CaseID for the event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// FromID is the ID of the event to hold the link
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	FromID string
+
+	// EventIDs of the events to be linked
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EventIDs []string
+
+	// Bidirectional means that he link also should be
+	// created for the "ToID"
+	//
+	// example: true
+	Bidirectional bool
+}
+
+// LinkEventCreateResponse is the output-object
+// for linking objects with an event
+type LinkEventCreateResponse struct {
+	Linked LinkEvent
+}
+
+// LinkEventUpdateRequest is the input-object
+// for updating linked objects with an event
+type LinkEventUpdateRequest struct {
+	// ID of the linked event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID for the event
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// FromID is the ID of the event to hold the link
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	FromID string
+
+	// EventAddIDs of the events to be linked
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EventAddIDs []string
+
+	// EventRemoveIDs of the events to be removed
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EventRemoveIDs []string
+}
+
+// LinkEventUpdateResponse is the output-object
+// for linking objects with an event
+type LinkEventUpdateResponse struct {
+	Updated LinkEvent
+}
+
+// LinkEventGetRequest is the input-object
+// for getting a linked Event
+type LinkEventGetRequest struct {
+	// CaseID of the case where the event
+	// belongs
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// EventID of the Event to get
+	// all links for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	EventID string
+}
+
+// LinkEventGetResponse is the output-object
+// for getting a linked Event
+type LinkEventGetResponse struct {
+	Link LinkEvent
+}
+
+// LinkEventDeleteRequest is the input-object
+// for removing a linked event
+type LinkEventDeleteRequest struct {
+	// CaseID of the case where the event
+	// belongs
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// EventID of the Event to get
+	// all links for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	EventID string
+
+	// Bidirectional - if bidirectional links also
+	// should get deleted
+	//
+	// example: false
+	Bidirectional bool
+}
+
+// LinkEventDeleteResponse is the output-object
+// for removing a linked event
+type LinkEventDeleteResponse struct{}
 
 // Process holds information about
 // a job that processes data to app
