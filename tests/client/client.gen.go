@@ -875,10 +875,10 @@ func (s *LinkService) DeleteEvent(ctx context.Context, r LinkEventDeleteRequest)
 }
 
 // GetEvent gets an event with its links
-func (s *LinkService) GetEvent(ctx context.Context, r LinkEventCreateRequest) (*LinkEventCreateResponse, error) {
+func (s *LinkService) GetEvent(ctx context.Context, r LinkEventGetRequest) (*LinkEventGetResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.GetEvent: marshal LinkEventCreateRequest")
+		return nil, errors.Wrap(err, "LinkService.GetEvent: marshal LinkEventGetRequest")
 	}
 	url := s.client.RemoteHost + "LinkService.GetEvent"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
@@ -897,7 +897,7 @@ func (s *LinkService) GetEvent(ctx context.Context, r LinkEventCreateRequest) (*
 	}
 	defer resp.Body.Close()
 	var response struct {
-		LinkEventCreateResponse
+		LinkEventGetResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
@@ -923,7 +923,7 @@ func (s *LinkService) GetEvent(ctx context.Context, r LinkEventCreateRequest) (*
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.LinkEventCreateResponse, nil
+	return &response.LinkEventGetResponse, nil
 }
 
 // UpdateEvent updates links for the specified event
@@ -1665,14 +1665,11 @@ type LinkEventCreateResponse struct {
 
 // LinkEventDeleteRequest is the input-object for removing a linked event
 type LinkEventDeleteRequest struct {
-	// CaseID of the case where the event belongs
+	// CaseID of the case where the linked event belongs
 	CaseID string `json:"caseID"`
 
-	// EventID of the Event to get all links for
+	// EventID of the Event to delete the link for
 	EventID string `json:"eventID"`
-
-	// Bidirectional - if bidirectional links also should get deleted
-	Bidirectional bool `json:"bidirectional"`
 }
 
 // LinkEventDeleteResponse is the output-object for removing a linked event
@@ -1696,14 +1693,11 @@ type LinkEventGetResponse struct {
 // LinkEventUpdateRequest is the input-object for updating linked objects with an
 // event
 type LinkEventUpdateRequest struct {
-	// ID of the linked event
-	ID string `json:"id"`
+	// EventID is the ID of the event to hold the link
+	EventID string `json:"eventID"`
 
 	// CaseID for the event
 	CaseID string `json:"caseID"`
-
-	// FromID is the ID of the event to hold the link
-	FromID string `json:"fromID"`
 
 	// EventAddIDs of the events to be linked
 	EventAddIDs []string `json:"eventAddIDs"`
