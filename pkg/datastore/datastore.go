@@ -18,6 +18,7 @@ import (
 const (
 	indexCase  = "cases"
 	indexEvent = "events"
+	indexLink  = "links"
 )
 
 // Service is the interface for the datastore
@@ -35,6 +36,10 @@ type Service interface {
 	UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error)
 	DeleteFile(ctx context.Context, caseID, fileID string) error
 	GetFile(ctx context.Context, caseID, fileID string) (*api.File, error)
+	CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
+	UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
+	GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error)
+	DeleteLinkEvent(ctx context.Context, caseID, eventID string) error
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -255,6 +260,36 @@ func (s svc) GetProcess(ctx context.Context, id string) (*api.Process, error) {
 	}
 
 	return &process, nil
+}
+
+func (s svc) CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
+	link.ID = internal.NewID()
+	link.CreatedAt = time.Now().Unix()
+	return s.save(ctx, indexLink+"-"+caseID, link.From.ID, link)
+}
+
+func (s svc) UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
+	link.UpdatedAt = time.Now().Unix()
+	return s.save(ctx, indexLink+"-"+caseID, link.From.ID, link)
+}
+
+func (s svc) GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error) {
+	resp, err := s.searchByID(ctx, indexLink+"-"+caseID, eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	var link api.LinkEvent
+	if err := json.Unmarshal(resp, &link); err != nil {
+		return nil, err
+	}
+
+	return &link, nil
+}
+
+func (s svc) DeleteLinkEvent(ctx context.Context, caseID, eventID string) error {
+	index := fmt.Sprintf("%s-%s", indexLink, caseID)
+	return s.delete(ctx, index, eventID)
 }
 
 func (s svc) save(ctx context.Context, index, id string, data interface{}) error {
