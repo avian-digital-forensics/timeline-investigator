@@ -9,8 +9,8 @@ import (
 // Service handles the methods
 // for the filestore
 type Service interface {
-	Upload(name string, content []byte) (*File, error)
-	Delete(filepath string) error
+	Upload(identifier, name string, content []byte) (*File, error)
+	Delete(identifier, name string) error
 }
 
 type svc struct {
@@ -33,12 +33,12 @@ type File struct {
 	Size int
 }
 
-func (s svc) Upload(name string, content []byte) (*File, error) {
+func (s svc) Upload(identifier, name string, content []byte) (*File, error) {
 	if len(name) == 0 {
 		return nil, errors.New("specify name for file to upload")
 	}
 
-	path := fmt.Sprintf("%s/%s", s.path, name)
+	path := fmt.Sprintf("%s/%s/%s", s.path, identifier, name)
 	file, err := os.Create(path)
 	if err != nil {
 		return nil, err
@@ -54,4 +54,6 @@ func (s svc) Upload(name string, content []byte) (*File, error) {
 	return &File{Name: name, Path: path, Size: size}, nil
 }
 
-func (svc) Delete(filepath string) error { return os.Remove(filepath) }
+func (s svc) Delete(identifier, name string) error {
+	return os.Remove(fmt.Sprintf("%s/%s/%s", s.path, identifier, name))
+}

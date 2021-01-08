@@ -31,7 +31,10 @@ type Service interface {
 	DeleteEvent(ctx context.Context, caseID, eventID string) error
 	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
 	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
-	// CreateFile(ctx context.Context, file *api.File) error
+	CreateFile(ctx context.Context, caseID string, file *api.File) error
+	UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error)
+	DeleteFile(ctx context.Context, caseID, fileID string) error
+	GetFile(ctx context.Context, caseID, fileID string) (*api.File, error)
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -161,10 +164,72 @@ func (s svc) DeleteEvent(ctx context.Context, caseID, eventID string) error {
 	return s.delete(ctx, index, eventID)
 }
 
-func (s svc) CreateFile(ctx context.Context, file *api.File) error {
+func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) error {
+	caze, err := s.GetCase(ctx, caseID)
+	if err != nil {
+		return err
+	}
+
 	file.ID = internal.NewID()
 	file.CreatedAt = time.Now().Unix()
-	return s.save(ctx, "files", file.ID, file)
+
+	caze.Files = append(caze.Files, *file)
+	if err := s.UpdateCase(ctx, caze); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s svc) UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error) {
+	caze, err := s.GetCase(ctx, caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range caze.Files {
+		if file.ID == fileID {
+			file.UpdatedAt = time.Now().Unix()
+			file.Description = description
+			if err := s.UpdateCase(ctx, caze); err != nil {
+				return nil, err
+			}
+			return &file, nil
+		}
+	}
+
+	return nil, errors.New("file not found")
+}
+
+func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
+	caze, err := s.GetCase(ctx, caseID)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range caze.Files {
+		if file.ID == fileID {
+			// TODO: Delete file from case
+			return nil
+		}
+	}
+
+	return errors.New("file not found")
+}
+
+func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, error) {
+	caze, err := s.GetCase(ctx, caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range caze.Files {
+		if file.ID == fileID {
+			return &file, nil
+		}
+	}
+
+	return nil, errors.New("file not found")
 }
 
 func (s svc) CreateProcess(ctx context.Context, process *api.Process) error {

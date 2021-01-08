@@ -10,6 +10,7 @@ import (
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/authentication"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/datastore"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/filestore"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/services"
 
 	"github.com/pacedotdev/oto/otohttp"
@@ -42,6 +43,11 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 		return err
 	}
 
+	filestore, err := filestore.New("/tmp")
+	if err != nil {
+		return err
+	}
+
 	// Set the base-path for the oto-server
 	srv.router.Basepath = "/api/"
 	http.Handle("/api/", srv.router)
@@ -57,7 +63,7 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	api.RegisterCaseService(srv.router, caseService)
 	api.RegisterEventService(srv.router, services.NewEventService(db, caseService))
 	api.RegisterLinkService(srv.router, services.NewLinkService(db, caseService))
-	api.RegisterFileService(srv.router, &services.FileService{})
+	api.RegisterFileService(srv.router, services.NewFileService(db, filestore, caseService))
 	api.RegisterProcessService(srv.router, &services.ProcessService{})
 
 	// Only create the TestService if it is a test-run
