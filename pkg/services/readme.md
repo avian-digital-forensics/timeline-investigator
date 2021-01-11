@@ -857,6 +857,7 @@ for updating an existing event_
 | ------ | -------- | ----------- | ------- | -------- |
 | Delete | /FileService.Delete | Delete deletes the specified file | FileDeleteRequest | FileDeleteResponse |
 | New | /FileService.New | New uploads a file to the backend | FileNewRequest | FileNewResponse |
+| Open | /FileService.Open | Open opens a file | FileOpenRequest | FileOpenResponse |
 | Update | /FileService.Update | Update updates the information for a file | FileUpdateRequest | FileUpdateResponse |
 
 #### Delete
@@ -935,7 +936,7 @@ for creating a new file_
 | caseID | string | CaseID of the case to upload the file | 7a1713b0249d477d92f5e10124a59861 |
 | name | string | Name of the file | text-file.txt |
 | description | string | Description of the file | This file contains evidence |
-| mime | string | Mime is the mime-type of the file | @file/plain |
+| mime | string | Mime is the mime-type of the file (decided by frontend) | @file/plain |
 | data | string | Data of the file (base64 encoded) | iVBORw0KGgoAAAANSUhEUgAAA1IAAAEeCA....... |
 
 ```sh
@@ -982,6 +983,65 @@ for creating a new file_
         "processed": false,
         "size": 450060
     }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Open
+
+Open opens a file
+
+##### Endpoint
+
+POST `/FileService.Open`
+
+##### Request
+
+_FileOpenRequest is the input-object
+for opening a file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the file to open | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to open the file | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/FileService.Open
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_FileOpenResponse is the output-object
+for opening a file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| data | string | Data contains the b64-encoded data for the file | c2FtcGxlCmRhdGEKMQ== |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "data": "c2FtcGxlCmRhdGEKMQ=="
 }
 ```
 

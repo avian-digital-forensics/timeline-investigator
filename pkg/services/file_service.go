@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -40,7 +41,12 @@ func (s *FileService) New(ctx context.Context, r api.FileNewRequest) (*api.FileN
 		return nil, api.ErrNotAllowed
 	}
 
-	f, err := s.store.Upload(r.CaseID, r.Name, []byte(r.Data))
+	data, err := base64.StdEncoding.DecodeString(r.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := s.store.Upload(r.CaseID, r.Name, data)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +65,29 @@ func (s *FileService) New(ctx context.Context, r api.FileNewRequest) (*api.FileN
 	}
 
 	return &api.FileNewResponse{New: file}, nil
+}
+
+// Open opens a file from the backend
+func (s *FileService) Open(ctx context.Context, r api.FileOpenRequest) (*api.FileOpenResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, err
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	content, err := s.store.GetContent(file.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.FileOpenResponse{Data: base64.URLEncoding.EncodeToString(content)}, nil
 }
 
 // Update updates the information for a file
@@ -110,5 +139,5 @@ func (s *FileService) Delete(ctx context.Context, r api.FileDeleteRequest) (*api
 //
 // NOTE : Only for Go-servers
 func (s *FileService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	return ctx, nil
+	return s.caseService.Authenticate(ctx, r)
 }
