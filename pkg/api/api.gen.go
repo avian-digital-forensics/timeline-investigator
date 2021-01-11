@@ -50,6 +50,8 @@ type FileService interface {
 	Delete(context.Context, FileDeleteRequest) (*FileDeleteResponse, error)
 	// New uploads a file to the backend
 	New(context.Context, FileNewRequest) (*FileNewResponse, error)
+	// Open opens a file
+	Open(context.Context, FileOpenRequest) (*FileOpenResponse, error)
 	// Update updates the information for a file
 	Update(context.Context, FileUpdateRequest) (*FileUpdateResponse, error)
 }
@@ -63,7 +65,7 @@ type LinkService interface {
 	// DeleteEvent deletes all links to the specified event
 	DeleteEvent(context.Context, LinkEventDeleteRequest) (*LinkEventDeleteResponse, error)
 	// GetEvent gets an event with its links
-	GetEvent(context.Context, LinkEventCreateRequest) (*LinkEventCreateResponse, error)
+	GetEvent(context.Context, LinkEventGetRequest) (*LinkEventGetResponse, error)
 	// UpdateEvent updates links for the specified event
 	UpdateEvent(context.Context, LinkEventUpdateRequest) (*LinkEventUpdateResponse, error)
 }
@@ -365,6 +367,7 @@ func RegisterFileService(server *otohttp.Server, fileService FileService) {
 
 	server.Register("FileService", "Delete", handler.handleDelete)
 	server.Register("FileService", "New", handler.handleNew)
+	server.Register("FileService", "Open", handler.handleOpen)
 	server.Register("FileService", "Update", handler.handleUpdate)
 }
 
@@ -402,6 +405,28 @@ func (s *fileServiceServer) handleNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, err := s.fileService.New(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleOpen(w http.ResponseWriter, r *http.Request) {
+	var request FileOpenRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.Open(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -498,7 +523,7 @@ func (s *linkServiceServer) handleDeleteEvent(w http.ResponseWriter, r *http.Req
 }
 
 func (s *linkServiceServer) handleGetEvent(w http.ResponseWriter, r *http.Request) {
-	var request LinkEventCreateRequest
+	var request LinkEventGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -963,7 +988,7 @@ type FileNewRequest struct {
 	Name string `json:"name"`
 	// Description of the file
 	Description string `json:"description"`
-	// Mime is the mime-type of the file
+	// Mime is the mime-type of the file (decided by frontend)
 	Mime string `json:"mime"`
 	// Data of the file (base64 encoded)
 	Data string `json:"data"`
@@ -972,6 +997,22 @@ type FileNewRequest struct {
 // FileNewResponse is the output-object for creating a new file
 type FileNewResponse struct {
 	New File `json:"new"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// FileOpenRequest is the input-object for opening a file in a case
+type FileOpenRequest struct {
+	// ID of the file to open
+	ID string `json:"id"`
+	// CaseID of the case to open the file
+	CaseID string `json:"caseID"`
+}
+
+// FileOpenResponse is the output-object for opening a file in a case
+type FileOpenResponse struct {
+	// Data contains the b64-encoded data for the file
+	Data string `json:"data"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
@@ -1023,12 +1064,10 @@ type LinkEventCreateResponse struct {
 
 // LinkEventDeleteRequest is the input-object for removing a linked event
 type LinkEventDeleteRequest struct {
-	// CaseID of the case where the event belongs
+	// CaseID of the case where the linked event belongs
 	CaseID string `json:"caseID"`
-	// EventID of the Event to get all links for
+	// EventID of the Event to delete the link for
 	EventID string `json:"eventID"`
-	// Bidirectional - if bidirectional links also should get deleted
-	Bidirectional bool `json:"bidirectional"`
 }
 
 // LinkEventDeleteResponse is the output-object for removing a linked event
@@ -1048,17 +1087,17 @@ type LinkEventGetRequest struct {
 // LinkEventGetResponse is the output-object for getting a linked Event
 type LinkEventGetResponse struct {
 	Link LinkEvent `json:"link"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 // LinkEventUpdateRequest is the input-object for updating linked objects with an
 // event
 type LinkEventUpdateRequest struct {
-	// ID of the linked event
-	ID string `json:"id"`
+	// EventID is the ID of the event to hold the link
+	EventID string `json:"eventID"`
 	// CaseID for the event
 	CaseID string `json:"caseID"`
-	// FromID is the ID of the event to hold the link
-	FromID string `json:"fromID"`
 	// EventAddIDs of the events to be linked
 	EventAddIDs []string `json:"eventAddIDs"`
 	// EventRemoveIDs of the events to be removed

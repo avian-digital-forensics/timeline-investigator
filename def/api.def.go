@@ -58,6 +58,9 @@ type FileService interface {
 	// New uploads a file to the backend
 	New(FileNewRequest) FileNewResponse
 
+	// Open opens a file
+	Open(FileOpenRequest) FileOpenResponse
+
 	// Update updates the information for a file
 	Update(FileUpdateRequest) FileUpdateResponse
 
@@ -79,7 +82,7 @@ type LinkService interface {
 	CreateEvent(LinkEventCreateRequest) LinkEventCreateResponse
 
 	// GetEvent gets an event with its links
-	GetEvent(LinkEventCreateRequest) LinkEventCreateResponse
+	GetEvent(LinkEventGetRequest) LinkEventGetResponse
 
 	// DeleteEvent deletes all links to the specified event
 	DeleteEvent(LinkEventDeleteRequest) LinkEventDeleteResponse
@@ -518,6 +521,7 @@ type FileNewRequest struct {
 	Description string
 
 	// Mime is the mime-type of the file
+	// (decided by frontend)
 	//
 	// example: "@file/plain"
 	Mime string
@@ -532,6 +536,30 @@ type FileNewRequest struct {
 // for creating a new file
 type FileNewResponse struct {
 	New File
+}
+
+// FileOpenRequest is the input-object
+// for opening a file in a case
+type FileOpenRequest struct {
+	// ID of the file to open
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to open the file
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// FileOpenResponse is the output-object
+// for opening a file in a case
+type FileOpenResponse struct {
+	// Data contains the b64-encoded
+	// data for the file
+	//
+	// example: "c2FtcGxlCmRhdGEKMQ=="
+	Data string
 }
 
 // FileUpdateRequest is the input-object
@@ -624,20 +652,15 @@ type LinkEventCreateResponse struct {
 // LinkEventUpdateRequest is the input-object
 // for updating linked objects with an event
 type LinkEventUpdateRequest struct {
-	// ID of the linked event
+	// EventID is the ID of the event to hold the link
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
-	ID string
+	EventID string
 
 	// CaseID for the event
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
-
-	// FromID is the ID of the event to hold the link
-	//
-	// example: "7a1713b0249d477d92f5e10124a59861"
-	FromID string
 
 	// EventAddIDs of the events to be linked
 	//
@@ -681,23 +704,16 @@ type LinkEventGetResponse struct {
 // LinkEventDeleteRequest is the input-object
 // for removing a linked event
 type LinkEventDeleteRequest struct {
-	// CaseID of the case where the event
+	// CaseID of the case where the linked event
 	// belongs
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
 
-	// EventID of the Event to get
-	// all links for
+	// EventID of the Event to delete the link for
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	EventID string
-
-	// Bidirectional - if bidirectional links also
-	// should get deleted
-	//
-	// example: false
-	Bidirectional bool
 }
 
 // LinkEventDeleteResponse is the output-object

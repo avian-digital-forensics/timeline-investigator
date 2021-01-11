@@ -704,6 +704,58 @@ func (s *FileService) New(ctx context.Context, r FileNewRequest) (*FileNewRespon
 	return &response.FileNewResponse, nil
 }
 
+// Open opens a file
+func (s *FileService) Open(ctx context.Context, r FileOpenRequest) (*FileOpenResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Open: marshal FileOpenRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Open"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Open: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Open")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileOpenResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Open: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Open: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Open: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileOpenResponse, nil
+}
+
 // Update updates the information for a file
 func (s *FileService) Update(ctx context.Context, r FileUpdateRequest) (*FileUpdateResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -1603,7 +1655,7 @@ type FileNewRequest struct {
 	// Description of the file
 	Description string `json:"description"`
 
-	// Mime is the mime-type of the file
+	// Mime is the mime-type of the file (decided by frontend)
 	Mime string `json:"mime"`
 
 	// Data of the file (base64 encoded)
@@ -1613,6 +1665,21 @@ type FileNewRequest struct {
 // FileNewResponse is the output-object for creating a new file
 type FileNewResponse struct {
 	New File `json:"new"`
+}
+
+// FileOpenRequest is the input-object for opening a file in a case
+type FileOpenRequest struct {
+	// ID of the file to open
+	ID string `json:"id"`
+
+	// CaseID of the case to open the file
+	CaseID string `json:"caseID"`
+}
+
+// FileOpenResponse is the output-object for opening a file in a case
+type FileOpenResponse struct {
+	// Data contains the b64-encoded data for the file
+	Data string `json:"data"`
 }
 
 // FileUpdateRequest is the input-object for updating a files information
