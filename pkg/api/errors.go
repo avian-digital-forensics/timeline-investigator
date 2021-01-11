@@ -19,6 +19,9 @@ var (
 
 	// ErrInvalidImportance is when the importance for an event is invalid
 	ErrInvalidImportance = errors.New("importance must be a number between 1 - 5")
+
+	// ErrInvalidEntityType is an error occuring when trying to use a non existing entity-type
+	ErrInvalidEntityType = errors.New("invalid entity-type - list all available entity-types with: EntityService.Types")
 )
 
 // Error wraps an error with an internal-error
