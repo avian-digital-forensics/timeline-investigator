@@ -88,6 +88,22 @@ type LinkService interface {
 	UpdateEvent(context.Context, LinkEventUpdateRequest) (*LinkEventUpdateResponse, error)
 }
 
+// PersonService is the API to handle entities
+type PersonService interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
+	// Create creates a new person
+	Create(context.Context, PersonCreateRequest) (*PersonCreateResponse, error)
+	// Delete deletes an existing person
+	Delete(context.Context, PersonDeleteRequest) (*PersonDeleteResponse, error)
+	// Get the specified person
+	Get(context.Context, PersonGetRequest) (*PersonGetResponse, error)
+	// List all entities for a case
+	List(context.Context, PersonListRequest) (*PersonListResponse, error)
+	// Update updates an existing person
+	Update(context.Context, PersonUpdateRequest) (*PersonUpdateResponse, error)
+}
+
 // ProcessService is the API - that handles evidence-processing
 type ProcessService interface {
 	// Abort aborts the specified processing-job
@@ -727,6 +743,136 @@ func (s *linkServiceServer) handleUpdateEvent(w http.ResponseWriter, r *http.Req
 		return
 	}
 	response, err := s.linkService.UpdateEvent(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+type personServiceServer struct {
+	server        *otohttp.Server
+	personService PersonService
+	test          bool
+}
+
+// Register adds the PersonService to the otohttp.Server.
+func RegisterPersonService(server *otohttp.Server, personService PersonService) {
+	handler := &personServiceServer{
+		server:        server,
+		personService: personService,
+	}
+
+	server.Register("PersonService", "Create", handler.handleCreate)
+	server.Register("PersonService", "Delete", handler.handleDelete)
+	server.Register("PersonService", "Get", handler.handleGet)
+	server.Register("PersonService", "List", handler.handleList)
+	server.Register("PersonService", "Update", handler.handleUpdate)
+}
+
+func (s *personServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var request PersonCreateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.Create(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+	var request PersonDeleteRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.Delete(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
+	var request PersonGetRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
+	var request PersonListRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.List(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	var request PersonUpdateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.Update(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1393,6 +1539,123 @@ type LinkEventUpdateRequest struct {
 // LinkEventUpdateResponse is the output-object for linking objects with an event
 type LinkEventUpdateResponse struct {
 	Updated LinkEvent `json:"updated"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// Person is a human related to a case
+type Person struct {
+	Base
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonCreateRequest is the input-object for creating a person
+type PersonCreateRequest struct {
+	// CaseID of the case where the person should be created
+	CaseID string `json:"caseID"`
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonCreateResponse is the output-object for creating a person
+type PersonCreateResponse struct {
+	Created Person `json:"created"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// PersonDeleteRequest is the input-object for deleting an existing person
+type PersonDeleteRequest struct {
+	// ID of the person to delete
+	ID string `json:"id"`
+	// CaseID of the case where the person should be deleted
+	CaseID string `json:"caseID"`
+}
+
+// PersonDeleteResponse is the output-object for deleting an existing person
+type PersonDeleteResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// PersonGetRequest is the input-object for getting an existing person
+type PersonGetRequest struct {
+	// ID of the person to get
+	ID string `json:"id"`
+	// CaseID of the case where the person should be gotten from
+	CaseID string `json:"caseID"`
+}
+
+// PersonGetResponse is the output-object for getting an existing person
+type PersonGetResponse struct {
+	Person Person `json:"person"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// PersonListRequest is the input-object for listing all persons for a case
+type PersonListRequest struct {
+	// CaseID of the case to listen all persons
+	CaseID string `json:"caseID"`
+}
+
+// PersonListResponse is the output-object for listing all persons for a case
+type PersonListResponse struct {
+	Persons []Person `json:"persons"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// PersonUpdateRequest is the input-object for updating an existing person
+type PersonUpdateRequest struct {
+	// ID of the person to update
+	ID string `json:"id"`
+	// CaseID of the case where the person should be updated
+	CaseID string `json:"caseID"`
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonUpdateResponse is the output-object for updating an existing person
+type PersonUpdateResponse struct {
+	Updated Person `json:"updated"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

@@ -7,6 +7,7 @@
 | EventService | EventService is the API to handle events |
 | FileService | FileService is the API for handling files |
 | LinkService | LinkService is a API for creating links between objects |
+| PersonService | PersonService is the API to handle entities |
 | ProcessService | ProcessService is the API - that handles evidence-processing |
 | TestService | TestService is used for testing-purposes |
 
@@ -1894,6 +1895,392 @@ for linking objects with an event_
             "importance": 3,
             "toDate": 1257894000
         }
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+## PersonService
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |
+| Create | /PersonService.Create | Create creates a new person | PersonCreateRequest | PersonCreateResponse |
+| Delete | /PersonService.Delete | Delete deletes an existing person | PersonDeleteRequest | PersonDeleteResponse |
+| Get | /PersonService.Get | Get the specified person | PersonGetRequest | PersonGetResponse |
+| List | /PersonService.List | List all entities for a case | PersonListRequest | PersonListResponse |
+| Update | /PersonService.Update | Update updates an existing person | PersonUpdateRequest | PersonUpdateResponse |
+
+#### Create
+
+Create creates a new person
+
+##### Endpoint
+
+POST `/PersonService.Create`
+
+##### Request
+
+_PersonCreateRequest is the input-object
+for creating a person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case where the person should be created | 7a1713b0249d477d92f5e10124a59861 |
+| firstName | string | FirstName(s) of the person | Simon |
+| lastName | string | LastName(s) of the person | Jansson |
+| emailAddress | string | EmailAddress of the person | sja@avian.dk |
+| postalAddress | string | PostalAddress of the person | Applebys Plads 7, 1411 Copenhagen, Denmark |
+| workAddress | string | WorkAddress of the person | Applebys Plads 7, 1411 Copenhagen, Denmark |
+| telephoneNo | string | TelephoneNo of the person | +46765550125 |
+| custom | map[string]interface{} | Custom is a free form with key-value pairs specified by the user. |  |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","custom":{},"emailAddress":"sja@avian.dk","firstName":"Simon","lastName":"Jansson","postalAddress":"Applebys Plads 7, 1411 Copenhagen, Denmark","telephoneNo":"+46765550125","workAddress":"Applebys Plads 7, 1411 Copenhagen, Denmark"}' http://localhost:8080/api/PersonService.Create
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "custom": {},
+    "emailAddress": "sja@avian.dk",
+    "firstName": "Simon",
+    "lastName": "Jansson",
+    "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+    "telephoneNo": "+46765550125",
+    "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+}
+```
+
+##### Response
+
+_PersonCreateResponse is the output-object
+for creating a person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| created | Person |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "created": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "emailAddress": "sja@avian.dk",
+        "firstName": "Simon",
+        "lastName": "Jansson",
+        "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+        "telephoneNo": "+46765550125",
+        "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Delete
+
+Delete deletes an existing person
+
+##### Endpoint
+
+POST `/PersonService.Delete`
+
+##### Request
+
+_PersonDeleteRequest is the input-object
+for deleting an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the person to delete | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case where the person should be deleted | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/PersonService.Delete
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_PersonDeleteResponse is the output-object
+for deleting an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Get
+
+Get the specified person
+
+##### Endpoint
+
+POST `/PersonService.Get`
+
+##### Request
+
+_PersonGetRequest is the input-object
+for getting an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the person to get | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case where the person should be gotten from | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/PersonService.Get
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_PersonGetResponse is the output-object
+for getting an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| person | Person |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "person": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "emailAddress": "sja@avian.dk",
+        "firstName": "Simon",
+        "lastName": "Jansson",
+        "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+        "telephoneNo": "+46765550125",
+        "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### List
+
+List all entities for a case
+
+##### Endpoint
+
+POST `/PersonService.List`
+
+##### Request
+
+_PersonListRequest is the input-object
+for listing all persons for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case to listen all persons | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/PersonService.List
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_PersonListResponse is the output-object
+for listing all persons for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| persons | []Person |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "persons": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "custom": {},
+            "emailAddress": "sja@avian.dk",
+            "firstName": "Simon",
+            "lastName": "Jansson",
+            "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+            "telephoneNo": "+46765550125",
+            "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+        }
+    ]
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Update
+
+Update updates an existing person
+
+##### Endpoint
+
+POST `/PersonService.Update`
+
+##### Request
+
+_PersonUpdateRequest is the input-object
+for updating an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the person to update | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case where the person should be updated | 7a1713b0249d477d92f5e10124a59861 |
+| firstName | string | FirstName(s) of the person | Simon |
+| lastName | string | LastName(s) of the person | Jansson |
+| emailAddress | string | EmailAddress of the person | sja@avian.dk |
+| postalAddress | string | PostalAddress of the person | Applebys Plads 7, 1411 Copenhagen, Denmark |
+| workAddress | string | WorkAddress of the person | Applebys Plads 7, 1411 Copenhagen, Denmark |
+| telephoneNo | string | TelephoneNo of the person | +46765550125 |
+| custom | map[string]interface{} | Custom is a free form with key-value pairs specified by the user. |  |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","custom":{},"emailAddress":"sja@avian.dk","firstName":"Simon","id":"7a1713b0249d477d92f5e10124a59861","lastName":"Jansson","postalAddress":"Applebys Plads 7, 1411 Copenhagen, Denmark","telephoneNo":"+46765550125","workAddress":"Applebys Plads 7, 1411 Copenhagen, Denmark"}' http://localhost:8080/api/PersonService.Update
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "custom": {},
+    "emailAddress": "sja@avian.dk",
+    "firstName": "Simon",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "lastName": "Jansson",
+    "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+    "telephoneNo": "+46765550125",
+    "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+}
+```
+
+##### Response
+
+_PersonUpdateResponse is the output-object
+for updating an existing person_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| updated | Person |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "updated": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "emailAddress": "sja@avian.dk",
+        "firstName": "Simon",
+        "lastName": "Jansson",
+        "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+        "telephoneNo": "+46765550125",
+        "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
     }
 }
 ```

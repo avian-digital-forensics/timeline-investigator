@@ -124,6 +124,30 @@ type LinkService interface {
 	Authenticate(*http.Request) context.Context
 }
 
+// PersonService is the API to handle entities
+type PersonService interface {
+	// Create creates a new person
+	Create(PersonCreateRequest) PersonCreateResponse
+
+	// Update updates an existing person
+	Update(PersonUpdateRequest) PersonUpdateResponse
+
+	// Delete deletes an existing person
+	Delete(PersonDeleteRequest) PersonDeleteResponse
+
+	// Get the specified person
+	Get(PersonGetRequest) PersonGetResponse
+
+	// List all entities for a case
+	List(PersonListRequest) PersonListResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
+}
+
 // ProcessService is the API -
 // that handles evidence-processing
 type ProcessService interface {
@@ -925,6 +949,205 @@ type LinkEventDeleteRequest struct {
 // LinkEventDeleteResponse is the output-object
 // for removing a linked event
 type LinkEventDeleteResponse struct{}
+
+// Person is a human related to a case
+type Person struct {
+	Base
+
+	// FirstName(s) of the person
+	//
+	// example: "Simon"
+	FirstName string
+
+	// LastName(s) of the person
+	//
+	// example: "Jansson"
+	LastName string
+
+	// EmailAddress of the person
+	//
+	// example: "sja@avian.dk"
+	EmailAddress string
+
+	// PostalAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	PostalAddress string
+
+	// WorkAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	WorkAddress string
+
+	// TelephoneNo of the person
+	//
+	// example: "+46765550125"
+	TelephoneNo string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// PersonCreateRequest is the input-object
+// for creating a person
+type PersonCreateRequest struct {
+	// CaseID of the case where
+	// the person should be created
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// FirstName(s) of the person
+	//
+	// example: "Simon"
+	FirstName string
+
+	// LastName(s) of the person
+	//
+	// example: "Jansson"
+	LastName string
+
+	// EmailAddress of the person
+	//
+	// example: "sja@avian.dk"
+	EmailAddress string
+
+	// PostalAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	PostalAddress string
+
+	// WorkAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	WorkAddress string
+
+	// TelephoneNo of the person
+	//
+	// example: "+46765550125"
+	TelephoneNo string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// PersonCreateResponse is the output-object
+// for creating a person
+type PersonCreateResponse struct {
+	Created Person
+}
+
+// PersonUpdateRequest is the input-object
+// for updating an existing person
+type PersonUpdateRequest struct {
+	// ID of the person to update
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case where
+	// the person should be updated
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// FirstName(s) of the person
+	//
+	// example: "Simon"
+	FirstName string
+
+	// LastName(s) of the person
+	//
+	// example: "Jansson"
+	LastName string
+
+	// EmailAddress of the person
+	//
+	// example: "sja@avian.dk"
+	EmailAddress string
+
+	// PostalAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	PostalAddress string
+
+	// WorkAddress of the person
+	//
+	// example: "Applebys Plads 7, 1411 Copenhagen, Denmark"
+	WorkAddress string
+
+	// TelephoneNo of the person
+	//
+	// example: "+46765550125"
+	TelephoneNo string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// PersonUpdateResponse is the output-object
+// for updating an existing person
+type PersonUpdateResponse struct {
+	Updated Person
+}
+
+// PersonGetRequest is the input-object
+// for getting an existing person
+type PersonGetRequest struct {
+	// ID of the person to get
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case where
+	// the person should be gotten from
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// PersonGetResponse is the output-object
+// for getting an existing person
+type PersonGetResponse struct {
+	Person Person
+}
+
+// PersonDeleteRequest is the input-object
+// for deleting an existing person
+type PersonDeleteRequest struct {
+	// ID of the person to delete
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case where
+	// the person should be deleted
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// PersonDeleteResponse is the output-object
+// for deleting an existing person
+type PersonDeleteResponse struct{}
+
+// PersonListRequest is the input-object
+// for listing all persons for a case
+type PersonListRequest struct {
+	// CaseID of the case to listen all persons
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// PersonListResponse is the output-object
+// for listing all persons for a case
+type PersonListResponse struct {
+	Persons []Person
+}
 
 // Process holds information about
 // a job that processes data to app

@@ -1356,6 +1356,280 @@ func (s *LinkService) UpdateEvent(ctx context.Context, r LinkEventUpdateRequest)
 	return &response.LinkEventUpdateResponse, nil
 }
 
+// PersonService is the API to handle entities
+type PersonService struct {
+	client *Client
+	token  string
+}
+
+// NewPersonService makes a new client for accessing PersonService services.
+func NewPersonService(client *Client, token string) *PersonService {
+	return &PersonService{
+		client: client,
+		token:  token,
+	}
+}
+
+// Create creates a new person
+func (s *PersonService) Create(ctx context.Context, r PersonCreateRequest) (*PersonCreateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Create: marshal PersonCreateRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.Create"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Create: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Create")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		PersonCreateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.Create: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Create: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.Create: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.PersonCreateResponse, nil
+}
+
+// Delete deletes an existing person
+func (s *PersonService) Delete(ctx context.Context, r PersonDeleteRequest) (*PersonDeleteResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Delete: marshal PersonDeleteRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.Delete"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Delete: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Delete")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		PersonDeleteResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.Delete: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Delete: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.PersonDeleteResponse, nil
+}
+
+// Get the specified person
+func (s *PersonService) Get(ctx context.Context, r PersonGetRequest) (*PersonGetResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Get: marshal PersonGetRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.Get"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Get: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Get")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		PersonGetResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.Get: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Get: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.Get: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.PersonGetResponse, nil
+}
+
+// List all entities for a case
+func (s *PersonService) List(ctx context.Context, r PersonListRequest) (*PersonListResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.List: marshal PersonListRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.List"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.List: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.List")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		PersonListResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.List: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.List: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.List: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.PersonListResponse, nil
+}
+
+// Update updates an existing person
+func (s *PersonService) Update(ctx context.Context, r PersonUpdateRequest) (*PersonUpdateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Update: marshal PersonUpdateRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.Update"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Update: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Update")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		PersonUpdateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.Update: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.Update: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.Update: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.PersonUpdateResponse, nil
+}
+
 // ProcessService is the API - that handles evidence-processing
 type ProcessService struct {
 	client *Client
@@ -2220,6 +2494,137 @@ type LinkEventUpdateRequest struct {
 // LinkEventUpdateResponse is the output-object for linking objects with an event
 type LinkEventUpdateResponse struct {
 	Updated LinkEvent `json:"updated"`
+}
+
+// Person is a human related to a case
+type Person struct {
+	Base
+
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonCreateRequest is the input-object for creating a person
+type PersonCreateRequest struct {
+	// CaseID of the case where the person should be created
+	CaseID string `json:"caseID"`
+
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonCreateResponse is the output-object for creating a person
+type PersonCreateResponse struct {
+	Created Person `json:"created"`
+}
+
+// PersonDeleteRequest is the input-object for deleting an existing person
+type PersonDeleteRequest struct {
+	// ID of the person to delete
+	ID string `json:"id"`
+
+	// CaseID of the case where the person should be deleted
+	CaseID string `json:"caseID"`
+}
+
+// PersonDeleteResponse is the output-object for deleting an existing person
+type PersonDeleteResponse struct {
+}
+
+// PersonGetRequest is the input-object for getting an existing person
+type PersonGetRequest struct {
+	// ID of the person to get
+	ID string `json:"id"`
+
+	// CaseID of the case where the person should be gotten from
+	CaseID string `json:"caseID"`
+}
+
+// PersonGetResponse is the output-object for getting an existing person
+type PersonGetResponse struct {
+	Person Person `json:"person"`
+}
+
+// PersonListRequest is the input-object for listing all persons for a case
+type PersonListRequest struct {
+	// CaseID of the case to listen all persons
+	CaseID string `json:"caseID"`
+}
+
+// PersonListResponse is the output-object for listing all persons for a case
+type PersonListResponse struct {
+	Persons []Person `json:"persons"`
+}
+
+// PersonUpdateRequest is the input-object for updating an existing person
+type PersonUpdateRequest struct {
+	// ID of the person to update
+	ID string `json:"id"`
+
+	// CaseID of the case where the person should be updated
+	CaseID string `json:"caseID"`
+
+	// FirstName(s) of the person
+	FirstName string `json:"firstName"`
+
+	// LastName(s) of the person
+	LastName string `json:"lastName"`
+
+	// EmailAddress of the person
+	EmailAddress string `json:"emailAddress"`
+
+	// PostalAddress of the person
+	PostalAddress string `json:"postalAddress"`
+
+	// WorkAddress of the person
+	WorkAddress string `json:"workAddress"`
+
+	// TelephoneNo of the person
+	TelephoneNo string `json:"telephoneNo"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// PersonUpdateResponse is the output-object for updating an existing person
+type PersonUpdateResponse struct {
+	Updated Person `json:"updated"`
 }
 
 // ProcessAbortRequest is the input-object for aborting a processing-job
