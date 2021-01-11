@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	indexCase  = "cases"
-	indexEvent = "events"
-	indexLink  = "links"
+	indexCase   = "cases"
+	indexEntity = "entities"
+	indexEvent  = "events"
+	indexLink   = "links"
 )
 
 // Service is the interface for the datastore
@@ -32,6 +33,11 @@ type Service interface {
 	DeleteEvent(ctx context.Context, caseID, eventID string) error
 	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
 	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
+	CreateEntity(ctx context.Context, caseID string, entity *api.Entity) error
+	UpdateEntity(ctx context.Context, caseID string, entity *api.Entity) error
+	DeleteEntity(ctx context.Context, caseID, entityID string) error
+	GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error)
+	GetEntities(ctx context.Context, caseID string) ([]api.Entity, error)
 	CreateFile(ctx context.Context, caseID string, file *api.File) error
 	UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error)
 	DeleteFile(ctx context.Context, caseID, fileID string) error
@@ -167,6 +173,61 @@ func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) 
 func (s svc) DeleteEvent(ctx context.Context, caseID, eventID string) error {
 	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
 	return s.delete(ctx, index, eventID)
+}
+
+func (s svc) CreateEntity(ctx context.Context, caseID string, entity *api.Entity) error {
+	entity.ID = internal.NewID()
+	entity.CreatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
+	return s.save(ctx, index, entity.ID, entity)
+}
+
+func (s svc) UpdateEntity(ctx context.Context, caseID string, entity *api.Entity) error {
+	entity.UpdatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
+	return s.save(ctx, index, entity.ID, entity)
+}
+
+func (s svc) GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error) {
+	resp, err := s.searchByID(ctx, indexEntity+"-"+caseID, entityID)
+	if err != nil {
+		return nil, err
+	}
+
+	var entity api.Entity
+	if err := json.Unmarshal(resp, &entity); err != nil {
+		return nil, err
+	}
+
+	return &entity, nil
+}
+
+func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, error) {
+	search, err := s.search(ctx, indexEntity+"-"+caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var entities []api.Entity
+	for _, hit := range search.Hits.Hits {
+		source, err := json.Marshal(hit.Source)
+		if err != nil {
+			return nil, err
+		}
+
+		var entity api.Entity
+		if err := json.Unmarshal(source, &entity); err != nil {
+			return nil, err
+		}
+
+		entities = append(entities, entity)
+	}
+	return entities, nil
+}
+
+func (s svc) DeleteEntity(ctx context.Context, caseID, entityID string) error {
+	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
+	return s.delete(ctx, index, entityID)
 }
 
 func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) error {
