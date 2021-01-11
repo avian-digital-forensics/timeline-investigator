@@ -13,4 +13,5 @@ config:
   authentication:
     api_key: ${AUTH_API_KEY}
     credentials_file: ${AUTH_CREDENTIALS_FILE}
-  
+  filestore:
+    base_path: ./

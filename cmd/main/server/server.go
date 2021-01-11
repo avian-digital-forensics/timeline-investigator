@@ -43,7 +43,7 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 		return err
 	}
 
-	filestore, err := filestore.New("/tmp")
+	filestore, err := filestore.New(cfg.Filestore.BasePath)
 	if err != nil {
 		return err
 	}

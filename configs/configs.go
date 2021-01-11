@@ -15,10 +15,11 @@ type Config struct {
 
 // MainAPI holds the specified configuration for the main api
 type MainAPI struct {
-	Test           *TestConfig    `yaml:"test"`
-	Network        *NetworkConfig `yaml:"network"`
-	DB             *DBConfig      `yaml:"db"`
-	Authentication *AuthConfig    `yaml:"authentication"`
+	Test           *TestConfig      `yaml:"test"`
+	Network        *NetworkConfig   `yaml:"network"`
+	DB             *DBConfig        `yaml:"db"`
+	Authentication *AuthConfig      `yaml:"authentication"`
+	Filestore      *FilestoreConfig `yaml:"filestore"`
 }
 
 // NetworkConfig has the http-configuration
@@ -47,6 +48,11 @@ type AuthConfig struct {
 type TestConfig struct {
 	Run    bool   `yaml:"run"`
 	Secret string `yaml:"secret" envconfig:"TEST_SECRET"`
+}
+
+// FilestoreConfig holds information for the filestore
+type FilestoreConfig struct {
+	BasePath string `yaml:"base_path"`
 }
 
 func readYAML(path string, cfg *Config) error {
