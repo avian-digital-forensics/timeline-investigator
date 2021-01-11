@@ -312,6 +312,332 @@ func (s *CaseService) Update(ctx context.Context, r CaseUpdateRequest) (*CaseUpd
 	return &response.CaseUpdateResponse, nil
 }
 
+// EntityService is the API to handle entities
+type EntityService struct {
+	client *Client
+	token  string
+}
+
+// NewEntityService makes a new client for accessing EntityService services.
+func NewEntityService(client *Client, token string) *EntityService {
+	return &EntityService{
+		client: client,
+		token:  token,
+	}
+}
+
+// Create creates a new entity
+func (s *EntityService) Create(ctx context.Context, r EntityCreateRequest) (*EntityCreateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Create: marshal EntityCreateRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.Create"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Create: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Create")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityCreateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.Create: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Create: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.Create: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityCreateResponse, nil
+}
+
+// Delete deletes an existing entity
+func (s *EntityService) Delete(ctx context.Context, r EntityDeleteRequest) (*EntityDeleteResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Delete: marshal EntityDeleteRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.Delete"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Delete: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Delete")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityDeleteResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.Delete: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Delete: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityDeleteResponse, nil
+}
+
+// Get the specified entity
+func (s *EntityService) Get(ctx context.Context, r EntityGetRequest) (*EntityGetResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Get: marshal EntityGetRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.Get"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Get: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Get")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityGetResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.Get: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Get: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.Get: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityGetResponse, nil
+}
+
+// List all entities
+func (s *EntityService) List(ctx context.Context, r EntityListRequest) (*EntityListResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.List: marshal EntityListRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.List"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.List: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.List")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityListResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.List: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.List: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.List: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityListResponse, nil
+}
+
+// Types returns the existing entity-types
+func (s *EntityService) Types(ctx context.Context, r EntityTypesRequest) (*EntityTypesResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Types: marshal EntityTypesRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.Types"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Types: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Types")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityTypesResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.Types: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Types: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.Types: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityTypesResponse, nil
+}
+
+// Update updates an existing entity
+func (s *EntityService) Update(ctx context.Context, r EntityUpdateRequest) (*EntityUpdateResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Update: marshal EntityUpdateRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.Update"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Update: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Update")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		EntityUpdateResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.Update: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.Update: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.Update: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.EntityUpdateResponse, nil
+}
+
 // EventService is the API to handle events
 type EventService struct {
 	client *Client
@@ -1524,6 +1850,124 @@ type CaseUploadRequest struct {
 
 	// Name of the item to upload
 	Name string `json:"name"`
+}
+
+// Entity is an object that can be of different types. For example, organization or
+// location
+type Entity struct {
+	Base
+
+	// Title of the entity
+	Title string `json:"title"`
+
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+
+	// Type of the entity
+	Type string `json:"type"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityCreateRequest is the input-object for creating an entity
+type EntityCreateRequest struct {
+	// CaseID of the case to create the new entity to
+	CaseID string `json:"caseID"`
+
+	// Title of the entity
+	Title string `json:"title"`
+
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+
+	// Type of the entity
+	Type string `json:"type"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityCreateResponse is the output-object for creating an entity
+type EntityCreateResponse struct {
+	Created Entity `json:"created"`
+}
+
+// EntityDeleteRequest is the input-object for deleting an existing entity
+type EntityDeleteRequest struct {
+	// ID of the entity to delete
+	ID string `json:"id"`
+
+	// CaseID of the case to delete the new entity to
+	CaseID string `json:"caseID"`
+}
+
+// EntityDeleteResponse is the output-object for updating an existing entity
+type EntityDeleteResponse struct {
+}
+
+// EntityGetRequest is the input-object for getting an existing entity
+type EntityGetRequest struct {
+	// ID of the entity to get
+	ID string `json:"id"`
+
+	// CaseID of the case to get the entity for
+	CaseID string `json:"caseID"`
+}
+
+// EntityGetResponse is the output-object for getting an existing entity
+type EntityGetResponse struct {
+	Entity Entity `json:"entity"`
+}
+
+// EntityListRequest is the input-object for deleting an existing entity
+type EntityListRequest struct {
+	// CaseID of the case to list the entities for
+	CaseID string `json:"caseID"`
+}
+
+// EntityListResponse is the output-object for updating an existing entity
+type EntityListResponse struct {
+	Entities []Entity `json:"entities"`
+}
+
+// EntityTypesRequest is the input-object for getting all entity-types
+type EntityTypesRequest struct {
+}
+
+// EntityTypesResponse is the output-object for getting all entity-types
+type EntityTypesResponse struct {
+	// EntityTypes are the existing entity-types in the system
+	EntityTypes []string `json:"entityTypes"`
+}
+
+// EntityUpdateRequest is the input-object for updating an existing entity
+type EntityUpdateRequest struct {
+	// ID of the entity to update
+	ID string `json:"id"`
+
+	// CaseID of the case to update the existing entity to
+	CaseID string `json:"caseID"`
+
+	// Title of the entity
+	Title string `json:"title"`
+
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+
+	// Type of the entity
+	Type string `json:"type"`
+
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityUpdateResponse is the output-object for updating an existing entity
+type EntityUpdateResponse struct {
+	Updated Entity `json:"updated"`
 }
 
 // Event is an important happening that needs investigation.

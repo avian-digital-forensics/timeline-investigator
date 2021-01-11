@@ -29,6 +29,33 @@ type CaseService interface {
 	Authenticate(*http.Request) context.Context
 }
 
+// EntityService is the API to handle entities
+type EntityService interface {
+	// Create creates a new entity
+	Create(EntityCreateRequest) EntityCreateResponse
+
+	// Update updates an existing entity
+	Update(EntityUpdateRequest) EntityUpdateResponse
+
+	// Delete deletes an existing entity
+	Delete(EntityDeleteRequest) EntityDeleteResponse
+
+	// Get the specified entity
+	Get(EntityGetRequest) EntityGetResponse
+
+	// List all entities
+	List(EntityListRequest) EntityListResponse
+
+	// Types returns the existing entity-types
+	Types(EntityTypesRequest) EntityTypesResponse
+
+	// Authenticate is a middleware
+	// in the http-handler
+	//
+	// NOTE : Only for Go-servers
+	Authenticate(*http.Request) context.Context
+}
+
 // EventService is the API to handle events
 type EventService interface {
 	// Create creates a new event
@@ -299,6 +326,185 @@ type CaseUploadRequest struct {
 
 	// Name of the item to upload
 	Name string
+}
+
+// Entity is an object that can be
+// of different types. For example,
+// organization or location
+type Entity struct {
+	Base
+
+	// Title of the entity
+	//
+	// example: "Avian APS"
+	Title string
+
+	// PhotoURL of the entity.
+	// NOTE: can currently be any string,
+	// but in the future have it be uploaded
+	// and served by the file-service with some security
+	//
+	// example: "api.google.com/logo.png"
+	PhotoURL string
+
+	// Type of the entity
+	//
+	// example: "organization"
+	Type string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// EntityCreateRequest is the input-object
+// for creating an entity
+type EntityCreateRequest struct {
+	// CaseID of the case to create
+	// the new entity to
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// Title of the entity
+	//
+	// example: "Avian APS"
+	Title string
+
+	// PhotoURL of the entity.
+	// NOTE: can currently be any string,
+	// but in the future have it be uploaded
+	// and served by the file-service with some security
+	//
+	// example: "api.google.com/logo.png"
+	PhotoURL string
+
+	// Type of the entity
+	//
+	// example: "organization"
+	Type string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// EntityCreateResponse is the output-object
+// for creating an entity
+type EntityCreateResponse struct {
+	Created Entity
+}
+
+// EntityUpdateRequest is the input-object
+// for updating an existing entity
+type EntityUpdateRequest struct {
+	// ID of the entity to update
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to update
+	// the existing entity to
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// Title of the entity
+	//
+	// example: "Avian APS"
+	Title string
+
+	// PhotoURL of the entity.
+	//
+	// NOTE: can currently be any string,
+	// but in the future have it be uploaded
+	// and served by the file-service with some security
+	//
+	// example: "api.google.com/logo.png"
+	PhotoURL string
+
+	// Type of the entity
+	//
+	// example: "organization"
+	Type string
+
+	// Custom is a free form with key-value pairs
+	// specified by the user.
+	Custom map[string]interface{}
+}
+
+// EntityUpdateResponse is the output-object
+// for updating an existing entity
+type EntityUpdateResponse struct {
+	Updated Entity
+}
+
+// EntityGetRequest is the input-object
+// for getting an existing entity
+type EntityGetRequest struct {
+	// ID of the entity to get
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to get the entity for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EntityGetResponse is the output-object
+// for getting an existing entity
+type EntityGetResponse struct {
+	Entity Entity
+}
+
+// EntityDeleteRequest is the input-object
+// for deleting an existing entity
+type EntityDeleteRequest struct {
+	// ID of the entity to delete
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to delete
+	// the new entity to
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EntityDeleteResponse is the output-object
+// for updating an existing entity
+type EntityDeleteResponse struct{}
+
+// EntityListRequest is the input-object
+// for deleting an existing entity
+type EntityListRequest struct {
+	// CaseID of the case to list the entities for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// EntityListResponse is the output-object
+// for updating an existing entity
+type EntityListResponse struct {
+	Entities []Entity
+}
+
+// EntityTypesRequest is the input-object
+// for getting all entity-types
+type EntityTypesRequest struct{}
+
+// EntityTypesResponse is the output-object
+// for getting all entity-types
+type EntityTypesResponse struct {
+	// EntityTypes are the existing
+	// entity-types in the system
+	//
+	// example: ["organization", "location"]
+	EntityTypes []string
 }
 
 // Event is an important happening

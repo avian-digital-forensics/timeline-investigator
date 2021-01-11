@@ -3,6 +3,7 @@
 | Service | Description |
 | ------- | ----------- |
 | CaseService | CaseService is the API to handle cases |
+| EntityService | EntityService is the API to handle entities |
 | EventService | EventService is the API to handle events |
 | FileService | FileService is the API for handling files |
 | LinkService | LinkService is a API for creating links between objects |
@@ -475,6 +476,426 @@ for updating an existing case_
             }
         ],
         "toDate": 1257894000
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+## EntityService
+
+### Methods
+
+| Method | Endpoint | Description | Request | Response |
+| ------ | -------- | ----------- | ------- | -------- |
+| Create | /EntityService.Create | Create creates a new entity | EntityCreateRequest | EntityCreateResponse |
+| Delete | /EntityService.Delete | Delete deletes an existing entity | EntityDeleteRequest | EntityDeleteResponse |
+| Get | /EntityService.Get | Get the specified entity | EntityGetRequest | EntityGetResponse |
+| List | /EntityService.List | List all entities | EntityListRequest | EntityListResponse |
+| Types | /EntityService.Types | Types returns the existing entity-types | EntityTypesRequest | EntityTypesResponse |
+| Update | /EntityService.Update | Update updates an existing entity | EntityUpdateRequest | EntityUpdateResponse |
+
+#### Create
+
+Create creates a new entity
+
+##### Endpoint
+
+POST `/EntityService.Create`
+
+##### Request
+
+_EntityCreateRequest is the input-object
+for creating an entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case to create the new entity to | 7a1713b0249d477d92f5e10124a59861 |
+| title | string | Title of the entity | Avian APS |
+| photoURL | string | PhotoURL of the entity. but in the future have it be uploaded and served by the file-service with some security | api.google.com/logo.png |
+| type | string | Type of the entity | organization |
+| custom | map[string]interface{} | Custom is a free form with key-value pairs specified by the user. |  |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","custom":{},"photoURL":"api.google.com/logo.png","title":"Avian APS","type":"organization"}' http://localhost:8080/api/EntityService.Create
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "custom": {},
+    "photoURL": "api.google.com/logo.png",
+    "title": "Avian APS",
+    "type": "organization"
+}
+```
+
+##### Response
+
+_EntityCreateResponse is the output-object
+for creating an entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| created | Entity |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "created": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "photoURL": "api.google.com/logo.png",
+        "title": "Avian APS",
+        "type": "organization"
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Delete
+
+Delete deletes an existing entity
+
+##### Endpoint
+
+POST `/EntityService.Delete`
+
+##### Request
+
+_EntityDeleteRequest is the input-object
+for deleting an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the entity to delete | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to delete the new entity to | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EntityService.Delete
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EntityDeleteResponse is the output-object
+for updating an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Get
+
+Get the specified entity
+
+##### Endpoint
+
+POST `/EntityService.Get`
+
+##### Request
+
+_EntityGetRequest is the input-object
+for getting an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the entity to get | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to get the entity for | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EntityService.Get
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EntityGetResponse is the output-object
+for getting an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| entity | Entity |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "entity": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "photoURL": "api.google.com/logo.png",
+        "title": "Avian APS",
+        "type": "organization"
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### List
+
+List all entities
+
+##### Endpoint
+
+POST `/EntityService.List`
+
+##### Request
+
+_EntityListRequest is the input-object
+for deleting an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case to list the entities for | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/EntityService.List
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_EntityListResponse is the output-object
+for updating an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| entities | []Entity |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "entities": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "custom": {},
+            "photoURL": "api.google.com/logo.png",
+            "title": "Avian APS",
+            "type": "organization"
+        }
+    ]
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Types
+
+Types returns the existing entity-types
+
+##### Endpoint
+
+POST `/EntityService.Types`
+
+##### Request
+
+_EntityTypesRequest is the input-object
+for getting all entity-types_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{}' http://localhost:8080/api/EntityService.Types
+```
+
+```json
+{}
+```
+
+##### Response
+
+_EntityTypesResponse is the output-object
+for getting all entity-types_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| entityTypes | []string | EntityTypes are the existing entity-types in the system | organizationlocation |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "entityTypes": [
+        "organization",
+        "location"
+    ]
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Update
+
+Update updates an existing entity
+
+##### Endpoint
+
+POST `/EntityService.Update`
+
+##### Request
+
+_EntityUpdateRequest is the input-object
+for updating an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the entity to update | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to update the existing entity to | 7a1713b0249d477d92f5e10124a59861 |
+| title | string | Title of the entity | Avian APS |
+| photoURL | string | PhotoURL of the entity. but in the future have it be uploaded and served by the file-service with some security | api.google.com/logo.png |
+| type | string | Type of the entity | organization |
+| custom | map[string]interface{} | Custom is a free form with key-value pairs specified by the user. |  |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","custom":{},"id":"7a1713b0249d477d92f5e10124a59861","photoURL":"api.google.com/logo.png","title":"Avian APS","type":"organization"}' http://localhost:8080/api/EntityService.Update
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "custom": {},
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "photoURL": "api.google.com/logo.png",
+    "title": "Avian APS",
+    "type": "organization"
+}
+```
+
+##### Response
+
+_EntityUpdateResponse is the output-object
+for updating an existing entity_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| updated | Entity |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "updated": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "custom": {},
+        "photoURL": "api.google.com/logo.png",
+        "title": "Avian APS",
+        "type": "organization"
     }
 }
 ```

@@ -26,6 +26,24 @@ type CaseService interface {
 	Update(context.Context, CaseUpdateRequest) (*CaseUpdateResponse, error)
 }
 
+// EntityService is the API to handle entities
+type EntityService interface {
+	// Authenticate is a middleware in the http-handler
+	Authenticate(context.Context, *http.Request) (context.Context, error)
+	// Create creates a new entity
+	Create(context.Context, EntityCreateRequest) (*EntityCreateResponse, error)
+	// Delete deletes an existing entity
+	Delete(context.Context, EntityDeleteRequest) (*EntityDeleteResponse, error)
+	// Get the specified entity
+	Get(context.Context, EntityGetRequest) (*EntityGetResponse, error)
+	// List all entities
+	List(context.Context, EntityListRequest) (*EntityListResponse, error)
+	// Types returns the existing entity-types
+	Types(context.Context, EntityTypesRequest) (*EntityTypesResponse, error)
+	// Update updates an existing entity
+	Update(context.Context, EntityUpdateRequest) (*EntityUpdateResponse, error)
+}
+
 // EventService is the API to handle events
 type EventService interface {
 	// Authenticate is a middleware in the http-handler
@@ -212,6 +230,159 @@ func (s *caseServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response, err := s.caseService.Update(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+type entityServiceServer struct {
+	server        *otohttp.Server
+	entityService EntityService
+	test          bool
+}
+
+// Register adds the EntityService to the otohttp.Server.
+func RegisterEntityService(server *otohttp.Server, entityService EntityService) {
+	handler := &entityServiceServer{
+		server:        server,
+		entityService: entityService,
+	}
+
+	server.Register("EntityService", "Create", handler.handleCreate)
+	server.Register("EntityService", "Delete", handler.handleDelete)
+	server.Register("EntityService", "Get", handler.handleGet)
+	server.Register("EntityService", "List", handler.handleList)
+	server.Register("EntityService", "Types", handler.handleTypes)
+	server.Register("EntityService", "Update", handler.handleUpdate)
+}
+
+func (s *entityServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var request EntityCreateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.Create(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+	var request EntityDeleteRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.Delete(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
+	var request EntityGetRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
+	var request EntityListRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.List(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleTypes(w http.ResponseWriter, r *http.Request) {
+	var request EntityTypesRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.Types(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
+	var request EntityUpdateRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.Update(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -864,6 +1035,121 @@ type CaseUploadRequest struct {
 	ID string `json:"id"`
 	// Name of the item to upload
 	Name string `json:"name"`
+}
+
+// Entity is an object that can be of different types. For example, organization or
+// location
+type Entity struct {
+	Base
+	// Title of the entity
+	Title string `json:"title"`
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+	// Type of the entity
+	Type string `json:"type"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityCreateRequest is the input-object for creating an entity
+type EntityCreateRequest struct {
+	// CaseID of the case to create the new entity to
+	CaseID string `json:"caseID"`
+	// Title of the entity
+	Title string `json:"title"`
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+	// Type of the entity
+	Type string `json:"type"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityCreateResponse is the output-object for creating an entity
+type EntityCreateResponse struct {
+	Created Entity `json:"created"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EntityDeleteRequest is the input-object for deleting an existing entity
+type EntityDeleteRequest struct {
+	// ID of the entity to delete
+	ID string `json:"id"`
+	// CaseID of the case to delete the new entity to
+	CaseID string `json:"caseID"`
+}
+
+// EntityDeleteResponse is the output-object for updating an existing entity
+type EntityDeleteResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EntityGetRequest is the input-object for getting an existing entity
+type EntityGetRequest struct {
+	// ID of the entity to get
+	ID string `json:"id"`
+	// CaseID of the case to get the entity for
+	CaseID string `json:"caseID"`
+}
+
+// EntityGetResponse is the output-object for getting an existing entity
+type EntityGetResponse struct {
+	Entity Entity `json:"entity"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EntityListRequest is the input-object for deleting an existing entity
+type EntityListRequest struct {
+	// CaseID of the case to list the entities for
+	CaseID string `json:"caseID"`
+}
+
+// EntityListResponse is the output-object for updating an existing entity
+type EntityListResponse struct {
+	Entities []Entity `json:"entities"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EntityTypesRequest is the input-object for getting all entity-types
+type EntityTypesRequest struct {
+}
+
+// EntityTypesResponse is the output-object for getting all entity-types
+type EntityTypesResponse struct {
+	// EntityTypes are the existing entity-types in the system
+	EntityTypes []string `json:"entityTypes"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// EntityUpdateRequest is the input-object for updating an existing entity
+type EntityUpdateRequest struct {
+	// ID of the entity to update
+	ID string `json:"id"`
+	// CaseID of the case to update the existing entity to
+	CaseID string `json:"caseID"`
+	// Title of the entity
+	Title string `json:"title"`
+	// PhotoURL of the entity. but in the future have it be uploaded and served by the
+	// file-service with some security
+	PhotoURL string `json:"photoURL"`
+	// Type of the entity
+	Type string `json:"type"`
+	// Custom is a free form with key-value pairs specified by the user.
+	Custom map[string]interface{} `json:"custom"`
+}
+
+// EntityUpdateResponse is the output-object for updating an existing entity
+type EntityUpdateResponse struct {
+	Updated Entity `json:"updated"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 // Event is an important happening that needs investigation.
