@@ -192,10 +192,11 @@ func (s svc) UpdateFile(ctx context.Context, caseID, fileID, description string)
 		return nil, err
 	}
 
-	for _, file := range caze.Files {
+	for i, file := range caze.Files {
 		if file.ID == fileID {
 			file.UpdatedAt = time.Now().Unix()
 			file.Description = description
+			caze.Files[i] = file
 			if err := s.UpdateCase(ctx, caze); err != nil {
 				return nil, err
 			}
@@ -212,9 +213,12 @@ func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
 		return err
 	}
 
-	for _, file := range caze.Files {
+	for i, file := range caze.Files {
 		if file.ID == fileID {
-			// TODO: Delete file from case
+			caze.Files = append(caze.Files[:i], caze.Files[i+1:]...)
+			if err := s.UpdateCase(ctx, caze); err != nil {
+				return err
+			}
 			return nil
 		}
 	}
