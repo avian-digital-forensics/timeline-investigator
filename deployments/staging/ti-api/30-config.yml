@@ -24,3 +24,5 @@ data:
       authentication:
         api_key: ${AUTH_API_KEY}
         credentials_file: /etc/secret-volume/auth-credentials-file.json
+      filestore:
+        base_path: ./
