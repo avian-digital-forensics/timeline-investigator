@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/cmd"
@@ -227,16 +229,27 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 		// Set the status-code to the page (store in-memory)
 		savedPage.Response.StatusCode = resp.StatusCode
 
-		// Decode the response-body and return the error if it failed
-		body, err := ioutil.ReadAll(resp.Body)
+		var bodyReader io.Reader = resp.Body
+		if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+			decodedBody, err := gzip.NewReader(resp.Body)
+			if err != nil {
+				savedPage.Error = fmt.Sprintf("Failed to create new gzip reader: %s", err.Error())
+				tmpl.Execute(w, savedPage)
+				return
+			}
+			defer decodedBody.Close()
+			bodyReader = decodedBody
+		}
+
+		respBodyBytes, err := ioutil.ReadAll(bodyReader)
 		if err != nil {
-			savedPage.Error = fmt.Sprintf("Failed to decode response: %s", err.Error())
+			savedPage.Error = fmt.Sprintf("Failed to read response body: %s", err.Error())
 			tmpl.Execute(w, savedPage)
 			return
 		}
 
 		// Set the response-body to the savedPage (store in-memory)
-		savedPage.Response.Body = string(body)
+		savedPage.Response.Body = string(respBodyBytes)
 		// Return the savedPage
 		tmpl.Execute(w, savedPage)
 	})
