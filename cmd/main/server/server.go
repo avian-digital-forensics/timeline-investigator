@@ -65,6 +65,7 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	api.RegisterLinkService(srv.router, services.NewLinkService(db, caseService))
 	api.RegisterFileService(srv.router, services.NewFileService(db, filestore, caseService))
 	api.RegisterEntityService(srv.router, services.NewEntityService(db, caseService))
+	api.RegisterPersonService(srv.router, services.NewPersonService(db, caseService))
 	api.RegisterProcessService(srv.router, &services.ProcessService{})
 
 	// Only create the TestService if it is a test-run

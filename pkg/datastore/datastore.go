@@ -20,32 +20,50 @@ const (
 	indexEntity = "entities"
 	indexEvent  = "events"
 	indexLink   = "links"
+	indexPerson = "persons"
 )
 
 // Service is the interface for the datastore
 type Service interface {
+	// Case-methods
 	CreateCase(ctx context.Context, caze *api.Case) error
 	UpdateCase(ctx context.Context, caze *api.Case) error
 	GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error)
 	GetCase(ctx context.Context, id string) (*api.Case, error)
+
+	// Event-methods
 	CreateEvent(ctx context.Context, caseID string, event *api.Event) error
 	UpdateEvent(ctx context.Context, caseID string, event *api.Event) error
 	DeleteEvent(ctx context.Context, caseID, eventID string) error
 	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
 	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
+
+	// Entity-methods
 	CreateEntity(ctx context.Context, caseID string, entity *api.Entity) error
 	UpdateEntity(ctx context.Context, caseID string, entity *api.Entity) error
 	DeleteEntity(ctx context.Context, caseID, entityID string) error
 	GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error)
 	GetEntities(ctx context.Context, caseID string) ([]api.Entity, error)
+
+	// File-methods
 	CreateFile(ctx context.Context, caseID string, file *api.File) error
 	UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error)
 	DeleteFile(ctx context.Context, caseID, fileID string) error
 	GetFile(ctx context.Context, caseID, fileID string) (*api.File, error)
+
+	// Link-methods
 	CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
 	UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
 	GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error)
 	DeleteLinkEvent(ctx context.Context, caseID, eventID string) error
+
+	// Person-methods
+	CreatePerson(ctx context.Context, caseID string, Person *api.Person) error
+	UpdatePerson(ctx context.Context, caseID string, Person *api.Person) error
+	DeletePerson(ctx context.Context, caseID, personID string) error
+	GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error)
+	GetPersons(ctx context.Context, caseID string) ([]api.Person, error)
+
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -228,6 +246,61 @@ func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, erro
 func (s svc) DeleteEntity(ctx context.Context, caseID, entityID string) error {
 	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
 	return s.delete(ctx, index, entityID)
+}
+
+func (s svc) CreatePerson(ctx context.Context, caseID string, person *api.Person) error {
+	person.ID = internal.NewID()
+	person.CreatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
+	return s.save(ctx, index, person.ID, person)
+}
+
+func (s svc) UpdatePerson(ctx context.Context, caseID string, person *api.Person) error {
+	person.UpdatedAt = time.Now().Unix()
+	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
+	return s.save(ctx, index, person.ID, person)
+}
+
+func (s svc) GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error) {
+	resp, err := s.searchByID(ctx, indexPerson+"-"+caseID, personID)
+	if err != nil {
+		return nil, err
+	}
+
+	var person api.Person
+	if err := json.Unmarshal(resp, &person); err != nil {
+		return nil, err
+	}
+
+	return &person, nil
+}
+
+func (s svc) GetPersons(ctx context.Context, caseID string) ([]api.Person, error) {
+	search, err := s.search(ctx, indexPerson+"-"+caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var persons []api.Person
+	for _, hit := range search.Hits.Hits {
+		source, err := json.Marshal(hit.Source)
+		if err != nil {
+			return nil, err
+		}
+
+		var person api.Person
+		if err := json.Unmarshal(source, &person); err != nil {
+			return nil, err
+		}
+
+		persons = append(persons, person)
+	}
+	return persons, nil
+}
+
+func (s svc) DeletePerson(ctx context.Context, caseID, personID string) error {
+	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
+	return s.delete(ctx, index, personID)
 }
 
 func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) error {
