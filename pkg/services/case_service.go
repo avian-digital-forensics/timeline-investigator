@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -40,7 +41,7 @@ func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseN
 	}
 
 	if err := s.db.CreateCase(ctx, &caze); err != nil {
-		return nil, err
+		return nil, api.ErrCannotPerformOperation
 	}
 
 	return &api.CaseNewResponse{New: caze}, nil
@@ -50,7 +51,7 @@ func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseN
 func (s *CaseService) Get(ctx context.Context, r api.CaseGetRequest) (*api.CaseGetResponse, error) {
 	caze, err := s.db.GetCase(ctx, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("case - %v", api.ErrNotFound)
 	}
 
 	if !isAllowed(caze, utils.GetUser(ctx).Email) {
@@ -86,7 +87,7 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 
 	cases, err := s.db.GetCasesByEmail(ctx, currentUser.Email)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.CaseListResponse{Cases: cases}, nil
@@ -99,7 +100,7 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 func (s *CaseService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
 	usr, err := s.auth.GetUserByToken(ctx, utils.GetToken(r))
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotAllowed)
 	}
 
 	return utils.SetUser(ctx, api.User{

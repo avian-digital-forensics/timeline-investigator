@@ -34,7 +34,7 @@ func (s *EntityService) Create(ctx context.Context, r api.EntityCreateRequest) (
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
@@ -51,7 +51,7 @@ func (s *EntityService) Create(ctx context.Context, r api.EntityCreateRequest) (
 	}
 
 	if err := s.db.CreateEntity(ctx, r.CaseID, &entity); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EntityCreateResponse{Created: entity}, nil
@@ -62,7 +62,7 @@ func (s *EntityService) Update(ctx context.Context, r api.EntityUpdateRequest) (
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
@@ -80,7 +80,7 @@ func (s *EntityService) Update(ctx context.Context, r api.EntityUpdateRequest) (
 	entity.ID = r.ID
 
 	if err := s.db.UpdateEntity(ctx, r.CaseID, &entity); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EntityUpdateResponse{Updated: entity}, nil
@@ -91,13 +91,13 @@ func (s *EntityService) Delete(ctx context.Context, r api.EntityDeleteRequest) (
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	if err := s.db.DeleteEntity(ctx, r.CaseID, r.ID); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EntityDeleteResponse{}, nil
@@ -108,14 +108,14 @@ func (s *EntityService) Get(ctx context.Context, r api.EntityGetRequest) (*api.E
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	entity, err := s.db.GetEntityByID(ctx, r.CaseID, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	return &api.EntityGetResponse{Entity: *entity}, nil
@@ -126,14 +126,14 @@ func (s *EntityService) List(ctx context.Context, r api.EntityListRequest) (*api
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	entities, err := s.db.GetEntities(ctx, r.CaseID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EntityListResponse{Entities: entities}, nil

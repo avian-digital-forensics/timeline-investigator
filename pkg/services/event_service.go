@@ -31,7 +31,7 @@ func (s *EventService) Create(ctx context.Context, r api.EventCreateRequest) (*a
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
@@ -54,7 +54,7 @@ func (s *EventService) Create(ctx context.Context, r api.EventCreateRequest) (*a
 	}
 
 	if err := s.db.CreateEvent(ctx, r.CaseID, &event); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EventCreateResponse{Created: event}, nil
@@ -65,7 +65,7 @@ func (s *EventService) Update(ctx context.Context, r api.EventUpdateRequest) (*a
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
@@ -89,7 +89,7 @@ func (s *EventService) Update(ctx context.Context, r api.EventUpdateRequest) (*a
 	event.ID = r.ID
 
 	if err := s.db.UpdateEvent(ctx, r.CaseID, &event); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EventUpdateResponse{Updated: event}, nil
@@ -100,13 +100,13 @@ func (s *EventService) Delete(ctx context.Context, r api.EventDeleteRequest) (*a
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	if err := s.db.DeleteEvent(ctx, r.CaseID, r.ID); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EventDeleteResponse{}, nil
@@ -117,14 +117,14 @@ func (s *EventService) Get(ctx context.Context, r api.EventGetRequest) (*api.Eve
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	event, err := s.db.GetEventByID(ctx, r.CaseID, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	return &api.EventGetResponse{Event: *event}, nil
@@ -135,14 +135,14 @@ func (s *EventService) List(ctx context.Context, r api.EventListRequest) (*api.E
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	events, err := s.db.GetEvents(ctx, r.CaseID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.EventListResponse{Events: events}, nil

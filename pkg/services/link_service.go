@@ -25,21 +25,21 @@ func NewLinkService(db datastore.Service, caseService *CaseService) *LinkService
 func (s *LinkService) CreateEvent(ctx context.Context, r api.LinkEventCreateRequest) (*api.LinkEventCreateResponse, error) {
 	from, err := s.db.GetEventByID(ctx, r.CaseID, r.FromID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	var events []api.Event
 	for _, id := range r.EventIDs {
 		event, err := s.db.GetEventByID(ctx, r.CaseID, id)
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotFound)
 		}
 		events = append(events, *event)
 	}
 
 	link := api.LinkEvent{From: *from, Events: events}
 	if err := s.db.CreateLinkEvent(ctx, r.CaseID, &link); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	if !r.Bidirectional {
@@ -48,7 +48,7 @@ func (s *LinkService) CreateEvent(ctx context.Context, r api.LinkEventCreateRequ
 
 	for _, event := range events {
 		if err := s.db.CreateLinkEvent(ctx, r.CaseID, &api.LinkEvent{From: event, Events: []api.Event{*from}}); err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrCannotPerformOperation)
 		}
 	}
 
@@ -59,7 +59,7 @@ func (s *LinkService) CreateEvent(ctx context.Context, r api.LinkEventCreateRequ
 func (s *LinkService) GetEvent(ctx context.Context, r api.LinkEventGetRequest) (*api.LinkEventGetResponse, error) {
 	link, err := s.db.GetLinkEvent(ctx, r.CaseID, r.EventID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	return &api.LinkEventGetResponse{Link: *link}, nil
@@ -68,7 +68,7 @@ func (s *LinkService) GetEvent(ctx context.Context, r api.LinkEventGetRequest) (
 // DeleteEvent deletes all links to the specified event
 func (s *LinkService) DeleteEvent(ctx context.Context, r api.LinkEventDeleteRequest) (*api.LinkEventDeleteResponse, error) {
 	if err := s.db.DeleteLinkEvent(ctx, r.CaseID, r.EventID); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 	return &api.LinkEventDeleteResponse{}, nil
 }
@@ -77,7 +77,7 @@ func (s *LinkService) DeleteEvent(ctx context.Context, r api.LinkEventDeleteRequ
 func (s *LinkService) UpdateEvent(ctx context.Context, r api.LinkEventUpdateRequest) (*api.LinkEventUpdateResponse, error) {
 	link, err := s.db.GetLinkEvent(ctx, r.CaseID, r.EventID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	var removeEvent = make(map[string]bool)
@@ -89,7 +89,7 @@ func (s *LinkService) UpdateEvent(ctx context.Context, r api.LinkEventUpdateRequ
 	for _, id := range r.EventAddIDs {
 		event, err := s.db.GetEventByID(ctx, r.CaseID, id)
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotFound)
 		}
 		events = append(events, *event)
 	}
@@ -102,7 +102,7 @@ func (s *LinkService) UpdateEvent(ctx context.Context, r api.LinkEventUpdateRequ
 
 	link.Events = events
 	if err := s.db.UpdateLinkEvent(ctx, r.CaseID, link); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.LinkEventUpdateResponse{Updated: *link}, nil

@@ -88,12 +88,18 @@ func NewService(elasticURLs ...string) (Service, error) {
 func (s svc) CreateCase(ctx context.Context, caze *api.Case) error {
 	caze.ID = internal.NewID()
 	caze.CreatedAt = time.Now().Unix()
-	return s.save(ctx, indexCase, caze.ID, caze)
+	if err := s.save(ctx, indexCase, caze.ID, caze); err != nil {
+		return fmt.Errorf("failed to save Case : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdateCase(ctx context.Context, caze *api.Case) error {
 	caze.UpdatedAt = time.Now().Unix()
-	return s.save(ctx, indexCase, caze.ID, caze)
+	if err := s.save(ctx, indexCase, caze.ID, caze); err != nil {
+		return fmt.Errorf("failed to save Case : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error) {
@@ -106,12 +112,12 @@ func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, err
 	for _, hit := range search.Hits.Hits {
 		source, err := json.Marshal(hit.Source)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("json.Marshal: %v", err)
 		}
 
 		var caze api.Case
 		if err := json.Unmarshal(source, &caze); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
 		}
 
 		for _, investigator := range caze.Investigators {
@@ -127,12 +133,12 @@ func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, err
 func (s svc) GetCase(ctx context.Context, id string) (*api.Case, error) {
 	resp, err := s.searchByID(ctx, indexCase, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
 	}
 
 	var caze api.Case
 	if err := json.Unmarshal(resp, &caze); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("- json.Unmarshal: %v", err)
 	}
 
 	return &caze, nil
@@ -142,24 +148,30 @@ func (s svc) CreateEvent(ctx context.Context, caseID string, event *api.Event) e
 	event.ID = internal.NewID()
 	event.CreatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
-	return s.save(ctx, index, event.ID, event)
+	if err := s.save(ctx, index, event.ID, event); err != nil {
+		return fmt.Errorf("failed to save ); : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdateEvent(ctx context.Context, caseID string, event *api.Event) error {
 	event.UpdatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
-	return s.save(ctx, index, event.ID, event)
+	if err := s.save(ctx, index, event.ID, event); err != nil {
+		return fmt.Errorf("failed to save ); : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error) {
 	resp, err := s.searchByID(ctx, indexEvent+"-"+caseID, eventID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot find Event in Case: %v", err)
 	}
 
 	var event api.Event
 	if err := json.Unmarshal(resp, &event); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Event json.Unmarshal: %v", err)
 	}
 
 	return &event, nil
@@ -168,19 +180,19 @@ func (s svc) GetEventByID(ctx context.Context, caseID, eventID string) (*api.Eve
 func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) {
 	search, err := s.search(ctx, indexEvent+"-"+caseID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot search in events-document: %v", err)
 	}
 
 	var events []api.Event
 	for _, hit := range search.Hits.Hits {
 		source, err := json.Marshal(hit.Source)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("json.Marshal: %v", err)
 		}
 
 		var event api.Event
 		if err := json.Unmarshal(source, &event); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Event json.Unmarshal: %v", err)
 		}
 
 		events = append(events, event)
@@ -190,31 +202,40 @@ func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) 
 
 func (s svc) DeleteEvent(ctx context.Context, caseID, eventID string) error {
 	index := fmt.Sprintf("%s-%s", indexEvent, caseID)
-	return s.delete(ctx, index, eventID)
+	if err := s.delete(ctx, index, eventID); err != nil {
+		return fmt.Errorf("cannot delete Event: %v", err)
+	}
+	return nil
 }
 
 func (s svc) CreateEntity(ctx context.Context, caseID string, entity *api.Entity) error {
 	entity.ID = internal.NewID()
 	entity.CreatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
-	return s.save(ctx, index, entity.ID, entity)
+	if err := s.save(ctx, index, entity.ID, entity); err != nil {
+		return fmt.Errorf("failed to save entity : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdateEntity(ctx context.Context, caseID string, entity *api.Entity) error {
 	entity.UpdatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
-	return s.save(ctx, index, entity.ID, entity)
+	if err := s.save(ctx, index, entity.ID, entity); err != nil {
+		return fmt.Errorf("failed to save entity : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error) {
 	resp, err := s.searchByID(ctx, indexEntity+"-"+caseID, entityID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
 	}
 
 	var entity api.Entity
 	if err := json.Unmarshal(resp, &entity); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Entity json.Unmarshal: %v", err)
 	}
 
 	return &entity, nil
@@ -230,12 +251,12 @@ func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, erro
 	for _, hit := range search.Hits.Hits {
 		source, err := json.Marshal(hit.Source)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("json.Marshal: %v", err)
 		}
 
 		var entity api.Entity
 		if err := json.Unmarshal(source, &entity); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
 		}
 
 		entities = append(entities, entity)
@@ -245,31 +266,40 @@ func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, erro
 
 func (s svc) DeleteEntity(ctx context.Context, caseID, entityID string) error {
 	index := fmt.Sprintf("%s-%s", indexEntity, caseID)
-	return s.delete(ctx, index, entityID)
+	if err := s.delete(ctx, index, entityID); err != nil {
+		return fmt.Errorf("cannot delete Entity: %v", err)
+	}
+	return nil
 }
 
 func (s svc) CreatePerson(ctx context.Context, caseID string, person *api.Person) error {
 	person.ID = internal.NewID()
 	person.CreatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
-	return s.save(ctx, index, person.ID, person)
+	if err := s.save(ctx, index, person.ID, person); err != nil {
+		return fmt.Errorf("failed to save Person : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdatePerson(ctx context.Context, caseID string, person *api.Person) error {
 	person.UpdatedAt = time.Now().Unix()
 	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
-	return s.save(ctx, index, person.ID, person)
+	if err := s.save(ctx, index, person.ID, person); err != nil {
+		return fmt.Errorf("failed to save Person : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error) {
 	resp, err := s.searchByID(ctx, indexPerson+"-"+caseID, personID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
 	}
 
 	var person api.Person
 	if err := json.Unmarshal(resp, &person); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Person json.Unmarshal: %v", err)
 	}
 
 	return &person, nil
@@ -285,12 +315,12 @@ func (s svc) GetPersons(ctx context.Context, caseID string) ([]api.Person, error
 	for _, hit := range search.Hits.Hits {
 		source, err := json.Marshal(hit.Source)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("json.Marshal: %v", err)
 		}
 
 		var person api.Person
 		if err := json.Unmarshal(source, &person); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
 		}
 
 		persons = append(persons, person)
@@ -300,7 +330,10 @@ func (s svc) GetPersons(ctx context.Context, caseID string) ([]api.Person, error
 
 func (s svc) DeletePerson(ctx context.Context, caseID, personID string) error {
 	index := fmt.Sprintf("%s-%s", indexPerson, caseID)
-	return s.delete(ctx, index, personID)
+	if err := s.delete(ctx, index, personID); err != nil {
+		return fmt.Errorf("cannot delete Person: %v", err)
+	}
+	return nil
 }
 
 func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) error {
@@ -332,7 +365,7 @@ func (s svc) UpdateFile(ctx context.Context, caseID, fileID, description string)
 			file.Description = description
 			caze.Files[i] = file
 			if err := s.UpdateCase(ctx, caze); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("cannot update file in case: %v", err)
 			}
 			return &file, nil
 		}
@@ -351,7 +384,7 @@ func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
 		if file.ID == fileID {
 			caze.Files = append(caze.Files[:i], caze.Files[i+1:]...)
 			if err := s.UpdateCase(ctx, caze); err != nil {
-				return err
+				return fmt.Errorf("cannot delete file in case: %v", err)
 			}
 			return nil
 		}
@@ -363,7 +396,7 @@ func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
 func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, error) {
 	caze, err := s.GetCase(ctx, caseID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot get case for file: %v", err)
 	}
 
 	for _, file := range caze.Files {
@@ -378,23 +411,29 @@ func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, err
 func (s svc) CreateProcess(ctx context.Context, process *api.Process) error {
 	process.ID = internal.NewID()
 	process.CreatedAt = time.Now().Unix()
-	return s.save(ctx, "processes", process.ID, process)
+	if err := s.save(ctx, "processes", process.ID, process); err != nil {
+		return fmt.Errorf("failed to save Process : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdateProcess(ctx context.Context, process *api.Process) error {
 	process.UpdatedAt = time.Now().Unix()
-	return s.save(ctx, "processes", process.ID, process)
+	if err := s.save(ctx, "processes", process.ID, process); err != nil {
+		return fmt.Errorf("failed to save Process : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetProcess(ctx context.Context, id string) (*api.Process, error) {
 	resp, err := s.searchByID(ctx, "processes", id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
 	}
 
 	var process api.Process
 	if err := json.Unmarshal(resp, &process); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Process json.Unmarshal: %v", err)
 	}
 
 	return &process, nil
@@ -403,23 +442,29 @@ func (s svc) GetProcess(ctx context.Context, id string) (*api.Process, error) {
 func (s svc) CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
 	link.ID = internal.NewID()
 	link.CreatedAt = time.Now().Unix()
-	return s.save(ctx, indexLink+"-"+caseID, link.From.ID, link)
+	if err := s.save(ctx, indexLink+"-"+caseID, link.From.ID, link); err != nil {
+		return fmt.Errorf("failed to save Link : %v", err)
+	}
+	return nil
 }
 
 func (s svc) UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
 	link.UpdatedAt = time.Now().Unix()
-	return s.save(ctx, indexLink+"-"+caseID, link.From.ID, link)
+	if err := s.save(ctx, indexLink+"-"+caseID, link.From.ID, link); err != nil {
+		return fmt.Errorf("failed to save Link : %v", err)
+	}
+	return nil
 }
 
 func (s svc) GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error) {
 	resp, err := s.searchByID(ctx, indexLink+"-"+caseID, eventID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
 	}
 
 	var link api.LinkEvent
 	if err := json.Unmarshal(resp, &link); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Link json.Unmarshal: %v", err)
 	}
 
 	return &link, nil
@@ -427,7 +472,10 @@ func (s svc) GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.Lin
 
 func (s svc) DeleteLinkEvent(ctx context.Context, caseID, eventID string) error {
 	index := fmt.Sprintf("%s-%s", indexLink, caseID)
-	return s.delete(ctx, index, eventID)
+	if err := s.delete(ctx, index, eventID); err != nil {
+		return fmt.Errorf("cannot delete Link for Event: %v", err)
+	}
+	return nil
 }
 
 func (s svc) save(ctx context.Context, index, id string, data interface{}) error {
@@ -525,7 +573,7 @@ func (s svc) searchByID(ctx context.Context, index, id string) ([]byte, error) {
 		if hit.ID == id {
 			dataJSON, err := json.Marshal(hit.Source)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("json.Marshal: %v", err)
 			}
 			return dataJSON, nil
 		}

@@ -36,19 +36,19 @@ func (s *FileService) New(ctx context.Context, r api.FileNewRequest) (*api.FileN
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	data, err := base64.StdEncoding.DecodeString(r.Data)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	f, err := s.store.Upload(r.CaseID, r.Name, data)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	file := api.File{
@@ -61,7 +61,7 @@ func (s *FileService) New(ctx context.Context, r api.FileNewRequest) (*api.FileN
 	}
 
 	if err := s.db.CreateFile(ctx, r.CaseID, &file); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.FileNewResponse{New: file}, nil
@@ -72,19 +72,19 @@ func (s *FileService) Open(ctx context.Context, r api.FileOpenRequest) (*api.Fil
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	content, err := s.store.GetContent(file.Path)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.FileOpenResponse{Data: base64.URLEncoding.EncodeToString(content)}, nil
@@ -95,14 +95,14 @@ func (s *FileService) Update(ctx context.Context, r api.FileUpdateRequest) (*api
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	file, err := s.db.UpdateFile(ctx, r.CaseID, r.ID, r.Description)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.FileUpdateResponse{Updated: *file}, nil
@@ -113,22 +113,22 @@ func (s *FileService) Delete(ctx context.Context, r api.FileDeleteRequest) (*api
 	currentUser := utils.GetUser(ctx)
 	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
 		if err != nil {
-			return nil, err
+			return nil, api.Error(err, api.ErrNotAllowed)
 		}
 		return nil, api.ErrNotAllowed
 	}
 
 	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrNotFound)
 	}
 
 	if err := s.db.DeleteFile(ctx, r.CaseID, file.ID); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	if err := s.store.Delete(r.CaseID, file.Name); err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.FileDeleteResponse{}, nil

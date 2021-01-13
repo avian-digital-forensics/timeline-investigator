@@ -10,6 +10,9 @@ var (
 	// isn't allowed to perform a specific operation
 	ErrNotAllowed = errors.New("not allowed")
 
+	// ErrNotFound is used when something wasn't found
+	ErrNotFound = errors.New("not found")
+
 	// ErrCannotPerformOperation is used to return an error
 	// when a operation is not possible to perform for some reason
 	ErrCannotPerformOperation = errors.New("cannot perform this operation")
