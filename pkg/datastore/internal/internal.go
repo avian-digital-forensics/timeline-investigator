@@ -11,6 +11,7 @@ type Response struct {
 	TimedOut bool   `json:"timed_out,omitempty"`
 	Shards   Shards `json:"_shards,omitempty"`
 	Hits     Hits   `json:"hits,omitempty"`
+	ScrollID string `json:"_scroll_id,omitempty"`
 }
 
 type Shards struct {
