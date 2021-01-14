@@ -143,7 +143,7 @@ for getting a specified case_
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
-                "processed": false,
+                "processedAt": 1257894000,
                 "size": 450060
             }
         ],
@@ -160,7 +160,10 @@ for getting a specified case_
                     "deletedAt": 0,
                     "id": "7a1713b0249d477d92f5e10124a59861",
                     "updatedAt": 0
-                }
+                },
+                "files": [
+                    "text"
+                ]
             }
         ],
         "toDate": 1257894000
@@ -243,7 +246,7 @@ listing cases for a specified user_
                     "mime": "@file/plain",
                     "name": "text-file.txt",
                     "path": "/filestore/text-file.txt",
-                    "processed": false,
+                    "processedAt": 1257894000,
                     "size": 450060
                 }
             ],
@@ -260,7 +263,10 @@ listing cases for a specified user_
                         "deletedAt": 0,
                         "id": "7a1713b0249d477d92f5e10124a59861",
                         "updatedAt": 0
-                    }
+                    },
+                    "files": [
+                        "text"
+                    ]
                 }
             ],
             "toDate": 1257894000
@@ -349,7 +355,7 @@ for creating a new case_
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
-                "processed": false,
+                "processedAt": 1257894000,
                 "size": 450060
             }
         ],
@@ -366,7 +372,10 @@ for creating a new case_
                     "deletedAt": 0,
                     "id": "7a1713b0249d477d92f5e10124a59861",
                     "updatedAt": 0
-                }
+                },
+                "files": [
+                    "text"
+                ]
             }
         ],
         "toDate": 1257894000
@@ -456,7 +465,7 @@ for updating an existing case_
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
-                "processed": false,
+                "processedAt": 1257894000,
                 "size": 450060
             }
         ],
@@ -473,7 +482,10 @@ for updating an existing case_
                     "deletedAt": 0,
                     "id": "7a1713b0249d477d92f5e10124a59861",
                     "updatedAt": 0
-                }
+                },
+                "files": [
+                    "text"
+                ]
             }
         ],
         "toDate": 1257894000
@@ -1280,6 +1292,7 @@ for updating an existing event_
 | Delete | /FileService.Delete | Delete deletes the specified file | FileDeleteRequest | FileDeleteResponse |
 | New | /FileService.New | New uploads a file to the backend | FileNewRequest | FileNewResponse |
 | Open | /FileService.Open | Open opens a file | FileOpenRequest | FileOpenResponse |
+| Process | /FileService.Process | Process processes a file | FileProcessRequest | FileProcessResponse |
 | Update | /FileService.Update | Update updates the information for a file | FileUpdateRequest | FileUpdateResponse |
 
 #### Delete
@@ -1402,7 +1415,7 @@ for creating a new file_
         "mime": "@file/plain",
         "name": "text-file.txt",
         "path": "/filestore/text-file.txt",
-        "processed": false,
+        "processedAt": 1257894000,
         "size": 450060
     }
 }
@@ -1475,6 +1488,78 @@ for opening a file in a case_
 }
 ```
 
+#### Process
+
+Process processes a file
+
+##### Endpoint
+
+POST `/FileService.Process`
+
+##### Request
+
+_FileProcessRequest is the input-object
+for processing a file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the file to process | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to process the file in | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/FileService.Process
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_FileProcessResponse is the output-object
+for processing a file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| processed | File |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "processed": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "description": "This file contains evidence",
+        "mime": "@file/plain",
+        "name": "text-file.txt",
+        "path": "/filestore/text-file.txt",
+        "processedAt": 1257894000,
+        "size": 450060
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
 #### Update
 
 Update updates the information for a file
@@ -1535,7 +1620,7 @@ for updating a files information_
         "mime": "@file/plain",
         "name": "text-file.txt",
         "path": "/filestore/text-file.txt",
-        "processed": false,
+        "processedAt": 1257894000,
         "size": 450060
     }
 }
@@ -2357,7 +2442,10 @@ for aborting a processing-job_
             "deletedAt": 0,
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
-        }
+        },
+        "files": [
+            "text"
+        ]
     }
 }
 ```
@@ -2423,7 +2511,10 @@ for getting all processing-jobs for a case_
                 "deletedAt": 0,
                 "id": "7a1713b0249d477d92f5e10124a59861",
                 "updatedAt": 0
-            }
+            },
+            "files": [
+                "text"
+            ]
         }
     ]
 }
@@ -2490,7 +2581,10 @@ for pausing a processing-job_
             "deletedAt": 0,
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
-        }
+        },
+        "files": [
+            "text"
+        ]
     }
 }
 ```
@@ -2559,7 +2653,10 @@ for starting a processing-job_
             "deletedAt": 0,
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
-        }
+        },
+        "files": [
+            "text"
+        ]
     }
 }
 ```

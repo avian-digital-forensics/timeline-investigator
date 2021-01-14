@@ -70,6 +70,8 @@ type FileService interface {
 	New(context.Context, FileNewRequest) (*FileNewResponse, error)
 	// Open opens a file
 	Open(context.Context, FileOpenRequest) (*FileOpenResponse, error)
+	// Process processes a file
+	Process(context.Context, FileProcessRequest) (*FileProcessResponse, error)
 	// Update updates the information for a file
 	Update(context.Context, FileUpdateRequest) (*FileUpdateResponse, error)
 }
@@ -555,6 +557,7 @@ func RegisterFileService(server *otohttp.Server, fileService FileService) {
 	server.Register("FileService", "Delete", handler.handleDelete)
 	server.Register("FileService", "New", handler.handleNew)
 	server.Register("FileService", "Open", handler.handleOpen)
+	server.Register("FileService", "Process", handler.handleProcess)
 	server.Register("FileService", "Update", handler.handleUpdate)
 }
 
@@ -614,6 +617,28 @@ func (s *fileServiceServer) handleOpen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, err := s.fileService.Open(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleProcess(w http.ResponseWriter, r *http.Request) {
+	var request FileProcessRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.Process(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1067,13 +1092,15 @@ type File struct {
 	Path string `json:"path"`
 	// Size of the file in bytes
 	Size int `json:"size"`
-	// Processed is if the file has been processed or not
-	Processed bool `json:"processed"`
+	// ProcessedAt is the unix-timestamp for when (if) the item was processed
+	ProcessedAt int64 `json:"processedAt"`
 }
 
 // Process holds information about a job that processes data to app
 type Process struct {
 	Base
+	// Files for the process
+	Files []string `json:"files"`
 }
 
 // Case is an object to hold data for a specific investigation
@@ -1445,6 +1472,21 @@ type FileOpenRequest struct {
 type FileOpenResponse struct {
 	// Data contains the b64-encoded data for the file
 	Data string `json:"data"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// FileProcessRequest is the input-object for processing a file in a case
+type FileProcessRequest struct {
+	// ID of the file to process
+	ID string `json:"id"`
+	// CaseID of the case to process the file in
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessResponse is the output-object for processing a file in a case
+type FileProcessResponse struct {
+	Processed File `json:"processed"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

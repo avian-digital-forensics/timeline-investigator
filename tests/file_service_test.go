@@ -51,7 +51,7 @@ func TestFileService(t *testing.T) {
 	is.Equal(file.New.Name, newRequest.Name)
 	is.Equal(file.New.Description, newRequest.Description)
 	is.Equal(file.New.Mime, newRequest.Mime)
-	is.Equal(file.New.Processed, false)
+	is.Equal(file.New.ProcessedAt, int64(0))
 
 	// Open the file and make sure the data is valid
 	open, err := fileService.Open(ctx, client.FileOpenRequest{ID: file.New.ID, CaseID: testCase.ID})
@@ -73,13 +73,22 @@ func TestFileService(t *testing.T) {
 	is.Equal(updated.Updated.ID, file.New.ID)
 	is.Equal(updated.Updated.CreatedAt, file.New.CreatedAt)
 	is.Equal(updated.Updated.Mime, file.New.Mime)
-	is.Equal(updated.Updated.Processed, file.New.Processed)
+	is.Equal(updated.Updated.ProcessedAt, file.New.ProcessedAt)
+
+	// Process the file
+	processed, err := fileService.Process(ctx, client.FileProcessRequest{ID: file.New.ID, CaseID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(processed.Processed.Description, updated.Updated.Description)
+	is.Equal(processed.Processed.ID, updated.Updated.ID)
+	is.Equal(processed.Processed.CreatedAt, updated.Updated.CreatedAt)
+	is.Equal(processed.Processed.Mime, updated.Updated.Mime)
+	is.Equal(false, processed.Processed.ProcessedAt == updated.Updated.ProcessedAt)
 
 	// Open the case and make sure the file is listed
 	gotten, err := caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(gotten.Case.Files), 1)
-	is.Equal(gotten.Case.Files[0], updated.Updated)
+	is.Equal(gotten.Case.Files[0], processed.Processed) // processed holds the updated file
 
 	// Upload more files to the case
 	file2, err := fileService.New(ctx, client.FileNewRequest{CaseID: testCase.ID, Name: "d2.txt", Data: b64.URLEncoding.EncodeToString(d2)})
@@ -91,7 +100,7 @@ func TestFileService(t *testing.T) {
 	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(gotten.Case.Files), 3)
-	is.Equal(gotten.Case.Files[0], updated.Updated)
+	is.Equal(gotten.Case.Files[0], processed.Processed)
 	is.Equal(gotten.Case.Files[1], file2.New)
 	is.Equal(gotten.Case.Files[2], file3.New)
 

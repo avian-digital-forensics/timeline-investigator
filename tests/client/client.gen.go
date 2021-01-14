@@ -1082,6 +1082,58 @@ func (s *FileService) Open(ctx context.Context, r FileOpenRequest) (*FileOpenRes
 	return &response.FileOpenResponse, nil
 }
 
+// Process processes a file
+func (s *FileService) Process(ctx context.Context, r FileProcessRequest) (*FileProcessResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Process: marshal FileProcessRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Process"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Process: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Process")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileProcessResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Process: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Process: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Process: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileProcessResponse, nil
+}
+
 // Update updates the information for a file
 func (s *FileService) Update(ctx context.Context, r FileUpdateRequest) (*FileUpdateResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -2004,13 +2056,16 @@ type File struct {
 	// Size of the file in bytes
 	Size int `json:"size"`
 
-	// Processed is if the file has been processed or not
-	Processed bool `json:"processed"`
+	// ProcessedAt is the unix-timestamp for when (if) the item was processed
+	ProcessedAt int64 `json:"processedAt"`
 }
 
 // Process holds information about a job that processes data to app
 type Process struct {
 	Base
+
+	// Files for the process
+	Files []string `json:"files"`
 }
 
 // Case is an object to hold data for a specific investigation
@@ -2398,6 +2453,20 @@ type FileOpenRequest struct {
 type FileOpenResponse struct {
 	// Data contains the b64-encoded data for the file
 	Data string `json:"data"`
+}
+
+// FileProcessRequest is the input-object for processing a file in a case
+type FileProcessRequest struct {
+	// ID of the file to process
+	ID string `json:"id"`
+
+	// CaseID of the case to process the file in
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessResponse is the output-object for processing a file in a case
+type FileProcessResponse struct {
+	Processed File `json:"processed"`
 }
 
 // FileUpdateRequest is the input-object for updating a files information

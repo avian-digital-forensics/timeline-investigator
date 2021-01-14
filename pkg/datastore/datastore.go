@@ -16,11 +16,12 @@ import (
 )
 
 const (
-	indexCase   = "cases"
-	indexEntity = "entities"
-	indexEvent  = "events"
-	indexLink   = "links"
-	indexPerson = "persons"
+	indexCase    = "cases"
+	indexEntity  = "entities"
+	indexEvent   = "events"
+	indexLink    = "links"
+	indexPerson  = "persons"
+	indexProcess = "processes"
 )
 
 // Service is the interface for the datastore
@@ -47,7 +48,7 @@ type Service interface {
 
 	// File-methods
 	CreateFile(ctx context.Context, caseID string, file *api.File) error
-	UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error)
+	UpdateFile(ctx context.Context, caseID string, file *api.File) error
 	DeleteFile(ctx context.Context, caseID, fileID string) error
 	GetFile(ctx context.Context, caseID, fileID string) (*api.File, error)
 
@@ -64,6 +65,8 @@ type Service interface {
 	GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error)
 	GetPersons(ctx context.Context, caseID string) ([]api.Person, error)
 
+	// Process-methods
+	ProcessIndex(caseID string) string
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -353,25 +356,23 @@ func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) erro
 	return nil
 }
 
-func (s svc) UpdateFile(ctx context.Context, caseID, fileID, description string) (*api.File, error) {
+func (s svc) UpdateFile(ctx context.Context, caseID string, file *api.File) error {
 	caze, err := s.GetCase(ctx, caseID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	for i, file := range caze.Files {
-		if file.ID == fileID {
-			file.UpdatedAt = time.Now().Unix()
-			file.Description = description
-			caze.Files[i] = file
+	for i, f := range caze.Files {
+		if f.ID == file.ID {
+			caze.Files[i] = *file
 			if err := s.UpdateCase(ctx, caze); err != nil {
-				return nil, fmt.Errorf("cannot update file in case: %v", err)
+				return fmt.Errorf("cannot update file in case: %v", err)
 			}
-			return &file, nil
+			return nil
 		}
 	}
 
-	return nil, errors.New("file not found")
+	return errors.New("file not found")
 }
 
 func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
@@ -477,6 +478,9 @@ func (s svc) DeleteLinkEvent(ctx context.Context, caseID, eventID string) error 
 	}
 	return nil
 }
+
+// ProcessIndex returns the elastic-index for the processes in the specified case
+func (svc) ProcessIndex(caseID string) string { return fmt.Sprintf("%s-%s", indexProcess, caseID) }
 
 func (s svc) save(ctx context.Context, index, id string, data interface{}) error {
 	dataJSON, err := json.Marshal(data)

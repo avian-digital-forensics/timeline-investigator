@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -11,6 +13,7 @@ import (
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/authentication"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/datastore"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/filestore"
+	"github.com/avian-digital-forensics/timeline-investigator/pkg/fscrawler"
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/services"
 
 	"github.com/pacedotdev/oto/otohttp"
@@ -48,6 +51,15 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 		return err
 	}
 
+	// Connect to fscrawler for indexing files
+	fs := fscrawler.New(cfg.Indexing.FSCrawlerURL)
+	if ok, err := fs.Ping(srv.ctx); !ok {
+		if err != nil {
+			return fmt.Errorf("no pong from fscrawler: %v", err)
+		}
+		return errors.New("fscrawler: not healthy")
+	}
+
 	// Set the base-path for the oto-server
 	srv.router.Basepath = "/api/"
 	http.Handle("/api/", srv.router)
@@ -63,7 +75,7 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 	api.RegisterCaseService(srv.router, caseService)
 	api.RegisterEventService(srv.router, services.NewEventService(db, caseService))
 	api.RegisterLinkService(srv.router, services.NewLinkService(db, caseService))
-	api.RegisterFileService(srv.router, services.NewFileService(db, filestore, caseService))
+	api.RegisterFileService(srv.router, services.NewFileService(db, filestore, caseService, fs))
 	api.RegisterEntityService(srv.router, services.NewEntityService(db, caseService))
 	api.RegisterPersonService(srv.router, services.NewPersonService(db, caseService))
 	api.RegisterProcessService(srv.router, &services.ProcessService{})

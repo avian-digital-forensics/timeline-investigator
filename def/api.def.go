@@ -88,6 +88,9 @@ type FileService interface {
 	// Open opens a file
 	Open(FileOpenRequest) FileOpenResponse
 
+	// Process processes a file
+	Process(FileProcessRequest) FileProcessResponse
+
 	// Update updates the information for a file
 	Update(FileUpdateRequest) FileUpdateResponse
 
@@ -725,11 +728,11 @@ type File struct {
 	// example: 450060
 	Size int
 
-	// Processed is if the file has been
-	// processed or not
+	// ProcessedAt is the unix-timestamp
+	// for when (if) the item was processed
 	//
-	// example: false
-	Processed bool
+	// example: 1257894000
+	ProcessedAt int64
 }
 
 // FileNewRequest is the input-object
@@ -766,6 +769,26 @@ type FileNewRequest struct {
 // for creating a new file
 type FileNewResponse struct {
 	New File
+}
+
+// FileProcessRequest is the input-object
+// for processing a file in a case
+type FileProcessRequest struct {
+	// ID of the file to process
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to process the file in
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// FileProcessResponse is the output-object
+// for processing a file in a case
+type FileProcessResponse struct {
+	Processed File
 }
 
 // FileOpenRequest is the input-object
@@ -1154,7 +1177,8 @@ type PersonListResponse struct {
 type Process struct {
 	Base
 
-	// TODO : Add more fields
+	// Files for the process
+	Files []string
 }
 
 // ProcessStartRequest is the input-object
