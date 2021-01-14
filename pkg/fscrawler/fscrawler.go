@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
@@ -62,15 +63,15 @@ func (c *Client) Ping(ctx context.Context) (bool, error) {
 // Process holds information
 // for a process-job
 type Process struct {
-	client   *Client
-	id       string
-	index    string
-	filepath string
+	client  *Client
+	id      string
+	index   string
+	fileURI string
 }
 
 // NewProcess creates a new process to be used for a new processing-job
-func (c *Client) NewProcess(filepath string) *Process {
-	return &Process{client: c, filepath: filepath}
+func (c *Client) NewProcess(fileURI string) *Process {
+	return &Process{client: c, fileURI: fileURI}
 }
 
 // WithID sets an ID for the processor
@@ -86,48 +87,57 @@ func (p *Process) WithIndex(index string) *Process {
 }
 
 // Start the process-job
-func (p *Process) Start() error {
-	file, err := os.Open(p.filepath)
+func (p *Process) Start(ctx context.Context) error {
+	file, err := os.Open(p.fileURI)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cannot open file to process: ")
 	}
 	defer file.Close()
 
 	// Create a new writer
-	var body *bytes.Buffer
-	writer := multipart.NewWriter(body)
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
 	defer writer.Close()
 
 	// Pass custom-ID if it has been added as an argument
 	if len(p.id) > 0 {
-		writer.WriteField("id", p.id)
+		if err := writer.WriteField("id", p.id); err != nil {
+			return errors.Wrap(err, "cannot set custom-id: ")
+		}
 	}
 
 	// Pass custom-Index if it has been added as an argument
 	if len(p.index) > 0 {
-		writer.WriteField("index", p.index)
+		if err := writer.WriteField("index", p.index); err != nil {
+			return errors.Wrap(err, "cannot set custom-index: ")
+		}
 	}
 
 	// Get part for file
-	part, err := writer.CreateFormFile("file", p.filepath)
+	part, err := writer.CreateFormFile("file", filepath.Base(p.fileURI))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cannot create form-file: ")
 	}
 
 	// Write file to part
 	if _, err := io.Copy(part, file); err != nil {
-		return err
+		return errors.Wrap(err, "cannot write file to part")
+	}
+
+	if err := writer.Close(); err != nil {
+		return errors.Wrap(err, "writer.Close(): ")
 	}
 
 	// Make the request
-	req, err := http.NewRequest("POST", p.client.url+"/_upload", body)
+	req, err := http.NewRequest("POST", p.client.url+"/_upload", &body)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cannot create new request: ")
 	}
+	req.WithContext(ctx)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	resp, err := p.client.httpClient.Do(req)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "cannot do request: ")
 	}
 	defer resp.Body.Close()
 
@@ -136,7 +146,7 @@ func (p *Process) Start() error {
 		OK bool `json:"ok"`
 	}
 
-	if err := decodeResponse(resp, respBody); err != nil {
+	if err := decodeResponse(resp, &respBody); err != nil {
 		return err
 	}
 
@@ -155,7 +165,7 @@ func decodeResponse(r *http.Response, to interface{}) error {
 
 	if err := json.Unmarshal(respBodyBytes, &to); err != nil {
 		if r.StatusCode != http.StatusOK {
-			return errors.Errorf("fscrawler.decodeResponse: (%d) %v", r.StatusCode, string(respBodyBytes))
+			return errors.Errorf("fscrawler.decodeResponse: (%d) %s", r.StatusCode, string(respBodyBytes))
 		}
 		return errors.Wrap(err, "fscrawler.decodeResponse: cannot unmarshal body")
 	}

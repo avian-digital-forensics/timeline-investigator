@@ -13,7 +13,7 @@ func TestClient(t *testing.T) {
 	ctx := context.Background()
 
 	// Create client
-	fs := fscrawler.New("http://localhost:8080/fscrawler")
+	fs := fscrawler.New("http://localhost:8890/fscrawler")
 
 	// Test status
 	ok, err := fs.Ping(ctx)
@@ -22,6 +22,6 @@ func TestClient(t *testing.T) {
 
 	// Test processing
 	process := fs.NewProcess("test-1.txt").WithIndex("test").WithID("id")
-	err = process.Start()
+	err = process.Start(ctx)
 	is.NoErr(err)
 }
