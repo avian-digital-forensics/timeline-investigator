@@ -15,3 +15,5 @@ config:
     credentials_file: ${AUTH_CREDENTIALS_FILE}
   filestore:
     base_path: ./
+  indexing:
+    fscrawler_url: http://localhost:8890/fscrawler

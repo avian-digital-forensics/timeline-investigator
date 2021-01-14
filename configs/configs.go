@@ -20,6 +20,7 @@ type MainAPI struct {
 	DB             *DBConfig        `yaml:"db"`
 	Authentication *AuthConfig      `yaml:"authentication"`
 	Filestore      *FilestoreConfig `yaml:"filestore"`
+	Indexing       *IndexingConfig  `yaml:"indexing"`
 }
 
 // NetworkConfig has the http-configuration
@@ -53,6 +54,11 @@ type TestConfig struct {
 // FilestoreConfig holds information for the filestore
 type FilestoreConfig struct {
 	BasePath string `yaml:"base_path"`
+}
+
+// IndexingConfig holds information for indexers
+type IndexingConfig struct {
+	FSCrawlerURL string `yaml:"fscrawler_url"`
 }
 
 func readYAML(path string, cfg *Config) error {
