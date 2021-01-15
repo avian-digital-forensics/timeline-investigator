@@ -72,6 +72,10 @@ type FileService interface {
 	Open(context.Context, FileOpenRequest) (*FileOpenResponse, error)
 	// Process processes a file
 	Process(context.Context, FileProcessRequest) (*FileProcessResponse, error)
+	// Processed gets information for a processed file
+	Processed(context.Context, FileProcessedRequest) (*FileProcessedResponse, error)
+	// Processes gets information for all proccesed files in the specified case
+	Processes(context.Context, FileProcessesRequest) (*FileProcessesResponse, error)
 	// Update updates the information for a file
 	Update(context.Context, FileUpdateRequest) (*FileUpdateResponse, error)
 }
@@ -558,6 +562,8 @@ func RegisterFileService(server *otohttp.Server, fileService FileService) {
 	server.Register("FileService", "New", handler.handleNew)
 	server.Register("FileService", "Open", handler.handleOpen)
 	server.Register("FileService", "Process", handler.handleProcess)
+	server.Register("FileService", "Processed", handler.handleProcessed)
+	server.Register("FileService", "Processes", handler.handleProcesses)
 	server.Register("FileService", "Update", handler.handleUpdate)
 }
 
@@ -639,6 +645,50 @@ func (s *fileServiceServer) handleProcess(w http.ResponseWriter, r *http.Request
 		return
 	}
 	response, err := s.fileService.Process(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleProcessed(w http.ResponseWriter, r *http.Request) {
+	var request FileProcessedRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.Processed(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleProcesses(w http.ResponseWriter, r *http.Request) {
+	var request FileProcessesRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.Processes(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1487,6 +1537,35 @@ type FileProcessRequest struct {
 // FileProcessResponse is the output-object for processing a file in a case
 type FileProcessResponse struct {
 	Processed File `json:"processed"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// FileProcessedRequest is the input-object for getting a processed file in a case
+type FileProcessedRequest struct {
+	// ID of the processed file
+	ID string `json:"id"`
+	// CaseID of the case to the processed file
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessedResponse is the output-object for get a processed file in a case
+type FileProcessedResponse struct {
+	ID        string      `json:"id"`
+	Processed interface{} `json:"processed"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// FileProcessesRequest is the input-object for getting a Processes file in a case
+type FileProcessesRequest struct {
+	// CaseID of the case to the get all the processes
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessesResponse is the output-object for get a Processes file in a case
+type FileProcessesResponse struct {
+	Processes interface{} `json:"processes"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

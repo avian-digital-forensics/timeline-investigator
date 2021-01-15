@@ -125,6 +125,42 @@ func (s *FileService) Process(ctx context.Context, r api.FileProcessRequest) (*a
 	return &api.FileProcessResponse{Processed: *file}, nil
 }
 
+// Processed gets information for a processed file
+func (s *FileService) Processed(ctx context.Context, r api.FileProcessedRequest) (*api.FileProcessedResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	processed, err := s.db.GetProcessedFile(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	return &api.FileProcessedResponse{ID: r.ID, Processed: processed}, nil
+}
+
+// Processes gets information for all proccesed files in the specified case
+func (s *FileService) Processes(ctx context.Context, r api.FileProcessesRequest) (*api.FileProcessesResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	processes, err := s.db.GetProcessedFiles(ctx, r.CaseID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	return &api.FileProcessesResponse{Processes: processes}, nil
+}
+
 // Update updates the information for a file
 func (s *FileService) Update(ctx context.Context, r api.FileUpdateRequest) (*api.FileUpdateResponse, error) {
 	currentUser := utils.GetUser(ctx)

@@ -5,6 +5,7 @@ import (
 	b64 "encoding/base64"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/tests/client"
 	"github.com/matryer/is"
@@ -88,7 +89,15 @@ func TestFileService(t *testing.T) {
 	gotten, err := caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(gotten.Case.Files), 1)
-	is.Equal(gotten.Case.Files[0], processed.Processed) // processed holds the updated file
+	is.Equal(gotten.Case.Files[0], processed.Processed) // processed latest info for the first file
+
+	// Wait 3 seconds for the file to be indexed
+	time.Sleep(3 * time.Second)
+
+	// get the processed information for the first file
+	processInfo, err := fileService.Processed(ctx, client.FileProcessedRequest{CaseID: testCase.ID, ID: file.New.ID})
+	is.NoErr(err)
+	is.Equal(processInfo.ID, file.New.ID)
 
 	// Upload more files to the case
 	file2, err := fileService.New(ctx, client.FileNewRequest{CaseID: testCase.ID, Name: "d2.txt", Data: b64.URLEncoding.EncodeToString(d2)})
@@ -112,4 +121,13 @@ func TestFileService(t *testing.T) {
 	is.Equal(len(gotten.Case.Files), 2)
 	is.Equal(gotten.Case.Files[0], file2.New)
 	is.Equal(gotten.Case.Files[1], file3.New)
+
+	// Process the second file
+	processed2, err := fileService.Process(ctx, client.FileProcessRequest{ID: file2.New.ID, CaseID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(processed2.Processed.ID, file2.New.ID)
+
+	// Get all processes for the case (should be two)
+	_, err = fileService.Processes(ctx, client.FileProcessesRequest{CaseID: testCase.ID})
+	is.NoErr(err)
 }

@@ -67,6 +67,8 @@ type Service interface {
 
 	// Process-methods
 	ProcessIndex(caseID string) string
+	GetProcessedFiles(ctx context.Context, caseID string) (interface{}, error)
+	GetProcessedFile(ctx context.Context, caseID, id string) (interface{}, error)
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -407,6 +409,39 @@ func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, err
 	}
 
 	return nil, errors.New("file not found")
+}
+
+func (s svc) GetProcessedFile(ctx context.Context, caseID, id string) (interface{}, error) {
+	resp, err := s.searchByID(ctx, s.ProcessIndex(caseID), id)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find Processed File in Case: %v", err)
+	}
+
+	var processed interface{}
+	if err := json.Unmarshal(resp, &processed); err != nil {
+		return nil, fmt.Errorf("- json.Unmarshal: %v", err)
+	}
+
+	return &processed, nil
+}
+
+func (s svc) GetProcessedFiles(ctx context.Context, caseID string) (interface{}, error) {
+	search, err := s.search(ctx, s.ProcessIndex(caseID))
+	if err != nil {
+		return nil, err
+	}
+
+	source, err := json.Marshal(search.Hits.Hits)
+	if err != nil {
+		return nil, fmt.Errorf("json.Marshal: %v", err)
+	}
+
+	var processes interface{}
+	if err := json.Unmarshal(source, &processes); err != nil {
+		return nil, fmt.Errorf("Processes json.Unmarshal: %v", err)
+	}
+
+	return &processes, nil
 }
 
 func (s svc) CreateProcess(ctx context.Context, process *api.Process) error {

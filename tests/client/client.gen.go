@@ -1134,6 +1134,110 @@ func (s *FileService) Process(ctx context.Context, r FileProcessRequest) (*FileP
 	return &response.FileProcessResponse, nil
 }
 
+// Processed gets information for a processed file
+func (s *FileService) Processed(ctx context.Context, r FileProcessedRequest) (*FileProcessedResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processed: marshal FileProcessedRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Processed"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processed: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processed")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileProcessedResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Processed: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processed: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Processed: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileProcessedResponse, nil
+}
+
+// Processes gets information for all proccesed files in the specified case
+func (s *FileService) Processes(ctx context.Context, r FileProcessesRequest) (*FileProcessesResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processes: marshal FileProcessesRequest")
+	}
+	url := s.client.RemoteHost + "FileService.Processes"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processes: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processes")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		FileProcessesResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.Processes: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.Processes: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.Processes: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.FileProcessesResponse, nil
+}
+
 // Update updates the information for a file
 func (s *FileService) Update(ctx context.Context, r FileUpdateRequest) (*FileUpdateResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -2467,6 +2571,33 @@ type FileProcessRequest struct {
 // FileProcessResponse is the output-object for processing a file in a case
 type FileProcessResponse struct {
 	Processed File `json:"processed"`
+}
+
+// FileProcessedRequest is the input-object for getting a processed file in a case
+type FileProcessedRequest struct {
+	// ID of the processed file
+	ID string `json:"id"`
+
+	// CaseID of the case to the processed file
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessedResponse is the output-object for get a processed file in a case
+type FileProcessedResponse struct {
+	ID string `json:"id"`
+
+	Processed interface{} `json:"processed"`
+}
+
+// FileProcessesRequest is the input-object for getting a Processes file in a case
+type FileProcessesRequest struct {
+	// CaseID of the case to the get all the processes
+	CaseID string `json:"caseID"`
+}
+
+// FileProcessesResponse is the output-object for get a Processes file in a case
+type FileProcessesResponse struct {
+	Processes interface{} `json:"processes"`
 }
 
 // FileUpdateRequest is the input-object for updating a files information

@@ -91,6 +91,13 @@ type FileService interface {
 	// Process processes a file
 	Process(FileProcessRequest) FileProcessResponse
 
+	// Processed gets information for a processed file
+	Processed(FileProcessedRequest) FileProcessedResponse
+
+	// Processes gets information for all proccesed
+	// files in the specified case
+	Processes(FileProcessesRequest) FileProcessesResponse
+
 	// Update updates the information for a file
 	Update(FileUpdateRequest) FileUpdateResponse
 
@@ -789,6 +796,42 @@ type FileProcessRequest struct {
 // for processing a file in a case
 type FileProcessResponse struct {
 	Processed File
+}
+
+// FileProcessedRequest is the input-object
+// for getting a processed file in a case
+type FileProcessedRequest struct {
+	// ID of the processed file
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case to the processed file
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// FileProcessedResponse is the output-object
+// for get a processed file in a case
+type FileProcessedResponse struct {
+	ID        string
+	Processed interface{}
+}
+
+// FileProcessesRequest is the input-object
+// for getting a Processes file in a case
+type FileProcessesRequest struct {
+	// CaseID of the case to the get all the processes
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// FileProcessesResponse is the output-object
+// for get a Processes file in a case
+type FileProcessesResponse struct {
+	Processes interface{}
 }
 
 // FileOpenRequest is the input-object

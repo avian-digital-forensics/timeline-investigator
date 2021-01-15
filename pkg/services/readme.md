@@ -1293,6 +1293,8 @@ for updating an existing event_
 | New | /FileService.New | New uploads a file to the backend | FileNewRequest | FileNewResponse |
 | Open | /FileService.Open | Open opens a file | FileOpenRequest | FileOpenResponse |
 | Process | /FileService.Process | Process processes a file | FileProcessRequest | FileProcessResponse |
+| Processed | /FileService.Processed | Processed gets information for a processed file | FileProcessedRequest | FileProcessedResponse |
+| Processes | /FileService.Processes | Processes gets information for all proccesed files in the specified case | FileProcessesRequest | FileProcessesResponse |
 | Update | /FileService.Update | Update updates the information for a file | FileUpdateRequest | FileUpdateResponse |
 
 #### Delete
@@ -1549,6 +1551,125 @@ for processing a file in a case_
         "processedAt": 1257894000,
         "size": 450060
     }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Processed
+
+Processed gets information for a processed file
+
+##### Endpoint
+
+POST `/FileService.Processed`
+
+##### Request
+
+_FileProcessedRequest is the input-object
+for getting a processed file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the processed file | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case to the processed file | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/FileService.Processed
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_FileProcessedResponse is the output-object
+for get a processed file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string |  |  |
+| processed | interface{} |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "id": "text",
+    "processed": {}
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Processes
+
+Processes gets information for all proccesed
+files in the specified case
+
+##### Endpoint
+
+POST `/FileService.Processes`
+
+##### Request
+
+_FileProcessesRequest is the input-object
+for getting a Processes file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| caseID | string | CaseID of the case to the get all the processes | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/FileService.Processes
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_FileProcessesResponse is the output-object
+for get a Processes file in a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| processes | interface{} |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "processes": {}
 }
 ```
 
