@@ -2,8 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -53,12 +51,14 @@ func (srv *Server) Initialize(cfg *configs.MainAPI) error {
 
 	// Connect to fscrawler for indexing files
 	fs := fscrawler.New(cfg.Indexing.FSCrawlerURL)
-	if ok, err := fs.Ping(srv.ctx); !ok {
-		if err != nil {
-			return fmt.Errorf("no pong from fscrawler: %v", err)
+	/*
+		if ok, err := fs.Ping(srv.ctx); !ok {
+			if err != nil {
+				return fmt.Errorf("no pong from fscrawler: %v", err)
+			}
+			return errors.New("fscrawler: not healthy")
 		}
-		return errors.New("fscrawler: not healthy")
-	}
+	*/
 
 	// Set the base-path for the oto-server
 	srv.router.Basepath = "/api/"
