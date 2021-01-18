@@ -76,6 +76,10 @@ func TestFileService(t *testing.T) {
 	is.Equal(updated.Updated.Mime, file.New.Mime)
 	is.Equal(updated.Updated.ProcessedAt, file.New.ProcessedAt)
 
+	if testing.Short() {
+		t.Skip("skipping for process in short mode.")
+	}
+
 	// Process the file
 	processed, err := fileService.Process(ctx, client.FileProcessRequest{ID: file.New.ID, CaseID: testCase.ID})
 	is.NoErr(err)
