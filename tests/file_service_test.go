@@ -95,8 +95,13 @@ func TestFileService(t *testing.T) {
 	is.Equal(len(gotten.Case.Files), 1)
 	is.Equal(gotten.Case.Files[0], processed.Processed) // processed latest info for the first file
 
-	// Wait 3 seconds for the file to be indexed
-	time.Sleep(3 * time.Second)
+	// Wait 10 seconds for the file to be indexed
+	log.Println("WAIT : 10 seconds for processed file to be indexed")
+	time.Sleep(1 * time.Second)
+	for _, s := range []int{9, 8, 7, 6, 5, 4, 3, 2, 1} {
+		log.Println("WAIT :", s)
+		time.Sleep(1 * time.Second)
+	}
 
 	// get the processed information for the first file
 	processInfo, err := fileService.Processed(ctx, client.FileProcessedRequest{CaseID: testCase.ID, ID: file.New.ID})
