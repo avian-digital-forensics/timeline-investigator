@@ -26,3 +26,5 @@ data:
         credentials_file: /etc/secret-volume/auth-credentials-file.json
       filestore:
         base_path: ./
+      indexing:
+        fscrawler_url: http://fscrawler:8890/fscrawler
