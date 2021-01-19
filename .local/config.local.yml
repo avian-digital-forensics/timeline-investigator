@@ -16,4 +16,4 @@ config:
   filestore:
     base_path: ./
   indexing:
-    fscrawler_url: http://localhost:8890/fscrawler
+    fscrawler_url: http://fscrawler:8890/fscrawler
