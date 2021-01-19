@@ -9,6 +9,8 @@ services:
     depends_on: 
       elasticsearch:
         condition: service_healthy
+      fscrawler:
+        condition: service_healthy
     environment:
       - AUTH_CREDENTIALS=${AUTH_CREDENTIALS}
       - AUTH_CREDENTIALS_FILE=${AUTH_CREDENTIALS_FILE}
@@ -80,10 +82,14 @@ services:
     - ${PWD}/_fscrawler_rest.yml:/root/.fscrawler/fscrawler_rest/_settings.yaml
     ports:
       - "8890:8890"
+    healthcheck:
+      test: "${DOCKER_HEALTHCHECK_TEST:-curl http://localhost:8890/fscrawler}"
+      interval: "10s"
+      timeout: "3s"
+      start_period: "5s"
+      retries: 3
     command:
       - ./bin/fscrawler
       - --trace
-      - --loop
-      - "0"
       - --rest
       - fscrawler_rest
