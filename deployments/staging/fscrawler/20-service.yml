@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fscrawler
+  namespace: staging
+  labels:
+    app: fscrawler
+    env: staging
+spec:
+  clusterIP: None
+  selector:
+    app: fscrawler
+  ports:
+  - name: http
+    port: 8890

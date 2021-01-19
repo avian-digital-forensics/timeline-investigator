@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fscrawler
+  namespace: staging
+  labels:
+    app: fscrawler
+    env: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fscrawler
+  template:
+    metadata:
+      labels:
+        app: fscrawler
+        namespace: staging
+    spec:
+      containers:
+      - name: fscrawler
+        image: dadoonet/fscrawler:2.7-SNAPSHOT-es7-eng
+        resources:
+          requests:
+            memory: 128Mi
+        ports:
+        - containerPort: 8890
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /fscrawler
+            port: 8890
+          initialDelaySeconds: 5
+        volumeMounts:
+        - name: config-volume
+          mountPath: /root/.fscrawler/fscrawler_rest
+        command: ["./bin/fscrawler", "--rest", "fscrawler_rest"]
+      volumes:
+        - name: config-volume
+          configMap:
+            # ConfigMap specified in 30-config.yml
+            name: fscrawler
