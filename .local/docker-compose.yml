@@ -79,13 +79,14 @@ services:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
   fscrawler:
-    image: dadoonet/fscrawler:2.7-SNAPSHOT-es7-eng
+    image: fscrawler:2.7-local
+    build:
+      context: .
+      dockerfile: fscrawler.Dockerfile
     container_name: fscrawler
     depends_on: 
       elasticsearch:
         condition: service_healthy
-    volumes:
-    - ${PWD}/_fscrawler_rest.yml:/root/.fscrawler/fscrawler_rest/_settings.yaml
     ports:
       - "8890:8890"
     healthcheck:
