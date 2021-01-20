@@ -42,6 +42,7 @@ type QueryRequest struct {
 type Query struct {
 	Match    interface{} `json:"match,omitempty"`
 	Wildcard interface{} `json:"wildcard,omitempty"`
+	IDs      interface{} `json:"ids,omitempty"`
 }
 
 // NewID generates a new ID

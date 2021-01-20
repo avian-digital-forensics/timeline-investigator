@@ -1761,72 +1761,96 @@ for updating a files information_
 
 | Method | Endpoint | Description | Request | Response |
 | ------ | -------- | ----------- | ------- | -------- |
-| CreateEvent | /LinkService.CreateEvent | CreateEvent creates a link for an event with multiple objects | LinkEventCreateRequest | LinkEventCreateResponse |
-| DeleteEvent | /LinkService.DeleteEvent | DeleteEvent deletes all links to the specified event | LinkEventDeleteRequest | LinkEventDeleteResponse |
-| GetEvent | /LinkService.GetEvent | GetEvent gets an event with its links | LinkEventGetRequest | LinkEventGetResponse |
-| UpdateEvent | /LinkService.UpdateEvent | UpdateEvent updates links for the specified event | LinkEventUpdateRequest | LinkEventUpdateResponse |
+| Add | /LinkService.Add | Add adds specified links to an object | LinkAddRequest | LinkAddResponse |
+| Create | /LinkService.Create | Create creates a links for an object | LinkCreateRequest | LinkCreateResponse |
+| Delete | /LinkService.Delete | Delete deletes all links to the specified object | LinkDeleteRequest | LinkDeleteResponse |
+| Get | /LinkService.Get | Get gets an object with its links | LinkGetRequest | LinkGetResponse |
+| Remove | /LinkService.Remove | Remove removes specified links from an object | LinkRemoveRequest | LinkRemoveResponse |
 
-#### CreateEvent
+#### Add
 
-CreateEvent creates a link for an event
-with multiple objects
+Add adds specified links to an object
 
 ##### Endpoint
 
-POST `/LinkService.CreateEvent`
+POST `/LinkService.Add`
 
 ##### Request
 
-_LinkEventCreateRequest is the input-object
-for linking objects with an event_
+_LinkAddRequest is the input-object
+for adding linked objects with a specific object_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| caseID | string | CaseID for the event | 7a1713b0249d477d92f5e10124a59861 |
-| fromID | string | FromID is the ID of the event to hold the link | 7a1713b0249d477d92f5e10124a59861 |
-| eventIDs | []string | EventIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
-| bidirectional | bool | Bidirectional means that he link also should be created for the "ToID" | true |
+| id | string | ID is the ID of the link to add objects for | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID for the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventIDs | []string | EventIDs of the events to be added to the link | 7a1713b0249d477d92f5e10124a59861 |
+| personIDs | []string | PersonIDs of the persons to be added to the link | 7a1713b0249d477d92f5e10124a59861 |
+| entityIDs | []string | EntityIDs of the entities to be added to the link | 7a1713b0249d477d92f5e10124a59861 |
+| fileIDs | []string | FileIDs of the files to be added to the link | 7a1713b0249d477d92f5e10124a59861 |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"bidirectional":true,"caseID":"7a1713b0249d477d92f5e10124a59861","eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fromID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.CreateEvent
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","entityIDs":["7a1713b0249d477d92f5e10124a59861"],"eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fileIDs":["7a1713b0249d477d92f5e10124a59861"],"id":"7a1713b0249d477d92f5e10124a59861","personIDs":["7a1713b0249d477d92f5e10124a59861"]}' http://localhost:8080/api/LinkService.Add
 ```
 
 ```json
 {
-    "bidirectional": true,
     "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "entityIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
     "eventIDs": [
         "7a1713b0249d477d92f5e10124a59861"
     ],
-    "fromID": "7a1713b0249d477d92f5e10124a59861"
+    "fileIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "personIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ]
 }
 ```
 
 ##### Response
 
-_LinkEventCreateResponse is the output-object
+_LinkAddResponse is the output-object
 for linking objects with an event_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| linked | LinkEvent |  |  |
+| addedLinks | Link |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "linked": {
+    "addedLinks": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
         },
+        "entities": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "photoURL": "api.google.com/logo.png",
+                "title": "Avian APS",
+                "type": "organization"
+            }
+        ],
         "events": [
             {
                 "base": {
@@ -1841,18 +1865,40 @@ for linking objects with an event_
                 "toDate": 1257894000
             }
         ],
-        "from": {
-            "base": {
-                "createdAt": 1257894000,
-                "deletedAt": 0,
-                "id": "7a1713b0249d477d92f5e10124a59861",
-                "updatedAt": 0
-            },
-            "description": "This needs investigation.",
-            "fromDate": 1100127600,
-            "importance": 3,
-            "toDate": 1257894000
-        }
+        "files": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This file contains evidence",
+                "mime": "@file/plain",
+                "name": "text-file.txt",
+                "path": "/filestore/text-file.txt",
+                "processedAt": 1257894000,
+                "size": 450060
+            }
+        ],
+        "from": {},
+        "persons": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "emailAddress": "sja@avian.dk",
+                "firstName": "Simon",
+                "lastName": "Jansson",
+                "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+                "telephoneNo": "+46765550125",
+                "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+            }
+        ]
     }
 }
 ```
@@ -1865,41 +1911,187 @@ for linking objects with an event_
 }
 ```
 
-#### DeleteEvent
+#### Create
 
-DeleteEvent deletes all links to the specified event
+Create creates a links for an object
 
 ##### Endpoint
 
-POST `/LinkService.DeleteEvent`
+POST `/LinkService.Create`
 
 ##### Request
 
-_LinkEventDeleteRequest is the input-object
-for removing a linked event_
+_LinkCreateRequest is the input-object
+for linking objects with to a specific object_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| caseID | string | CaseID of the case where the linked event belongs | 7a1713b0249d477d92f5e10124a59861 |
-| eventID | string | EventID of the Event to delete the link for | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID for the object | 7a1713b0249d477d92f5e10124a59861 |
+| fromID | string | FromID is the ID of the object to hold the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventIDs | []string | EventIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| personIDs | []string | PersonIDs of the persons to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| entityIDs | []string | EntityIDs of the entitys to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| fileIDs | []string | FileIDs of the files to be linked | 7a1713b0249d477d92f5e10124a59861 |
+| bidirectional | bool | Bidirectional means that he link also should be created for the "ToID" | true |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","eventID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.DeleteEvent
+curl -H "Content-Type: application/json" -X POST -d '{"bidirectional":true,"caseID":"7a1713b0249d477d92f5e10124a59861","entityIDs":["7a1713b0249d477d92f5e10124a59861"],"eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fileIDs":["7a1713b0249d477d92f5e10124a59861"],"fromID":"7a1713b0249d477d92f5e10124a59861","personIDs":["7a1713b0249d477d92f5e10124a59861"]}' http://localhost:8080/api/LinkService.Create
 ```
 
 ```json
 {
+    "bidirectional": true,
     "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "eventID": "7a1713b0249d477d92f5e10124a59861"
+    "entityIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "eventIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fileIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fromID": "7a1713b0249d477d92f5e10124a59861",
+    "personIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ]
 }
 ```
 
 ##### Response
 
-_LinkEventDeleteResponse is the output-object
-for removing a linked event_
+_LinkCreateResponse is the output-object
+for linking objects_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| linked | Link |  |  |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "linked": {
+        "base": {
+            "createdAt": 1257894000,
+            "deletedAt": 0,
+            "id": "7a1713b0249d477d92f5e10124a59861",
+            "updatedAt": 0
+        },
+        "entities": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "photoURL": "api.google.com/logo.png",
+                "title": "Avian APS",
+                "type": "organization"
+            }
+        ],
+        "events": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This needs investigation.",
+                "fromDate": 1100127600,
+                "importance": 3,
+                "toDate": 1257894000
+            }
+        ],
+        "files": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This file contains evidence",
+                "mime": "@file/plain",
+                "name": "text-file.txt",
+                "path": "/filestore/text-file.txt",
+                "processedAt": 1257894000,
+                "size": 450060
+            }
+        ],
+        "from": {},
+        "persons": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "emailAddress": "sja@avian.dk",
+                "firstName": "Simon",
+                "lastName": "Jansson",
+                "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+                "telephoneNo": "+46765550125",
+                "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+            }
+        ]
+    }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Delete
+
+Delete deletes all links to the specified object
+
+##### Endpoint
+
+POST `/LinkService.Delete`
+
+##### Request
+
+_LinkDeleteRequest is the input-object
+for removing a linked object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to delete the link for | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case where the link belongs | 7a1713b0249d477d92f5e10124a59861 |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.Delete
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861"
+}
+```
+
+##### Response
+
+_LinkDeleteResponse is the output-object
+for removing a link_
 
 **Fields**
 
@@ -1921,47 +2113,47 @@ for removing a linked event_
 }
 ```
 
-#### GetEvent
+#### Get
 
-GetEvent gets an event with its links
+Get gets an object with its links
 
 ##### Endpoint
 
-POST `/LinkService.GetEvent`
+POST `/LinkService.Get`
 
 ##### Request
 
-_LinkEventGetRequest is the input-object
-for getting a linked Event_
+_LinkGetRequest is the input-object
+for getting a links for an object_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| caseID | string | CaseID of the case where the event belongs | 7a1713b0249d477d92f5e10124a59861 |
-| eventID | string | EventID of the Event to get all links for | 7a1713b0249d477d92f5e10124a59861 |
+| id | string | ID of the object to get all links for | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case where the link belongs | 7a1713b0249d477d92f5e10124a59861 |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","eventID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.GetEvent
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/LinkService.Get
 ```
 
 ```json
 {
     "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "eventID": "7a1713b0249d477d92f5e10124a59861"
+    "id": "7a1713b0249d477d92f5e10124a59861"
 }
 ```
 
 ##### Response
 
-_LinkEventGetResponse is the output-object
-for getting a linked Event_
+_LinkGetResponse is the output-object
+for getting a links for an object_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| link | LinkEvent |  |  |
+| link | Link |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
@@ -1975,6 +2167,20 @@ for getting a linked Event_
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
         },
+        "entities": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "photoURL": "api.google.com/logo.png",
+                "title": "Avian APS",
+                "type": "organization"
+            }
+        ],
         "events": [
             {
                 "base": {
@@ -1989,18 +2195,40 @@ for getting a linked Event_
                 "toDate": 1257894000
             }
         ],
-        "from": {
-            "base": {
-                "createdAt": 1257894000,
-                "deletedAt": 0,
-                "id": "7a1713b0249d477d92f5e10124a59861",
-                "updatedAt": 0
-            },
-            "description": "This needs investigation.",
-            "fromDate": 1100127600,
-            "importance": 3,
-            "toDate": 1257894000
-        }
+        "files": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This file contains evidence",
+                "mime": "@file/plain",
+                "name": "text-file.txt",
+                "path": "/filestore/text-file.txt",
+                "processedAt": 1257894000,
+                "size": 450060
+            }
+        ],
+        "from": {},
+        "persons": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "emailAddress": "sja@avian.dk",
+                "firstName": "Simon",
+                "lastName": "Jansson",
+                "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+                "telephoneNo": "+46765550125",
+                "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+            }
+        ]
     }
 }
 ```
@@ -2013,40 +2241,48 @@ for getting a linked Event_
 }
 ```
 
-#### UpdateEvent
+#### Remove
 
-UpdateEvent updates links for the specified event
+Remove removes specified links from an object
 
 ##### Endpoint
 
-POST `/LinkService.UpdateEvent`
+POST `/LinkService.Remove`
 
 ##### Request
 
-_LinkEventUpdateRequest is the input-object
-for updating linked objects with an event_
+_LinkRemoveRequest is the input-object
+for removing linked objects with a specific object_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| eventID | string | EventID is the ID of the event to hold the link | 7a1713b0249d477d92f5e10124a59861 |
-| caseID | string | CaseID for the event | 7a1713b0249d477d92f5e10124a59861 |
-| eventAddIDs | []string | EventAddIDs of the events to be linked | 7a1713b0249d477d92f5e10124a59861 |
-| eventRemoveIDs | []string | EventRemoveIDs of the events to be removed | 7a1713b0249d477d92f5e10124a59861 |
+| id | string | ID is the ID of the link to remove objects for | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID for the link | 7a1713b0249d477d92f5e10124a59861 |
+| eventIDs | []string | EventIDs of the events to be removed from the link | 7a1713b0249d477d92f5e10124a59861 |
+| personIDs | []string | PersonIDs of the persons to be removed from the link | 7a1713b0249d477d92f5e10124a59861 |
+| entityIDs | []string | EntityIDs of the entities to be removed from the link | 7a1713b0249d477d92f5e10124a59861 |
+| fileIDs | []string | FileIDs of the files to be removed from the link | 7a1713b0249d477d92f5e10124a59861 |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","eventAddIDs":["7a1713b0249d477d92f5e10124a59861"],"eventID":"7a1713b0249d477d92f5e10124a59861","eventRemoveIDs":["7a1713b0249d477d92f5e10124a59861"]}' http://localhost:8080/api/LinkService.UpdateEvent
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","entityIDs":["7a1713b0249d477d92f5e10124a59861"],"eventIDs":["7a1713b0249d477d92f5e10124a59861"],"fileIDs":["7a1713b0249d477d92f5e10124a59861"],"id":"7a1713b0249d477d92f5e10124a59861","personIDs":["7a1713b0249d477d92f5e10124a59861"]}' http://localhost:8080/api/LinkService.Remove
 ```
 
 ```json
 {
     "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "eventAddIDs": [
+    "entityIDs": [
         "7a1713b0249d477d92f5e10124a59861"
     ],
-    "eventID": "7a1713b0249d477d92f5e10124a59861",
-    "eventRemoveIDs": [
+    "eventIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "fileIDs": [
+        "7a1713b0249d477d92f5e10124a59861"
+    ],
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "personIDs": [
         "7a1713b0249d477d92f5e10124a59861"
     ]
 }
@@ -2054,27 +2290,41 @@ curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d
 
 ##### Response
 
-_LinkEventUpdateResponse is the output-object
-for linking objects with an event_
+_LinkRemoveResponse is the output-object
+for removing linked objects from a link objects_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| updated | LinkEvent |  |  |
+| removedLinks | Link |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "updated": {
+    "removedLinks": {
         "base": {
             "createdAt": 1257894000,
             "deletedAt": 0,
             "id": "7a1713b0249d477d92f5e10124a59861",
             "updatedAt": 0
         },
+        "entities": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "photoURL": "api.google.com/logo.png",
+                "title": "Avian APS",
+                "type": "organization"
+            }
+        ],
         "events": [
             {
                 "base": {
@@ -2089,18 +2339,40 @@ for linking objects with an event_
                 "toDate": 1257894000
             }
         ],
-        "from": {
-            "base": {
-                "createdAt": 1257894000,
-                "deletedAt": 0,
-                "id": "7a1713b0249d477d92f5e10124a59861",
-                "updatedAt": 0
-            },
-            "description": "This needs investigation.",
-            "fromDate": 1100127600,
-            "importance": 3,
-            "toDate": 1257894000
-        }
+        "files": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "description": "This file contains evidence",
+                "mime": "@file/plain",
+                "name": "text-file.txt",
+                "path": "/filestore/text-file.txt",
+                "processedAt": 1257894000,
+                "size": 450060
+            }
+        ],
+        "from": {},
+        "persons": [
+            {
+                "base": {
+                    "createdAt": 1257894000,
+                    "deletedAt": 0,
+                    "id": "7a1713b0249d477d92f5e10124a59861",
+                    "updatedAt": 0
+                },
+                "custom": {},
+                "emailAddress": "sja@avian.dk",
+                "firstName": "Simon",
+                "lastName": "Jansson",
+                "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+                "telephoneNo": "+46765550125",
+                "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
+            }
+        ]
     }
 }
 ```

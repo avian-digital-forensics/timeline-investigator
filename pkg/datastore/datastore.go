@@ -37,6 +37,7 @@ type Service interface {
 	UpdateEvent(ctx context.Context, caseID string, event *api.Event) error
 	DeleteEvent(ctx context.Context, caseID, eventID string) error
 	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
+	GetEventsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Event, error)
 	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
 
 	// Entity-methods
@@ -44,25 +45,29 @@ type Service interface {
 	UpdateEntity(ctx context.Context, caseID string, entity *api.Entity) error
 	DeleteEntity(ctx context.Context, caseID, entityID string) error
 	GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error)
+	GetEntitiesByIDs(ctx context.Context, caseID string, ids []string) ([]api.Entity, error)
 	GetEntities(ctx context.Context, caseID string) ([]api.Entity, error)
 
 	// File-methods
 	CreateFile(ctx context.Context, caseID string, file *api.File) error
 	UpdateFile(ctx context.Context, caseID string, file *api.File) error
 	DeleteFile(ctx context.Context, caseID, fileID string) error
-	GetFile(ctx context.Context, caseID, fileID string) (*api.File, error)
+	GetFileByID(ctx context.Context, caseID, fileID string) (*api.File, error)
+	GetFilesByIDs(ctx context.Context, caseID string, ids []string) ([]api.File, error)
 
 	// Link-methods
-	CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
-	UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error
-	GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error)
-	DeleteLinkEvent(ctx context.Context, caseID, eventID string) error
+	CreateLink(ctx context.Context, caseID string, link *api.Link) error
+	UpdateLink(ctx context.Context, caseID string, link *api.Link) error
+	GetLinkByID(ctx context.Context, caseID, id string) (*api.Link, error)
+	GetLinksByIDs(ctx context.Context, caseID string, ids []string) ([]api.Link, error)
+	DeleteLink(ctx context.Context, caseID, id string) error
 
 	// Person-methods
 	CreatePerson(ctx context.Context, caseID string, Person *api.Person) error
 	UpdatePerson(ctx context.Context, caseID string, Person *api.Person) error
 	DeletePerson(ctx context.Context, caseID, personID string) error
 	GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error)
+	GetPersonsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Person, error)
 	GetPersons(ctx context.Context, caseID string) ([]api.Person, error)
 
 	// Process-methods
@@ -182,6 +187,20 @@ func (s svc) GetEventByID(ctx context.Context, caseID, eventID string) (*api.Eve
 	return &event, nil
 }
 
+func (s svc) GetEventsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Event, error) {
+	resp, err := s.searchByIDs(ctx, indexEvent+"-"+caseID, ids)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
+	}
+
+	var events []api.Event
+	if err := json.Unmarshal(resp, &events); err != nil {
+		return nil, fmt.Errorf("Event json.Unmarshal: %v", err)
+	}
+
+	return events, nil
+}
+
 func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) {
 	search, err := s.search(ctx, indexEvent+"-"+caseID)
 	if err != nil {
@@ -246,6 +265,20 @@ func (s svc) GetEntityByID(ctx context.Context, caseID, entityID string) (*api.E
 	return &entity, nil
 }
 
+func (s svc) GetEntitiesByIDs(ctx context.Context, caseID string, ids []string) ([]api.Entity, error) {
+	resp, err := s.searchByIDs(ctx, indexEntity+"-"+caseID, ids)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
+	}
+
+	var entities []api.Entity
+	if err := json.Unmarshal(resp, &entities); err != nil {
+		return nil, fmt.Errorf("Entity json.Unmarshal: %v", err)
+	}
+
+	return entities, nil
+}
+
 func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, error) {
 	search, err := s.search(ctx, indexEntity+"-"+caseID)
 	if err != nil {
@@ -308,6 +341,20 @@ func (s svc) GetPersonByID(ctx context.Context, caseID, personID string) (*api.P
 	}
 
 	return &person, nil
+}
+
+func (s svc) GetPersonsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Person, error) {
+	resp, err := s.searchByIDs(ctx, indexPerson+"-"+caseID, ids)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
+	}
+
+	var persons []api.Person
+	if err := json.Unmarshal(resp, &persons); err != nil {
+		return nil, fmt.Errorf("Person json.Unmarshal: %v", err)
+	}
+
+	return persons, nil
 }
 
 func (s svc) GetPersons(ctx context.Context, caseID string) ([]api.Person, error) {
@@ -396,7 +443,7 @@ func (s svc) DeleteFile(ctx context.Context, caseID, fileID string) error {
 	return errors.New("file not found")
 }
 
-func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, error) {
+func (s svc) GetFileByID(ctx context.Context, caseID, fileID string) (*api.File, error) {
 	caze, err := s.GetCase(ctx, caseID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get case for file: %v", err)
@@ -409,6 +456,28 @@ func (s svc) GetFile(ctx context.Context, caseID, fileID string) (*api.File, err
 	}
 
 	return nil, errors.New("file not found")
+}
+
+func (s svc) GetFilesByIDs(ctx context.Context, caseID string, ids []string) ([]api.File, error) {
+	caze, err := s.GetCase(ctx, caseID)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get case for file: %v", err)
+	}
+
+	// Create a hash-map for the IDs
+	var idMap = make(map[string]bool)
+	for _, id := range ids {
+		idMap[id] = true
+	}
+
+	var files []api.File
+	for _, f := range caze.Files {
+		if idMap[f.ID] {
+			files = append(files, f)
+		}
+	}
+
+	return files, nil
 }
 
 func (s svc) GetProcessedFile(ctx context.Context, caseID, id string) (interface{}, error) {
@@ -475,30 +544,30 @@ func (s svc) GetProcess(ctx context.Context, id string) (*api.Process, error) {
 	return &process, nil
 }
 
-func (s svc) CreateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
+func (s svc) CreateLink(ctx context.Context, caseID string, link *api.Link) error {
 	link.ID = internal.NewID()
 	link.CreatedAt = time.Now().Unix()
-	if err := s.save(ctx, indexLink+"-"+caseID, link.From.ID, link); err != nil {
+	if err := s.save(ctx, indexLink+"-"+caseID, link.ID, link); err != nil {
 		return fmt.Errorf("failed to save Link : %v", err)
 	}
 	return nil
 }
 
-func (s svc) UpdateLinkEvent(ctx context.Context, caseID string, link *api.LinkEvent) error {
+func (s svc) UpdateLink(ctx context.Context, caseID string, link *api.Link) error {
 	link.UpdatedAt = time.Now().Unix()
-	if err := s.save(ctx, indexLink+"-"+caseID, link.From.ID, link); err != nil {
+	if err := s.save(ctx, indexLink+"-"+caseID, link.ID, link); err != nil {
 		return fmt.Errorf("failed to save Link : %v", err)
 	}
 	return nil
 }
 
-func (s svc) GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.LinkEvent, error) {
-	resp, err := s.searchByID(ctx, indexLink+"-"+caseID, eventID)
+func (s svc) GetLinkByID(ctx context.Context, caseID, id string) (*api.Link, error) {
+	resp, err := s.searchByID(ctx, indexLink+"-"+caseID, id)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
+		return nil, fmt.Errorf("Cannot find Link in Case: %v", err)
 	}
 
-	var link api.LinkEvent
+	var link api.Link
 	if err := json.Unmarshal(resp, &link); err != nil {
 		return nil, fmt.Errorf("Link json.Unmarshal: %v", err)
 	}
@@ -506,10 +575,24 @@ func (s svc) GetLinkEvent(ctx context.Context, caseID, eventID string) (*api.Lin
 	return &link, nil
 }
 
-func (s svc) DeleteLinkEvent(ctx context.Context, caseID, eventID string) error {
+func (s svc) GetLinksByIDs(ctx context.Context, caseID string, ids []string) ([]api.Link, error) {
+	resp, err := s.searchByIDs(ctx, indexLink+"-"+caseID, ids)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find Links in Case: %v", err)
+	}
+
+	var links []api.Link
+	if err := json.Unmarshal(resp, &links); err != nil {
+		return nil, fmt.Errorf("Link json.Unmarshal: %v", err)
+	}
+
+	return links, nil
+}
+
+func (s svc) DeleteLink(ctx context.Context, caseID, id string) error {
 	index := fmt.Sprintf("%s-%s", indexLink, caseID)
-	if err := s.delete(ctx, index, eventID); err != nil {
-		return fmt.Errorf("cannot delete Link for Event: %v", err)
+	if err := s.delete(ctx, index, id); err != nil {
+		return fmt.Errorf("cannot delete Link for : %v", err)
 	}
 	return nil
 }
@@ -575,6 +658,62 @@ func (s svc) delete(ctx context.Context, index, id string) error {
 	}
 
 	return nil
+}
+
+func (s svc) searchByIDs(ctx context.Context, index string, ids []string) ([]byte, error) {
+	if len(ids) == 0 {
+		return []byte{}, nil
+	}
+
+	var query internal.QueryRequest
+	query.Query.IDs = map[string][]string{"values": ids}
+
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Perform the search request.
+	res, err := s.es.Search(
+		s.es.Search.WithContext(ctx),
+		s.es.Search.WithIndex(index),
+		s.es.Search.WithBody(bytes.NewReader(queryJSON)),
+		//es.Search.WithTrackTotalHits(true),
+		//es.Search.WithPretty(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get response: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, decodeError(res)
+	}
+
+	var search internal.Response
+	if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+		return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+
+	// make a hash-map of the ids
+	var idMap = make(map[string]bool)
+	for _, id := range ids {
+		idMap[id] = true
+	}
+
+	var data []interface{}
+	for _, hit := range search.Hits.Hits {
+		if idMap[hit.ID] {
+			data = append(data, hit.Source)
+		}
+	}
+
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("json.Marshal: %v", err)
+	}
+
+	return dataJSON, nil
 }
 
 func (s svc) searchByID(ctx context.Context, index, id string) ([]byte, error) {

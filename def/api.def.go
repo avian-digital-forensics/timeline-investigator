@@ -114,18 +114,20 @@ type FileService interface {
 // LinkService is a API for creating links
 // between objects
 type LinkService interface {
-	// CreateEvent creates a link for an event
-	// with multiple objects
-	CreateEvent(LinkEventCreateRequest) LinkEventCreateResponse
+	// Create creates a links for an object
+	Create(LinkCreateRequest) LinkCreateResponse
 
-	// GetEvent gets an event with its links
-	GetEvent(LinkEventGetRequest) LinkEventGetResponse
+	// Get gets an object with its links
+	Get(LinkGetRequest) LinkGetResponse
 
-	// DeleteEvent deletes all links to the specified event
-	DeleteEvent(LinkEventDeleteRequest) LinkEventDeleteResponse
+	// Delete deletes all links to the specified object
+	Delete(LinkDeleteRequest) LinkDeleteResponse
 
-	// UpdateEvent updates links for the specified event
-	UpdateEvent(LinkEventUpdateRequest) LinkEventUpdateResponse
+	// Add adds specified links to an object
+	Add(LinkAddRequest) LinkAddResponse
+
+	// Remove removes specified links from an object
+	Remove(LinkRemoveRequest) LinkRemoveResponse
 
 	// Authenticate is a middleware
 	// in the http-handler
@@ -903,26 +905,38 @@ type FileDeleteRequest struct {
 // for deleting a file
 type FileDeleteResponse struct{}
 
-// LinkEvent is a link for an event between different objects
-type LinkEvent struct {
+// Link is a link for an object between different objects
+type Link struct {
 	Base
 
-	// From which event has been linked
-	From Event
+	// From is the object
+	// that the link is from
+	//
+	// Note: can be any object
+	From interface{}
 
 	// Events that has been linked
 	Events []Event
+
+	// Persons that has been linked
+	Persons []Person
+
+	// Entities that has been linked
+	Entities []Entity
+
+	// Files that has been linked
+	Files []File
 }
 
-// LinkEventCreateRequest is the input-object
-// for linking objects with an event
-type LinkEventCreateRequest struct {
-	// CaseID for the event
+// LinkCreateRequest is the input-object
+// for linking objects with to a specific object
+type LinkCreateRequest struct {
+	// CaseID for the object
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
 
-	// FromID is the ID of the event to hold the link
+	// FromID is the ID of the object to hold the link
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	FromID string
@@ -932,6 +946,21 @@ type LinkEventCreateRequest struct {
 	// example: ["7a1713b0249d477d92f5e10124a59861"]
 	EventIDs []string
 
+	// PersonIDs of the persons to be linked
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	PersonIDs []string
+
+	// EntityIDs of the entitys to be linked
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EntityIDs []string
+
+	// FileIDs of the files to be linked
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	FileIDs []string
+
 	// Bidirectional means that he link also should be
 	// created for the "ToID"
 	//
@@ -939,82 +968,129 @@ type LinkEventCreateRequest struct {
 	Bidirectional bool
 }
 
-// LinkEventCreateResponse is the output-object
-// for linking objects with an event
-type LinkEventCreateResponse struct {
-	Linked LinkEvent
+// LinkCreateResponse is the output-object
+// for linking objects
+type LinkCreateResponse struct {
+	Linked Link
 }
 
-// LinkEventUpdateRequest is the input-object
-// for updating linked objects with an event
-type LinkEventUpdateRequest struct {
-	// EventID is the ID of the event to hold the link
+// LinkAddRequest is the input-object
+// for adding linked objects with a specific object
+type LinkAddRequest struct {
+	// ID is the ID of the link to add objects for
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
-	EventID string
+	ID string
 
-	// CaseID for the event
+	// CaseID for the link
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
 
-	// EventAddIDs of the events to be linked
+	// EventIDs of the events to be added to the link
 	//
 	// example: ["7a1713b0249d477d92f5e10124a59861"]
-	EventAddIDs []string
+	EventIDs []string
 
-	// EventRemoveIDs of the events to be removed
+	// PersonIDs of the persons to be added to the link
 	//
 	// example: ["7a1713b0249d477d92f5e10124a59861"]
-	EventRemoveIDs []string
+	PersonIDs []string
+
+	// EntityIDs of the entities to be added to the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EntityIDs []string
+
+	// FileIDs of the files to be added to the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	FileIDs []string
 }
 
-// LinkEventUpdateResponse is the output-object
+// LinkAddResponse is the output-object
 // for linking objects with an event
-type LinkEventUpdateResponse struct {
-	Updated LinkEvent
+type LinkAddResponse struct {
+	AddedLinks Link
 }
 
-// LinkEventGetRequest is the input-object
-// for getting a linked Event
-type LinkEventGetRequest struct {
-	// CaseID of the case where the event
-	// belongs
+// LinkRemoveRequest is the input-object
+// for removing linked objects with a specific object
+type LinkRemoveRequest struct {
+	// ID is the ID of the link to remove objects for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID for the link
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
 
-	// EventID of the Event to get
-	// all links for
+	// EventIDs of the events to be removed from the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EventIDs []string
+
+	// PersonIDs of the persons to be removed from the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	PersonIDs []string
+
+	// EntityIDs of the entities to be removed from the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	EntityIDs []string
+
+	// FileIDs of the files to be removed from the link
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861"]
+	FileIDs []string
+}
+
+// LinkRemoveResponse is the output-object
+// for removing linked objects from a link objects
+type LinkRemoveResponse struct {
+	RemovedLinks Link
+}
+
+// LinkGetRequest is the input-object
+// for getting a links for an object
+type LinkGetRequest struct {
+	// ID of the object to get all links for
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
-	EventID string
-}
+	ID string
 
-// LinkEventGetResponse is the output-object
-// for getting a linked Event
-type LinkEventGetResponse struct {
-	Link LinkEvent
-}
-
-// LinkEventDeleteRequest is the input-object
-// for removing a linked event
-type LinkEventDeleteRequest struct {
-	// CaseID of the case where the linked event
-	// belongs
+	// CaseID of the case where the link belongs
 	//
 	// example: "7a1713b0249d477d92f5e10124a59861"
 	CaseID string
-
-	// EventID of the Event to delete the link for
-	//
-	// example: "7a1713b0249d477d92f5e10124a59861"
-	EventID string
 }
 
-// LinkEventDeleteResponse is the output-object
-// for removing a linked event
-type LinkEventDeleteResponse struct{}
+// LinkGetResponse is the output-object
+// for getting a links for an object
+type LinkGetResponse struct {
+	Link Link
+}
+
+// LinkDeleteRequest is the input-object
+// for removing a linked object
+type LinkDeleteRequest struct {
+	// ID of the object to delete the link for
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case where the link belongs
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+}
+
+// LinkDeleteResponse is the output-object
+// for removing a link
+type LinkDeleteResponse struct{}
 
 // Person is a human related to a case
 type Person struct {

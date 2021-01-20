@@ -82,7 +82,7 @@ func (s *FileService) Open(ctx context.Context, r api.FileOpenRequest) (*api.Fil
 		return nil, api.ErrNotAllowed
 	}
 
-	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
@@ -105,7 +105,7 @@ func (s *FileService) Process(ctx context.Context, r api.FileProcessRequest) (*a
 		return nil, api.ErrNotAllowed
 	}
 
-	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
@@ -172,7 +172,7 @@ func (s *FileService) Update(ctx context.Context, r api.FileUpdateRequest) (*api
 	}
 
 	// Get the file to update
-	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
@@ -199,7 +199,7 @@ func (s *FileService) Delete(ctx context.Context, r api.FileDeleteRequest) (*api
 		return nil, api.ErrNotAllowed
 	}
 
-	file, err := s.db.GetFile(ctx, r.CaseID, r.ID)
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}

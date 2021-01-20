@@ -82,16 +82,18 @@ type FileService interface {
 
 // LinkService is a API for creating links between objects
 type LinkService interface {
+	// Add adds specified links to an object
+	Add(context.Context, LinkAddRequest) (*LinkAddResponse, error)
 	// Authenticate is a middleware in the http-handler
 	Authenticate(context.Context, *http.Request) (context.Context, error)
-	// CreateEvent creates a link for an event with multiple objects
-	CreateEvent(context.Context, LinkEventCreateRequest) (*LinkEventCreateResponse, error)
-	// DeleteEvent deletes all links to the specified event
-	DeleteEvent(context.Context, LinkEventDeleteRequest) (*LinkEventDeleteResponse, error)
-	// GetEvent gets an event with its links
-	GetEvent(context.Context, LinkEventGetRequest) (*LinkEventGetResponse, error)
-	// UpdateEvent updates links for the specified event
-	UpdateEvent(context.Context, LinkEventUpdateRequest) (*LinkEventUpdateResponse, error)
+	// Create creates a links for an object
+	Create(context.Context, LinkCreateRequest) (*LinkCreateResponse, error)
+	// Delete deletes all links to the specified object
+	Delete(context.Context, LinkDeleteRequest) (*LinkDeleteResponse, error)
+	// Get gets an object with its links
+	Get(context.Context, LinkGetRequest) (*LinkGetResponse, error)
+	// Remove removes specified links from an object
+	Remove(context.Context, LinkRemoveRequest) (*LinkRemoveResponse, error)
 }
 
 // PersonService is the API to handle entities
@@ -733,15 +735,16 @@ func RegisterLinkService(server *otohttp.Server, linkService LinkService) {
 		server:      server,
 		linkService: linkService,
 	}
+	server.Register("LinkService", "Add", handler.handleAdd)
 
-	server.Register("LinkService", "CreateEvent", handler.handleCreateEvent)
-	server.Register("LinkService", "DeleteEvent", handler.handleDeleteEvent)
-	server.Register("LinkService", "GetEvent", handler.handleGetEvent)
-	server.Register("LinkService", "UpdateEvent", handler.handleUpdateEvent)
+	server.Register("LinkService", "Create", handler.handleCreate)
+	server.Register("LinkService", "Delete", handler.handleDelete)
+	server.Register("LinkService", "Get", handler.handleGet)
+	server.Register("LinkService", "Remove", handler.handleRemove)
 }
 
-func (s *linkServiceServer) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
-	var request LinkEventCreateRequest
+func (s *linkServiceServer) handleAdd(w http.ResponseWriter, r *http.Request) {
+	var request LinkAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -751,7 +754,7 @@ func (s *linkServiceServer) handleCreateEvent(w http.ResponseWriter, r *http.Req
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.linkService.CreateEvent(ctx, request)
+	response, err := s.linkService.Add(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -762,8 +765,8 @@ func (s *linkServiceServer) handleCreateEvent(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (s *linkServiceServer) handleDeleteEvent(w http.ResponseWriter, r *http.Request) {
-	var request LinkEventDeleteRequest
+func (s *linkServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var request LinkCreateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -773,7 +776,7 @@ func (s *linkServiceServer) handleDeleteEvent(w http.ResponseWriter, r *http.Req
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.linkService.DeleteEvent(ctx, request)
+	response, err := s.linkService.Create(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -784,8 +787,8 @@ func (s *linkServiceServer) handleDeleteEvent(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (s *linkServiceServer) handleGetEvent(w http.ResponseWriter, r *http.Request) {
-	var request LinkEventGetRequest
+func (s *linkServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+	var request LinkDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -795,7 +798,7 @@ func (s *linkServiceServer) handleGetEvent(w http.ResponseWriter, r *http.Reques
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.linkService.GetEvent(ctx, request)
+	response, err := s.linkService.Delete(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -806,8 +809,8 @@ func (s *linkServiceServer) handleGetEvent(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (s *linkServiceServer) handleUpdateEvent(w http.ResponseWriter, r *http.Request) {
-	var request LinkEventUpdateRequest
+func (s *linkServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
+	var request LinkGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -817,7 +820,29 @@ func (s *linkServiceServer) handleUpdateEvent(w http.ResponseWriter, r *http.Req
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.linkService.UpdateEvent(ctx, request)
+	response, err := s.linkService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *linkServiceServer) handleRemove(w http.ResponseWriter, r *http.Request) {
+	var request LinkRemoveRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.linkService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.linkService.Remove(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1587,83 +1612,6 @@ type FileUpdateResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-// LinkEvent is a link for an event between different objects
-type LinkEvent struct {
-	Base
-	// From which event has been linked
-	From Event `json:"from"`
-	// Events that has been linked
-	Events []Event `json:"events"`
-}
-
-// LinkEventCreateRequest is the input-object for linking objects with an event
-type LinkEventCreateRequest struct {
-	// CaseID for the event
-	CaseID string `json:"caseID"`
-	// FromID is the ID of the event to hold the link
-	FromID string `json:"fromID"`
-	// EventIDs of the events to be linked
-	EventIDs []string `json:"eventIDs"`
-	// Bidirectional means that he link also should be created for the "ToID"
-	Bidirectional bool `json:"bidirectional"`
-}
-
-// LinkEventCreateResponse is the output-object for linking objects with an event
-type LinkEventCreateResponse struct {
-	Linked LinkEvent `json:"linked"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
-}
-
-// LinkEventDeleteRequest is the input-object for removing a linked event
-type LinkEventDeleteRequest struct {
-	// CaseID of the case where the linked event belongs
-	CaseID string `json:"caseID"`
-	// EventID of the Event to delete the link for
-	EventID string `json:"eventID"`
-}
-
-// LinkEventDeleteResponse is the output-object for removing a linked event
-type LinkEventDeleteResponse struct {
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
-}
-
-// LinkEventGetRequest is the input-object for getting a linked Event
-type LinkEventGetRequest struct {
-	// CaseID of the case where the event belongs
-	CaseID string `json:"caseID"`
-	// EventID of the Event to get all links for
-	EventID string `json:"eventID"`
-}
-
-// LinkEventGetResponse is the output-object for getting a linked Event
-type LinkEventGetResponse struct {
-	Link LinkEvent `json:"link"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
-}
-
-// LinkEventUpdateRequest is the input-object for updating linked objects with an
-// event
-type LinkEventUpdateRequest struct {
-	// EventID is the ID of the event to hold the link
-	EventID string `json:"eventID"`
-	// CaseID for the event
-	CaseID string `json:"caseID"`
-	// EventAddIDs of the events to be linked
-	EventAddIDs []string `json:"eventAddIDs"`
-	// EventRemoveIDs of the events to be removed
-	EventRemoveIDs []string `json:"eventRemoveIDs"`
-}
-
-// LinkEventUpdateResponse is the output-object for linking objects with an event
-type LinkEventUpdateResponse struct {
-	Updated LinkEvent `json:"updated"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
-}
-
 // Person is a human related to a case
 type Person struct {
 	Base
@@ -1681,6 +1629,125 @@ type Person struct {
 	TelephoneNo string `json:"telephoneNo"`
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+}
+
+// Link is a link for an object between different objects
+type Link struct {
+	Base
+	// From is the object that the link is from
+	From interface{} `json:"from"`
+	// Events that has been linked
+	Events []Event `json:"events"`
+	// Persons that has been linked
+	Persons []Person `json:"persons"`
+	// Entities that has been linked
+	Entities []Entity `json:"entities"`
+	// Files that has been linked
+	Files []File `json:"files"`
+}
+
+// LinkAddRequest is the input-object for adding linked objects with a specific
+// object
+type LinkAddRequest struct {
+	// ID is the ID of the link to add objects for
+	ID string `json:"id"`
+	// CaseID for the link
+	CaseID string `json:"caseID"`
+	// EventIDs of the events to be added to the link
+	EventIDs []string `json:"eventIDs"`
+	// PersonIDs of the persons to be added to the link
+	PersonIDs []string `json:"personIDs"`
+	// EntityIDs of the entities to be added to the link
+	EntityIDs []string `json:"entityIDs"`
+	// FileIDs of the files to be added to the link
+	FileIDs []string `json:"fileIDs"`
+}
+
+// LinkAddResponse is the output-object for linking objects with an event
+type LinkAddResponse struct {
+	AddedLinks Link `json:"addedLinks"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkCreateRequest is the input-object for linking objects with to a specific
+// object
+type LinkCreateRequest struct {
+	// CaseID for the object
+	CaseID string `json:"caseID"`
+	// FromID is the ID of the object to hold the link
+	FromID string `json:"fromID"`
+	// EventIDs of the events to be linked
+	EventIDs []string `json:"eventIDs"`
+	// PersonIDs of the persons to be linked
+	PersonIDs []string `json:"personIDs"`
+	// EntityIDs of the entitys to be linked
+	EntityIDs []string `json:"entityIDs"`
+	// FileIDs of the files to be linked
+	FileIDs []string `json:"fileIDs"`
+	// Bidirectional means that he link also should be created for the "ToID"
+	Bidirectional bool `json:"bidirectional"`
+}
+
+// LinkCreateResponse is the output-object for linking objects
+type LinkCreateResponse struct {
+	Linked Link `json:"linked"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkDeleteRequest is the input-object for removing a linked object
+type LinkDeleteRequest struct {
+	// ID of the object to delete the link for
+	ID string `json:"id"`
+	// CaseID of the case where the link belongs
+	CaseID string `json:"caseID"`
+}
+
+// LinkDeleteResponse is the output-object for removing a link
+type LinkDeleteResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkGetRequest is the input-object for getting a links for an object
+type LinkGetRequest struct {
+	// ID of the object to get all links for
+	ID string `json:"id"`
+	// CaseID of the case where the link belongs
+	CaseID string `json:"caseID"`
+}
+
+// LinkGetResponse is the output-object for getting a links for an object
+type LinkGetResponse struct {
+	Link Link `json:"link"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// LinkRemoveRequest is the input-object for removing linked objects with a
+// specific object
+type LinkRemoveRequest struct {
+	// ID is the ID of the link to remove objects for
+	ID string `json:"id"`
+	// CaseID for the link
+	CaseID string `json:"caseID"`
+	// EventIDs of the events to be removed from the link
+	EventIDs []string `json:"eventIDs"`
+	// PersonIDs of the persons to be removed from the link
+	PersonIDs []string `json:"personIDs"`
+	// EntityIDs of the entities to be removed from the link
+	EntityIDs []string `json:"entityIDs"`
+	// FileIDs of the files to be removed from the link
+	FileIDs []string `json:"fileIDs"`
+}
+
+// LinkRemoveResponse is the output-object for removing linked objects from a link
+// objects
+type LinkRemoveResponse struct {
+	RemovedLinks Link `json:"removedLinks"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 // PersonCreateRequest is the input-object for creating a person

@@ -1304,18 +1304,18 @@ func NewLinkService(client *Client, token string) *LinkService {
 	}
 }
 
-// CreateEvent creates a link for an event with multiple objects
-func (s *LinkService) CreateEvent(ctx context.Context, r LinkEventCreateRequest) (*LinkEventCreateResponse, error) {
+// Add adds specified links to an object
+func (s *LinkService) Add(ctx context.Context, r LinkAddRequest) (*LinkAddResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.CreateEvent: marshal LinkEventCreateRequest")
+		return nil, errors.Wrap(err, "LinkService.Add: marshal LinkAddRequest")
 	}
-	url := s.client.RemoteHost + "LinkService.CreateEvent"
+	url := s.client.RemoteHost + "LinkService.Add"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.CreateEvent: NewRequest")
+		return nil, errors.Wrap(err, "LinkService.Add: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -1323,51 +1323,51 @@ func (s *LinkService) CreateEvent(ctx context.Context, r LinkEventCreateRequest)
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.CreateEvent")
+		return nil, errors.Wrap(err, "LinkService.Add")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		LinkEventCreateResponse
+		LinkAddResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "LinkService.CreateEvent: new gzip reader")
+			return nil, errors.Wrap(err, "LinkService.Add: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.CreateEvent: read response body")
+		return nil, errors.Wrap(err, "LinkService.Add: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("LinkService.CreateEvent: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("LinkService.Add: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.LinkEventCreateResponse, nil
+	return &response.LinkAddResponse, nil
 }
 
-// DeleteEvent deletes all links to the specified event
-func (s *LinkService) DeleteEvent(ctx context.Context, r LinkEventDeleteRequest) (*LinkEventDeleteResponse, error) {
+// Create creates a links for an object
+func (s *LinkService) Create(ctx context.Context, r LinkCreateRequest) (*LinkCreateResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.DeleteEvent: marshal LinkEventDeleteRequest")
+		return nil, errors.Wrap(err, "LinkService.Create: marshal LinkCreateRequest")
 	}
-	url := s.client.RemoteHost + "LinkService.DeleteEvent"
+	url := s.client.RemoteHost + "LinkService.Create"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.DeleteEvent: NewRequest")
+		return nil, errors.Wrap(err, "LinkService.Create: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -1375,51 +1375,51 @@ func (s *LinkService) DeleteEvent(ctx context.Context, r LinkEventDeleteRequest)
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.DeleteEvent")
+		return nil, errors.Wrap(err, "LinkService.Create")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		LinkEventDeleteResponse
+		LinkCreateResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "LinkService.DeleteEvent: new gzip reader")
+			return nil, errors.Wrap(err, "LinkService.Create: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.DeleteEvent: read response body")
+		return nil, errors.Wrap(err, "LinkService.Create: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("LinkService.DeleteEvent: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("LinkService.Create: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.LinkEventDeleteResponse, nil
+	return &response.LinkCreateResponse, nil
 }
 
-// GetEvent gets an event with its links
-func (s *LinkService) GetEvent(ctx context.Context, r LinkEventGetRequest) (*LinkEventGetResponse, error) {
+// Delete deletes all links to the specified object
+func (s *LinkService) Delete(ctx context.Context, r LinkDeleteRequest) (*LinkDeleteResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.GetEvent: marshal LinkEventGetRequest")
+		return nil, errors.Wrap(err, "LinkService.Delete: marshal LinkDeleteRequest")
 	}
-	url := s.client.RemoteHost + "LinkService.GetEvent"
+	url := s.client.RemoteHost + "LinkService.Delete"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.GetEvent: NewRequest")
+		return nil, errors.Wrap(err, "LinkService.Delete: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -1427,51 +1427,51 @@ func (s *LinkService) GetEvent(ctx context.Context, r LinkEventGetRequest) (*Lin
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.GetEvent")
+		return nil, errors.Wrap(err, "LinkService.Delete")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		LinkEventGetResponse
+		LinkDeleteResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "LinkService.GetEvent: new gzip reader")
+			return nil, errors.Wrap(err, "LinkService.Delete: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.GetEvent: read response body")
+		return nil, errors.Wrap(err, "LinkService.Delete: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("LinkService.GetEvent: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("LinkService.Delete: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.LinkEventGetResponse, nil
+	return &response.LinkDeleteResponse, nil
 }
 
-// UpdateEvent updates links for the specified event
-func (s *LinkService) UpdateEvent(ctx context.Context, r LinkEventUpdateRequest) (*LinkEventUpdateResponse, error) {
+// Get gets an object with its links
+func (s *LinkService) Get(ctx context.Context, r LinkGetRequest) (*LinkGetResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.UpdateEvent: marshal LinkEventUpdateRequest")
+		return nil, errors.Wrap(err, "LinkService.Get: marshal LinkGetRequest")
 	}
-	url := s.client.RemoteHost + "LinkService.UpdateEvent"
+	url := s.client.RemoteHost + "LinkService.Get"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.UpdateEvent: NewRequest")
+		return nil, errors.Wrap(err, "LinkService.Get: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -1479,37 +1479,89 @@ func (s *LinkService) UpdateEvent(ctx context.Context, r LinkEventUpdateRequest)
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.UpdateEvent")
+		return nil, errors.Wrap(err, "LinkService.Get")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		LinkEventUpdateResponse
+		LinkGetResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "LinkService.UpdateEvent: new gzip reader")
+			return nil, errors.Wrap(err, "LinkService.Get: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "LinkService.UpdateEvent: read response body")
+		return nil, errors.Wrap(err, "LinkService.Get: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("LinkService.UpdateEvent: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("LinkService.Get: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.LinkEventUpdateResponse, nil
+	return &response.LinkGetResponse, nil
+}
+
+// Remove removes specified links from an object
+func (s *LinkService) Remove(ctx context.Context, r LinkRemoveRequest) (*LinkRemoveResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "LinkService.Remove: marshal LinkRemoveRequest")
+	}
+	url := s.client.RemoteHost + "LinkService.Remove"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "LinkService.Remove: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "LinkService.Remove")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		LinkRemoveResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "LinkService.Remove: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "LinkService.Remove: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("LinkService.Remove: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.LinkRemoveResponse, nil
 }
 
 // PersonService is the API to handle entities
@@ -2617,85 +2669,6 @@ type FileUpdateResponse struct {
 	Updated File `json:"updated"`
 }
 
-// LinkEvent is a link for an event between different objects
-type LinkEvent struct {
-	Base
-
-	// From which event has been linked
-	From Event `json:"from"`
-
-	// Events that has been linked
-	Events []Event `json:"events"`
-}
-
-// LinkEventCreateRequest is the input-object for linking objects with an event
-type LinkEventCreateRequest struct {
-	// CaseID for the event
-	CaseID string `json:"caseID"`
-
-	// FromID is the ID of the event to hold the link
-	FromID string `json:"fromID"`
-
-	// EventIDs of the events to be linked
-	EventIDs []string `json:"eventIDs"`
-
-	// Bidirectional means that he link also should be created for the "ToID"
-	Bidirectional bool `json:"bidirectional"`
-}
-
-// LinkEventCreateResponse is the output-object for linking objects with an event
-type LinkEventCreateResponse struct {
-	Linked LinkEvent `json:"linked"`
-}
-
-// LinkEventDeleteRequest is the input-object for removing a linked event
-type LinkEventDeleteRequest struct {
-	// CaseID of the case where the linked event belongs
-	CaseID string `json:"caseID"`
-
-	// EventID of the Event to delete the link for
-	EventID string `json:"eventID"`
-}
-
-// LinkEventDeleteResponse is the output-object for removing a linked event
-type LinkEventDeleteResponse struct {
-}
-
-// LinkEventGetRequest is the input-object for getting a linked Event
-type LinkEventGetRequest struct {
-	// CaseID of the case where the event belongs
-	CaseID string `json:"caseID"`
-
-	// EventID of the Event to get all links for
-	EventID string `json:"eventID"`
-}
-
-// LinkEventGetResponse is the output-object for getting a linked Event
-type LinkEventGetResponse struct {
-	Link LinkEvent `json:"link"`
-}
-
-// LinkEventUpdateRequest is the input-object for updating linked objects with an
-// event
-type LinkEventUpdateRequest struct {
-	// EventID is the ID of the event to hold the link
-	EventID string `json:"eventID"`
-
-	// CaseID for the event
-	CaseID string `json:"caseID"`
-
-	// EventAddIDs of the events to be linked
-	EventAddIDs []string `json:"eventAddIDs"`
-
-	// EventRemoveIDs of the events to be removed
-	EventRemoveIDs []string `json:"eventRemoveIDs"`
-}
-
-// LinkEventUpdateResponse is the output-object for linking objects with an event
-type LinkEventUpdateResponse struct {
-	Updated LinkEvent `json:"updated"`
-}
-
 // Person is a human related to a case
 type Person struct {
 	Base
@@ -2720,6 +2693,138 @@ type Person struct {
 
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+}
+
+// Link is a link for an object between different objects
+type Link struct {
+	Base
+
+	// From is the object that the link is from
+	From interface{} `json:"from"`
+
+	// Events that has been linked
+	Events []Event `json:"events"`
+
+	// Persons that has been linked
+	Persons []Person `json:"persons"`
+
+	// Entities that has been linked
+	Entities []Entity `json:"entities"`
+
+	// Files that has been linked
+	Files []File `json:"files"`
+}
+
+// LinkAddRequest is the input-object for adding linked objects with a specific
+// object
+type LinkAddRequest struct {
+	// ID is the ID of the link to add objects for
+	ID string `json:"id"`
+
+	// CaseID for the link
+	CaseID string `json:"caseID"`
+
+	// EventIDs of the events to be added to the link
+	EventIDs []string `json:"eventIDs"`
+
+	// PersonIDs of the persons to be added to the link
+	PersonIDs []string `json:"personIDs"`
+
+	// EntityIDs of the entities to be added to the link
+	EntityIDs []string `json:"entityIDs"`
+
+	// FileIDs of the files to be added to the link
+	FileIDs []string `json:"fileIDs"`
+}
+
+// LinkAddResponse is the output-object for linking objects with an event
+type LinkAddResponse struct {
+	AddedLinks Link `json:"addedLinks"`
+}
+
+// LinkCreateRequest is the input-object for linking objects with to a specific
+// object
+type LinkCreateRequest struct {
+	// CaseID for the object
+	CaseID string `json:"caseID"`
+
+	// FromID is the ID of the object to hold the link
+	FromID string `json:"fromID"`
+
+	// EventIDs of the events to be linked
+	EventIDs []string `json:"eventIDs"`
+
+	// PersonIDs of the persons to be linked
+	PersonIDs []string `json:"personIDs"`
+
+	// EntityIDs of the entitys to be linked
+	EntityIDs []string `json:"entityIDs"`
+
+	// FileIDs of the files to be linked
+	FileIDs []string `json:"fileIDs"`
+
+	// Bidirectional means that he link also should be created for the "ToID"
+	Bidirectional bool `json:"bidirectional"`
+}
+
+// LinkCreateResponse is the output-object for linking objects
+type LinkCreateResponse struct {
+	Linked Link `json:"linked"`
+}
+
+// LinkDeleteRequest is the input-object for removing a linked object
+type LinkDeleteRequest struct {
+	// ID of the object to delete the link for
+	ID string `json:"id"`
+
+	// CaseID of the case where the link belongs
+	CaseID string `json:"caseID"`
+}
+
+// LinkDeleteResponse is the output-object for removing a link
+type LinkDeleteResponse struct {
+}
+
+// LinkGetRequest is the input-object for getting a links for an object
+type LinkGetRequest struct {
+	// ID of the object to get all links for
+	ID string `json:"id"`
+
+	// CaseID of the case where the link belongs
+	CaseID string `json:"caseID"`
+}
+
+// LinkGetResponse is the output-object for getting a links for an object
+type LinkGetResponse struct {
+	Link Link `json:"link"`
+}
+
+// LinkRemoveRequest is the input-object for removing linked objects with a
+// specific object
+type LinkRemoveRequest struct {
+	// ID is the ID of the link to remove objects for
+	ID string `json:"id"`
+
+	// CaseID for the link
+	CaseID string `json:"caseID"`
+
+	// EventIDs of the events to be removed from the link
+	EventIDs []string `json:"eventIDs"`
+
+	// PersonIDs of the persons to be removed from the link
+	PersonIDs []string `json:"personIDs"`
+
+	// EntityIDs of the entities to be removed from the link
+	EntityIDs []string `json:"entityIDs"`
+
+	// FileIDs of the files to be removed from the link
+	FileIDs []string `json:"fileIDs"`
+}
+
+// LinkRemoveResponse is the output-object for removing linked objects from a link
+// objects
+type LinkRemoveResponse struct {
+	RemovedLinks Link `json:"removedLinks"`
 }
 
 // PersonCreateRequest is the input-object for creating a person
