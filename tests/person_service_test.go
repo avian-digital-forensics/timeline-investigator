@@ -21,7 +21,8 @@ func TestPersonService(t *testing.T) {
 	is.NoErr(err)
 	defer testUser.delete(ctx)
 
-	testCase, err := testUser.newTestCase(ctx, client.NewCaseService(httpClient, testUser.Token))
+	caseService := client.NewCaseService(httpClient, testUser.Token)
+	testCase, err := testUser.newTestCase(ctx, caseService)
 	is.NoErr(err)
 
 	personService := client.NewPersonService(httpClient, testUser.Token)
@@ -95,6 +96,39 @@ func TestPersonService(t *testing.T) {
 	is.Equal(updated.Updated.TelephoneNo, updateRequest.TelephoneNo)
 	is.Equal(updated.Updated.Custom, updateRequest.Custom)
 
+	// Get all keywords for the case where the person belongs
+	keywords, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 0)
+
+	// Add two keywords to the first person
+	keywordsRequest := client.KeywordsAddRequest{ID: person.Created.ID, CaseID: testCase.ID, Keywords: []string{"healthy", "green"}}
+	_, err = personService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Get the keywords for the case again and make sure they have been added for the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 2)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+
+	// Get the person again and make sure the keywords has been added there as well
+	gotten, err = personService.Get(ctx, client.PersonGetRequest{CaseID: testCase.ID, ID: person.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Person.Keywords), 2)
+	is.Equal(gotten.Person.Keywords, keywordsRequest.Keywords)
+	// make sure the rest of the data is valid as well
+	is.Equal(gotten.Person.ID, updated.Updated.ID)
+	is.Equal(gotten.Person.DeletedAt, updated.Updated.DeletedAt)
+	is.Equal(gotten.Person.FirstName, updated.Updated.FirstName)
+	is.Equal(gotten.Person.LastName, updated.Updated.LastName)
+	is.Equal(gotten.Person.EmailAddress, updated.Updated.EmailAddress)
+	is.Equal(gotten.Person.PostalAddress, updated.Updated.PostalAddress)
+	is.Equal(gotten.Person.WorkAddress, updated.Updated.WorkAddress)
+	is.Equal(gotten.Person.TelephoneNo, updated.Updated.TelephoneNo)
+	is.Equal(gotten.Person.Custom, updated.Updated.Custom)
+
 	// Create two new persons
 	person2, err := personService.Create(ctx, client.PersonCreateRequest{CaseID: testCase.ID, FirstName: "Simon 2"})
 	is.NoErr(err)
@@ -106,12 +140,74 @@ func TestPersonService(t *testing.T) {
 	is.NoErr(err)
 	is.Equal(len(all.Persons), 3)
 
+	// Add the keywords + another one, to person2 as well
+	keywordsRequest.ID = person2.Created.ID
+	keywordsRequest.Keywords = append(keywordsRequest.Keywords, "another one")
+	_, err = personService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Make sure the keywords has been added to person2
+	gotten, err = personService.Get(ctx, client.PersonGetRequest{CaseID: testCase.ID, ID: person2.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Person.Keywords), 3)
+	is.Equal(gotten.Person.Keywords, keywordsRequest.Keywords)
+
+	// We should now have 3 (unqiue) keywords in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+	is.Equal(keywordsRequest.Keywords[2], keywords.Keywords[2])
+
+	// Remove the keyword first keyword from person2
+	removeRequest := client.KeywordsRemoveRequest{ID: person2.Created.ID, CaseID: testCase.ID, Keywords: []string{keywords.Keywords[0]}}
+	_, err = personService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from person2
+	gotten, err = personService.Get(ctx, client.PersonGetRequest{CaseID: testCase.ID, ID: person2.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Person.Keywords), 2)
+	is.Equal(gotten.Person.Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(gotten.Person.Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it is still available in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+
+	// Make sure it is still available in the first person
+	gotten, err = personService.Get(ctx, client.PersonGetRequest{CaseID: testCase.ID, ID: person.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Person.Keywords), 2)
+	is.Equal(gotten.Person.Keywords[0], keywordsRequest.Keywords[0])
+	is.Equal(gotten.Person.Keywords[1], keywordsRequest.Keywords[1])
+
+	// Remove it from the first person as well
+	removeRequest.ID = person.Created.ID
+	_, err = personService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from the case (since no person has the keyword anymore)
+	keywords5, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords5.Keywords), 2)
+	is.Equal(keywords5.Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(keywords5.Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it was removed from the first person as well
+	gotten, err = personService.Get(ctx, client.PersonGetRequest{CaseID: testCase.ID, ID: person.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Person.Keywords), 1)
+	is.Equal(gotten.Person.Keywords[0], keywordsRequest.Keywords[1])
+
 	// Validate the list in a for loop
-	for i, person := range all.Persons {
+	for _, person := range all.Persons {
 		var check client.Person
-		if i == 0 {
-			check = updated.Updated
-		} else if i == 1 {
+		if person.ID == gotten.Person.ID {
+			check = gotten.Person
+		} else if person.ID == person2.Created.ID {
 			check = person2.Created
 		} else {
 			check = person3.Created
@@ -119,7 +215,6 @@ func TestPersonService(t *testing.T) {
 
 		is.Equal(person.ID, check.ID)
 		is.Equal(person.CreatedAt, check.CreatedAt)
-		is.Equal(person.UpdatedAt, check.UpdatedAt)
 		is.Equal(person.DeletedAt, check.DeletedAt)
 		is.Equal(person.FirstName, check.FirstName)
 		is.Equal(person.LastName, check.LastName)

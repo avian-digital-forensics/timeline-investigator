@@ -41,7 +41,7 @@ func (s *CaseService) New(ctx context.Context, r api.CaseNewRequest) (*api.CaseN
 	}
 
 	if err := s.db.CreateCase(ctx, &caze); err != nil {
-		return nil, api.ErrCannotPerformOperation
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.CaseNewResponse{New: caze}, nil
@@ -91,6 +91,24 @@ func (s *CaseService) List(ctx context.Context, r api.CaseListRequest) (*api.Cas
 	}
 
 	return &api.CaseListResponse{Cases: cases}, nil
+}
+
+// Keywords lists all the keywords for the case
+func (s *CaseService) Keywords(ctx context.Context, r api.CaseKeywordsRequest) (*api.CaseKeywordsResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.isAllowed(ctx, r.ID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	keywords, err := s.db.GetKeywords(ctx, r.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.CaseKeywordsResponse{Keywords: keywords}, nil
 }
 
 // Authenticate is a middleware

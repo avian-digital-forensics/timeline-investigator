@@ -24,7 +24,8 @@ func TestEventService(t *testing.T) {
 	is.NoErr(err)
 	defer testUser.delete(ctx)
 
-	testCase, err := testUser.newTestCase(ctx, client.NewCaseService(httpClient, testUser.Token))
+	caseService := client.NewCaseService(httpClient, testUser.Token)
+	testCase, err := testUser.newTestCase(ctx, caseService)
 	is.NoErr(err)
 
 	eventService := client.NewEventService(httpClient, testUser.Token)
@@ -125,6 +126,37 @@ func TestEventService(t *testing.T) {
 	is.Equal(gotten.Event.FromDate, updatedEvent.Updated.FromDate)
 	is.Equal(gotten.Event.ToDate, updatedEvent.Updated.ToDate)
 
+	// Get all keywords for the case where the event belongs
+	keywords, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 0)
+
+	// Add two keywords to the first event
+	keywordsRequest := client.KeywordsAddRequest{ID: gotten.Event.ID, CaseID: testCase.ID, Keywords: []string{"healthy", "green"}}
+	_, err = eventService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Get the keywords for the case again and make sure they have been added for the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 2)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+
+	// Get the entity again and make sure the keywords has been added there as well
+	gotten, err = eventService.Get(ctx, client.EventGetRequest{CaseID: testCase.ID, ID: gotten.Event.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Event.Keywords), 2)
+	is.Equal(gotten.Event.Keywords, keywordsRequest.Keywords)
+	// make sure the rest of the data is valid as well
+	is.Equal(gotten.Event.ID, updatedEvent.Updated.ID)
+	is.Equal(gotten.Event.CreatedAt, updatedEvent.Updated.CreatedAt)
+	is.Equal(gotten.Event.DeletedAt, updatedEvent.Updated.DeletedAt)
+	is.Equal(gotten.Event.Importance, updatedEvent.Updated.Importance)
+	is.Equal(gotten.Event.Description, updatedEvent.Updated.Description)
+	is.Equal(gotten.Event.FromDate, updatedEvent.Updated.FromDate)
+	is.Equal(gotten.Event.ToDate, updatedEvent.Updated.ToDate)
+
 	// List all events for the case and make sure that the created event is there
 	list, err := eventService.List(ctx, client.EventListRequest{CaseID: testCase.ID})
 	is.NoErr(err)
@@ -139,11 +171,73 @@ func TestEventService(t *testing.T) {
 	is.Equal(list.Events[0].ToDate, gotten.Event.ToDate)
 
 	// Create a new event and make sure it has been added to the list
-	_, err = eventService.Create(ctx, client.EventCreateRequest{CaseID: testCase.ID, Importance: 3})
+	event2, err := eventService.Create(ctx, client.EventCreateRequest{CaseID: testCase.ID, Importance: 3})
 	is.NoErr(err)
 	list, err = eventService.List(ctx, client.EventListRequest{CaseID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(list.Events), 2)
+
+	// Add the keywords + another one, to event2 as well
+	keywordsRequest.ID = event2.Created.ID
+	keywordsRequest.Keywords = append(keywordsRequest.Keywords, "another one")
+	_, err = eventService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Make sure the keywords has been added to event2
+	gotten, err = eventService.Get(ctx, client.EventGetRequest{CaseID: testCase.ID, ID: event2.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Event.Keywords), 3)
+	is.Equal(gotten.Event.Keywords, keywordsRequest.Keywords)
+
+	// We should now have 3 (unqiue) keywords in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+	is.Equal(keywordsRequest.Keywords[2], keywords.Keywords[2])
+
+	// Remove the keyword first keyword from event2
+	removeRequest := client.KeywordsRemoveRequest{ID: event2.Created.ID, CaseID: testCase.ID, Keywords: []string{keywords.Keywords[0]}}
+	_, err = eventService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from event2
+	gotten, err = eventService.Get(ctx, client.EventGetRequest{CaseID: testCase.ID, ID: event2.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Event.Keywords), 2)
+	is.Equal(gotten.Event.Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(gotten.Event.Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it is still available in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+
+	// Make sure it is still available in the first event
+	gotten, err = eventService.Get(ctx, client.EventGetRequest{CaseID: testCase.ID, ID: event.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Event.Keywords), 2)
+	is.Equal(gotten.Event.Keywords[0], keywordsRequest.Keywords[0])
+	is.Equal(gotten.Event.Keywords[1], keywordsRequest.Keywords[1])
+
+	// Remove it from the first event as well
+	removeRequest.ID = event.Created.ID
+	_, err = eventService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from the case (since no event has the keyword anymore)
+	keywords5, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords5.Keywords), 2)
+	is.Equal(keywords5.Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(keywords5.Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it was removed from the first event as well
+	gotten, err = eventService.Get(ctx, client.EventGetRequest{CaseID: testCase.ID, ID: event.Created.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Event.Keywords), 1)
+	is.Equal(gotten.Event.Keywords[0], keywordsRequest.Keywords[1])
 
 	// Delete all events
 	for _, event := range list.Events {

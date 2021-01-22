@@ -215,6 +215,134 @@ func (s *FileService) Delete(ctx context.Context, r api.FileDeleteRequest) (*api
 	return &api.FileDeleteResponse{}, nil
 }
 
+// KeywordsAdd adds keywords to a file
+func (s *FileService) KeywordsAdd(ctx context.Context, r api.KeywordsAddRequest) (*api.KeywordsAddResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	// Get the file to add the keyword to
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	// Get the keywords that should be added to the file
+	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
+	if err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Create a map of the keywords that were found from the db
+	// and add the File ID to each keyword
+	var keywordFound = make(map[string]bool)
+	for _, keyword := range keywords {
+		keywordFound[keyword.Name] = true
+		keyword.FileIDs = append(keyword.FileIDs, file.ID)
+	}
+
+	// Add the keywords from the request to the file
+	// and append the keywords that didn't already exist
+	// to the keyword-slice
+	for _, keyword := range r.Keywords {
+		if !keywordFound[keyword] {
+			keywords = append(keywords, api.Keyword{Name: keyword, FileIDs: []string{file.ID}})
+		}
+		file.Keywords = append(file.Keywords, keyword)
+	}
+
+	// Save the keywords with the File ID
+	// TODO / FIXME: Use bulk-indexer instead
+	for _, keyword := range keywords {
+		if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
+			return nil, api.Error(err, api.ErrCannotPerformOperation)
+		}
+	}
+
+	// Update the file with the added keywords
+	if err := s.db.UpdateFile(ctx, r.CaseID, file); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsAddResponse{OK: true}, nil
+}
+
+// KeywordsRemove removes keywords from a file
+func (s *FileService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveRequest) (*api.KeywordsRemoveResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range r.Keywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the file to remove the keywords from
+	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	// Get the keywords that should be removed from the file
+	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
+	if err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Remove the keywords from the file
+	for i, keyword := range file.Keywords {
+		if keywordToRemove[keyword] {
+			file.Keywords = append(file.Keywords[:i], file.Keywords[i+1:]...)
+		}
+	}
+
+	// Remove the FileID from the keywords
+	for ki, keyword := range keywords {
+		if keywordToRemove[keyword.Name] {
+			for ei, id := range keyword.FileIDs {
+				if id == file.ID {
+					keywords[ki].FileIDs = append(
+						keyword.FileIDs[:ei],
+						keyword.FileIDs[ei+1:]...,
+					)
+				}
+			}
+		}
+	}
+
+	// Save the keywords (or delete if empty)
+	// TODO/FIXME: use bulk indexer
+	for _, keyword := range keywords {
+		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
+		if toDelete {
+			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
+				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			}
+		} else if !toDelete {
+			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
+				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			}
+		}
+	}
+
+	// Update the file without the removed keyword
+	if err := s.db.UpdateFile(ctx, r.CaseID, file); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsRemoveResponse{}, nil
+}
+
 // Authenticate is a middleware
 // in the http-handler
 //

@@ -22,6 +22,9 @@ type CaseService interface {
 	// List the cases for a specified user
 	List(CaseListRequest) CaseListResponse
 
+	// Keywords lists all the keywords for the case
+	Keywords(CaseKeywordsRequest) CaseKeywordsResponse
+
 	// Authenticate is a middleware
 	// in the http-handler
 	//
@@ -49,6 +52,12 @@ type EntityService interface {
 	// Types returns the existing entity-types
 	Types(EntityTypesRequest) EntityTypesResponse
 
+	// KeywordsAdd to an entity
+	KeywordsAdd(KeywordsAddRequest) KeywordsAddResponse
+
+	// KeywordsRemove from an entity
+	KeywordsRemove(KeywordsRemoveRequest) KeywordsRemoveResponse
+
 	// Authenticate is a middleware
 	// in the http-handler
 	//
@@ -72,6 +81,12 @@ type EventService interface {
 
 	// List all events
 	List(EventListRequest) EventListResponse
+
+	// KeywordsAdd to an event
+	KeywordsAdd(KeywordsAddRequest) KeywordsAddResponse
+
+	// KeywordsRemove from an event
+	KeywordsRemove(KeywordsRemoveRequest) KeywordsRemoveResponse
 
 	// Authenticate is a middleware
 	// in the http-handler
@@ -103,6 +118,12 @@ type FileService interface {
 
 	// Delete deletes the specified file
 	Delete(FileDeleteRequest) FileDeleteResponse
+
+	// KeywordsAdd to a file
+	KeywordsAdd(KeywordsAddRequest) KeywordsAddResponse
+
+	// KeywordsRemove from a file
+	KeywordsRemove(KeywordsRemoveRequest) KeywordsRemoveResponse
 
 	// Authenticate is a middleware
 	// in the http-handler
@@ -152,6 +173,12 @@ type PersonService interface {
 
 	// List all entities for a case
 	List(PersonListRequest) PersonListResponse
+
+	// KeywordsAdd to a person
+	KeywordsAdd(KeywordsAddRequest) KeywordsAddResponse
+
+	// KeywordsRemove from a person
+	KeywordsRemove(KeywordsRemoveRequest) KeywordsRemoveResponse
 
 	// Authenticate is a middleware
 	// in the http-handler
@@ -354,14 +381,23 @@ type CaseListResponse struct {
 	Cases []Case
 }
 
-// CaseUploadRequest is the input-object for
-// uploading an evidence to the case
-type CaseUploadRequest struct {
-	// ID of the case to upload
+// CaseKeywordsRequest is the input-object
+// for listing keywords for a case
+type CaseKeywordsRequest struct {
+	// ID for the case to get
+	// the keywords for
+	//
+	// example: ""
 	ID string
+}
 
-	// Name of the item to upload
-	Name string
+// CaseKeywordsResponse is the output-object
+// for listing keywords for a case
+type CaseKeywordsResponse struct {
+	// Existing keywords in the case
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
 }
 
 // Entity is an object that can be
@@ -391,6 +427,11 @@ type Entity struct {
 	// Custom is a free form with key-value pairs
 	// specified by the user.
 	Custom map[string]interface{}
+
+	// The keywords for the entity
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
 }
 
 // EntityCreateRequest is the input-object
@@ -570,6 +611,11 @@ type Event struct {
 	//
 	// example: 1257894000
 	ToDate int64
+
+	// The keywords for the event
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
 }
 
 // EventCreateRequest is the input-object
@@ -742,6 +788,11 @@ type File struct {
 	//
 	// example: 1257894000
 	ProcessedAt int64
+
+	// The keywords for the file
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
 }
 
 // FileNewRequest is the input-object
@@ -1129,6 +1180,11 @@ type Person struct {
 	// Custom is a free form with key-value pairs
 	// specified by the user.
 	Custom map[string]interface{}
+
+	// The keywords for the person
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
 }
 
 // PersonCreateRequest is the input-object
@@ -1376,6 +1432,95 @@ type ProcessPauseRequest struct {
 type ProcessPauseResponse struct {
 	Paused Process
 }
+
+// Keyword represents a keyword
+// in used for a case
+type Keyword struct {
+	// Name of the keyword
+	//
+	// example: "healthy"
+	Name string
+
+	// IDs of the events that
+	// holds the keyword
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861", "7a1713b0249d477d92f5e10124a59861"]
+	EventIDs []string
+
+	// IDs of the persons that
+	// holds the keyword
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861", "7a1713b0249d477d92f5e10124a59861"]
+	PersonIDs []string
+
+	// IDs of the entities that
+	// holds the keyword
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861", "7a1713b0249d477d92f5e10124a59861"]
+	EntityIDs []string
+
+	// IDs of the files that
+	// holds the keyword
+	//
+	// example: ["7a1713b0249d477d92f5e10124a59861", "7a1713b0249d477d92f5e10124a59861"]
+	FileIDs []string
+}
+
+// KeywordsAddRequest is the input-object
+// for adding keywords to an object
+type KeywordsAddRequest struct {
+	// ID of the object
+	// to add keywords to
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case
+	// for where the object belongs
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// The keywords to add
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
+}
+
+// KeywordsAddResponse is the output-object
+// for adding keywords to an object
+type KeywordsAddResponse struct {
+	// OK is set to true if
+	// the add was ok
+	//
+	// example: true
+	OK bool
+}
+
+// KeywordsRemoveRequest is the input-object
+// for removing keywords from an object
+type KeywordsRemoveRequest struct {
+	// ID of the object
+	// to remove keywords to
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	ID string
+
+	// CaseID of the case
+	// for where the object belongs
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// The keywords to remove
+	//
+	// example: ["healthy", "green"]
+	Keywords []string
+}
+
+// KeywordsRemoveResponse is the output-object
+// for removing keywords from an object
+type KeywordsRemoveResponse struct{}
 
 // Base model for the database
 type Base struct {

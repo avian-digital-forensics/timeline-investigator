@@ -5,9 +5,9 @@ package api
 import (
 	"github.com/pacedotdev/oto/otohttp"
 
-	http "net/http"
-
 	context "context"
+
+	http "net/http"
 )
 
 // CaseService is the API to handle cases
@@ -18,6 +18,8 @@ type CaseService interface {
 	Delete(context.Context, CaseDeleteRequest) (*CaseDeleteResponse, error)
 	// Get returns the requested case
 	Get(context.Context, CaseGetRequest) (*CaseGetResponse, error)
+	// Keywords lists all the keywords for the case
+	Keywords(context.Context, CaseKeywordsRequest) (*CaseKeywordsResponse, error)
 	// List the cases for a specified user
 	List(context.Context, CaseListRequest) (*CaseListResponse, error)
 	// New creates a new case
@@ -36,6 +38,10 @@ type EntityService interface {
 	Delete(context.Context, EntityDeleteRequest) (*EntityDeleteResponse, error)
 	// Get the specified entity
 	Get(context.Context, EntityGetRequest) (*EntityGetResponse, error)
+	// KeywordsAdd to an entity
+	KeywordsAdd(context.Context, KeywordsAddRequest) (*KeywordsAddResponse, error)
+	// KeywordsRemove from an entity
+	KeywordsRemove(context.Context, KeywordsRemoveRequest) (*KeywordsRemoveResponse, error)
 	// List all entities
 	List(context.Context, EntityListRequest) (*EntityListResponse, error)
 	// Types returns the existing entity-types
@@ -54,6 +60,10 @@ type EventService interface {
 	Delete(context.Context, EventDeleteRequest) (*EventDeleteResponse, error)
 	// Get the specified event
 	Get(context.Context, EventGetRequest) (*EventGetResponse, error)
+	// KeywordsAdd to an event
+	KeywordsAdd(context.Context, KeywordsAddRequest) (*KeywordsAddResponse, error)
+	// KeywordsRemove from an event
+	KeywordsRemove(context.Context, KeywordsRemoveRequest) (*KeywordsRemoveResponse, error)
 	// List all events
 	List(context.Context, EventListRequest) (*EventListResponse, error)
 	// Update updates an existing event
@@ -66,6 +76,10 @@ type FileService interface {
 	Authenticate(context.Context, *http.Request) (context.Context, error)
 	// Delete deletes the specified file
 	Delete(context.Context, FileDeleteRequest) (*FileDeleteResponse, error)
+	// KeywordsAdd to a file
+	KeywordsAdd(context.Context, KeywordsAddRequest) (*KeywordsAddResponse, error)
+	// KeywordsRemove from a file
+	KeywordsRemove(context.Context, KeywordsRemoveRequest) (*KeywordsRemoveResponse, error)
 	// New uploads a file to the backend
 	New(context.Context, FileNewRequest) (*FileNewResponse, error)
 	// Open opens a file
@@ -106,6 +120,10 @@ type PersonService interface {
 	Delete(context.Context, PersonDeleteRequest) (*PersonDeleteResponse, error)
 	// Get the specified person
 	Get(context.Context, PersonGetRequest) (*PersonGetResponse, error)
+	// KeywordsAdd to a person
+	KeywordsAdd(context.Context, KeywordsAddRequest) (*KeywordsAddResponse, error)
+	// KeywordsRemove from a person
+	KeywordsRemove(context.Context, KeywordsRemoveRequest) (*KeywordsRemoveResponse, error)
 	// List all entities for a case
 	List(context.Context, PersonListRequest) (*PersonListResponse, error)
 	// Update updates an existing person
@@ -149,6 +167,7 @@ func RegisterCaseService(server *otohttp.Server, caseService CaseService) {
 
 	server.Register("CaseService", "Delete", handler.handleDelete)
 	server.Register("CaseService", "Get", handler.handleGet)
+	server.Register("CaseService", "Keywords", handler.handleKeywords)
 	server.Register("CaseService", "List", handler.handleList)
 	server.Register("CaseService", "New", handler.handleNew)
 	server.Register("CaseService", "Update", handler.handleUpdate)
@@ -188,6 +207,28 @@ func (s *caseServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, err := s.caseService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *caseServiceServer) handleKeywords(w http.ResponseWriter, r *http.Request) {
+	var request CaseKeywordsRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.caseService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.caseService.Keywords(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -280,6 +321,8 @@ func RegisterEntityService(server *otohttp.Server, entityService EntityService) 
 	server.Register("EntityService", "Create", handler.handleCreate)
 	server.Register("EntityService", "Delete", handler.handleDelete)
 	server.Register("EntityService", "Get", handler.handleGet)
+	server.Register("EntityService", "KeywordsAdd", handler.handleKeywordsAdd)
+	server.Register("EntityService", "KeywordsRemove", handler.handleKeywordsRemove)
 	server.Register("EntityService", "List", handler.handleList)
 	server.Register("EntityService", "Types", handler.handleTypes)
 	server.Register("EntityService", "Update", handler.handleUpdate)
@@ -341,6 +384,50 @@ func (s *entityServiceServer) handleGet(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	response, err := s.entityService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsAddRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.KeywordsAdd(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *entityServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsRemoveRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.entityService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.entityService.KeywordsRemove(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -433,6 +520,8 @@ func RegisterEventService(server *otohttp.Server, eventService EventService) {
 	server.Register("EventService", "Create", handler.handleCreate)
 	server.Register("EventService", "Delete", handler.handleDelete)
 	server.Register("EventService", "Get", handler.handleGet)
+	server.Register("EventService", "KeywordsAdd", handler.handleKeywordsAdd)
+	server.Register("EventService", "KeywordsRemove", handler.handleKeywordsRemove)
 	server.Register("EventService", "List", handler.handleList)
 	server.Register("EventService", "Update", handler.handleUpdate)
 }
@@ -503,6 +592,50 @@ func (s *eventServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *eventServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsAddRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.KeywordsAdd(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *eventServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsRemoveRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.eventService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.eventService.KeywordsRemove(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
 func (s *eventServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 	var request EventListRequest
 	if err := otohttp.Decode(r, &request); err != nil {
@@ -561,6 +694,8 @@ func RegisterFileService(server *otohttp.Server, fileService FileService) {
 	}
 
 	server.Register("FileService", "Delete", handler.handleDelete)
+	server.Register("FileService", "KeywordsAdd", handler.handleKeywordsAdd)
+	server.Register("FileService", "KeywordsRemove", handler.handleKeywordsRemove)
 	server.Register("FileService", "New", handler.handleNew)
 	server.Register("FileService", "Open", handler.handleOpen)
 	server.Register("FileService", "Process", handler.handleProcess)
@@ -581,6 +716,50 @@ func (s *fileServiceServer) handleDelete(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	response, err := s.fileService.Delete(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsAddRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.KeywordsAdd(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *fileServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsRemoveRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.fileService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.fileService.KeywordsRemove(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -869,6 +1048,8 @@ func RegisterPersonService(server *otohttp.Server, personService PersonService) 
 	server.Register("PersonService", "Create", handler.handleCreate)
 	server.Register("PersonService", "Delete", handler.handleDelete)
 	server.Register("PersonService", "Get", handler.handleGet)
+	server.Register("PersonService", "KeywordsAdd", handler.handleKeywordsAdd)
+	server.Register("PersonService", "KeywordsRemove", handler.handleKeywordsRemove)
 	server.Register("PersonService", "List", handler.handleList)
 	server.Register("PersonService", "Update", handler.handleUpdate)
 }
@@ -929,6 +1110,50 @@ func (s *personServiceServer) handleGet(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	response, err := s.personService.Get(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsAddRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.KeywordsAdd(ctx, request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *personServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
+	var request KeywordsRemoveRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	ctx, err := s.personService.Authenticate(r.Context(), r)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.personService.KeywordsRemove(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1169,6 +1394,8 @@ type File struct {
 	Size int `json:"size"`
 	// ProcessedAt is the unix-timestamp for when (if) the item was processed
 	ProcessedAt int64 `json:"processedAt"`
+	// The keywords for the file
+	Keywords []string `json:"keywords"`
 }
 
 // Process holds information about a job that processes data to app
@@ -1220,6 +1447,20 @@ type CaseGetRequest struct {
 // CaseGetResponse is the output-object for getting a specified case
 type CaseGetResponse struct {
 	Case Case `json:"case"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// CaseKeywordsRequest is the input-object for listing keywords for a case
+type CaseKeywordsRequest struct {
+	// ID for the case to get the keywords for
+	ID string `json:"id"`
+}
+
+// CaseKeywordsResponse is the output-object for listing keywords for a case
+type CaseKeywordsResponse struct {
+	// Existing keywords in the case
+	Keywords []string `json:"keywords"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
@@ -1277,14 +1518,6 @@ type CaseUpdateResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-// CaseUploadRequest is the input-object for uploading an evidence to the case
-type CaseUploadRequest struct {
-	// ID of the case to upload
-	ID string `json:"id"`
-	// Name of the item to upload
-	Name string `json:"name"`
-}
-
 // Entity is an object that can be of different types. For example, organization or
 // location
 type Entity struct {
@@ -1298,6 +1531,8 @@ type Entity struct {
 	Type string `json:"type"`
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+	// The keywords for the entity
+	Keywords []string `json:"keywords"`
 }
 
 // EntityCreateRequest is the input-object for creating an entity
@@ -1364,6 +1599,40 @@ type EntityListResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+// KeywordsAddRequest is the input-object for adding keywords to an object
+type KeywordsAddRequest struct {
+	// ID of the object to add keywords to
+	ID string `json:"id"`
+	// CaseID of the case for where the object belongs
+	CaseID string `json:"caseID"`
+	// The keywords to add
+	Keywords []string `json:"keywords"`
+}
+
+// KeywordsAddResponse is the output-object for adding keywords to an object
+type KeywordsAddResponse struct {
+	// OK is set to true if the add was ok
+	OK bool `json:"oK"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// KeywordsRemoveRequest is the input-object for removing keywords from an object
+type KeywordsRemoveRequest struct {
+	// ID of the object to remove keywords to
+	ID string `json:"id"`
+	// CaseID of the case for where the object belongs
+	CaseID string `json:"caseID"`
+	// The keywords to remove
+	Keywords []string `json:"keywords"`
+}
+
+// KeywordsRemoveResponse is the output-object for removing keywords from an object
+type KeywordsRemoveResponse struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
 // EntityTypesRequest is the input-object for getting all entity-types
 type EntityTypesRequest struct {
 }
@@ -1411,6 +1680,8 @@ type Event struct {
 	FromDate int64 `json:"fromDate"`
 	// ToDate is the unix-timestamp of when the event finished
 	ToDate int64 `json:"toDate"`
+	// The keywords for the event
+	Keywords []string `json:"keywords"`
 }
 
 // EventCreateRequest is the input-object for creating an event
@@ -1612,6 +1883,20 @@ type FileUpdateResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+// Keyword represents a keyword in used for a case
+type Keyword struct {
+	// Name of the keyword
+	Name string `json:"name"`
+	// IDs of the events that holds the keyword
+	EventIDs []string `json:"eventIDs"`
+	// IDs of the persons that holds the keyword
+	PersonIDs []string `json:"personIDs"`
+	// IDs of the entities that holds the keyword
+	EntityIDs []string `json:"entityIDs"`
+	// IDs of the files that holds the keyword
+	FileIDs []string `json:"fileIDs"`
+}
+
 // Person is a human related to a case
 type Person struct {
 	Base
@@ -1629,6 +1914,8 @@ type Person struct {
 	TelephoneNo string `json:"telephoneNo"`
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+	// The keywords for the person
+	Keywords []string `json:"keywords"`
 }
 
 // Link is a link for an object between different objects

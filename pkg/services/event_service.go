@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -146,6 +147,136 @@ func (s *EventService) List(ctx context.Context, r api.EventListRequest) (*api.E
 	}
 
 	return &api.EventListResponse{Events: events}, nil
+}
+
+// KeywordsAdd adds keywords to an event
+func (s *EventService) KeywordsAdd(ctx context.Context, r api.KeywordsAddRequest) (*api.KeywordsAddResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	// Get the event to add the keyword to
+	event, err := s.db.GetEventByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	// Get the keywords that should be added to the Event
+	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
+	if err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Create a map of the keywords that were found from the db
+	// and add the Event ID to each keyword
+	var keywordFound = make(map[string]bool)
+	for _, keyword := range keywords {
+		keywordFound[keyword.Name] = true
+		keyword.EventIDs = append(keyword.EventIDs, event.ID)
+	}
+
+	// Add the keywords from the request to the Event
+	// and append the keywords that didn't already exist
+	// to the keyword-slice
+	for _, keyword := range r.Keywords {
+		if !keywordFound[keyword] {
+			keywords = append(keywords, api.Keyword{Name: keyword, EventIDs: []string{event.ID}})
+		}
+		event.Keywords = append(event.Keywords, keyword)
+	}
+
+	// Save the keywords with the Event ID
+	// TODO / FIXME: Use bulk-indexer instead
+	for _, keyword := range keywords {
+		if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
+			return nil, api.Error(err, api.ErrCannotPerformOperation)
+		}
+	}
+
+	// Update the Event with the added keywords
+	if err := s.db.UpdateEvent(ctx, r.CaseID, event); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsAddResponse{OK: true}, nil
+}
+
+// KeywordsRemove removes keywords from an event
+func (s *EventService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveRequest) (*api.KeywordsRemoveResponse, error) {
+	currentUser := utils.GetUser(ctx)
+	if ok, err := s.caseService.isAllowed(ctx, r.CaseID, currentUser.Email); !ok {
+		if err != nil {
+			return nil, api.Error(err, api.ErrNotAllowed)
+		}
+		return nil, api.ErrNotAllowed
+	}
+
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range r.Keywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the event to remove the keywords from
+	event, err := s.db.GetEventByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	// Get the keywords that should be removed from the event
+	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
+	if err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Remove the keywords from the event
+	for i, keyword := range event.Keywords {
+		if keywordToRemove[keyword] {
+			event.Keywords = append(event.Keywords[:i], event.Keywords[i+1:]...)
+		}
+	}
+
+	// Remove the EventID from the keywords
+	for ki, keyword := range keywords {
+		if keywordToRemove[keyword.Name] {
+			for ei, id := range keyword.EventIDs {
+				if id == event.ID {
+					keywords[ki].EventIDs = append(
+						keyword.EventIDs[:ei],
+						keyword.EventIDs[ei+1:]...,
+					)
+				}
+			}
+		}
+	}
+
+	// Save the keywords (or delete if empty)
+	// TODO/FIXME: use bulk indexer
+	for _, keyword := range keywords {
+		log.Println(keyword)
+		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
+		log.Println(toDelete)
+		if toDelete {
+			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
+				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			}
+		} else if !toDelete {
+			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
+				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			}
+		}
+	}
+
+	// Update the Event without the removed keyword
+	if err := s.db.UpdateEvent(ctx, r.CaseID, event); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsRemoveResponse{}, nil
 }
 
 // Authenticate is a middleware

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -22,6 +23,7 @@ const (
 	indexLink    = "links"
 	indexPerson  = "persons"
 	indexProcess = "processes"
+	indexKeyword = "keywords"
 )
 
 // Service is the interface for the datastore
@@ -63,12 +65,19 @@ type Service interface {
 	DeleteLink(ctx context.Context, caseID, id string) error
 
 	// Person-methods
-	CreatePerson(ctx context.Context, caseID string, Person *api.Person) error
-	UpdatePerson(ctx context.Context, caseID string, Person *api.Person) error
+	CreatePerson(ctx context.Context, caseID string, person *api.Person) error
+	UpdatePerson(ctx context.Context, caseID string, person *api.Person) error
 	DeletePerson(ctx context.Context, caseID, personID string) error
 	GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error)
 	GetPersonsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Person, error)
 	GetPersons(ctx context.Context, caseID string) ([]api.Person, error)
+
+	// Keyword-methods
+	SaveKeyword(ctx context.Context, caseID string, keyword *api.Keyword) error
+	DeleteKeyword(ctx context.Context, caseID, keywordID string) error
+	GetKeywordByID(ctx context.Context, caseID string, id string) (*api.Keyword, error)
+	GetKeywordsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Keyword, error)
+	GetKeywords(ctx context.Context, caseID string) ([]string, error)
 
 	// Process-methods
 	ProcessIndex(caseID string) string
@@ -80,7 +89,8 @@ type Service interface {
 }
 
 type svc struct {
-	es *elasticsearch.Client
+	es   *elasticsearch.Client
+	urls []string
 }
 
 // NewService creates a new database-service
@@ -92,7 +102,7 @@ func NewService(elasticURLs ...string) (Service, error) {
 	if _, err := es.Ping(); err != nil {
 		return nil, err
 	}
-	return svc{es: es}, nil
+	return svc{es: es, urls: elasticURLs}, nil
 }
 
 func (s svc) CreateCase(ctx context.Context, caze *api.Case) error {
@@ -100,6 +110,9 @@ func (s svc) CreateCase(ctx context.Context, caze *api.Case) error {
 	caze.CreatedAt = time.Now().Unix()
 	if err := s.save(ctx, indexCase, caze.ID, caze); err != nil {
 		return fmt.Errorf("failed to save Case : %v", err)
+	}
+	if err := s.newIndex(ctx, indexKeyword+"-"+caze.ID); err != nil {
+		return fmt.Errorf("failed to create keywords-index for Case : %v", err)
 	}
 	return nil
 }
@@ -597,8 +610,104 @@ func (s svc) DeleteLink(ctx context.Context, caseID, id string) error {
 	return nil
 }
 
+func (s svc) SaveKeyword(ctx context.Context, caseID string, keyword *api.Keyword) error {
+	if err := s.save(ctx, indexKeyword+"-"+caseID, keyword.Name, keyword); err != nil {
+		return fmt.Errorf("failed to save Keyword in case : %v", err)
+	}
+	return nil
+}
+
+func (s svc) DeleteKeyword(ctx context.Context, caseID, id string) error {
+	index := fmt.Sprintf("%s-%s", indexKeyword, caseID)
+	if err := s.delete(ctx, index, id); err != nil {
+		return fmt.Errorf("cannot delete Keyword in case : %v", err)
+	}
+	return nil
+}
+
+func (s svc) GetKeywordByID(ctx context.Context, caseID, id string) (*api.Keyword, error) {
+	resp, err := s.searchByID(ctx, indexKeyword+"-"+caseID, id)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find Keyword in Case: %v", err)
+	}
+
+	var keyword api.Keyword
+	if err := json.Unmarshal(resp, &keyword); err != nil {
+		return nil, fmt.Errorf("Keyword json.Unmarshal: %v", err)
+	}
+
+	return &keyword, nil
+}
+
+func (s svc) GetKeywordsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Keyword, error) {
+	resp, err := s.searchByIDs(ctx, indexKeyword+"-"+caseID, ids)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot find Keywords in Case: %v", err)
+	}
+
+	var keywords []api.Keyword
+	if err := json.Unmarshal(resp, &keywords); err != nil {
+		return nil, fmt.Errorf("Keyword json.Unmarshal: %v", err)
+	}
+
+	return keywords, nil
+}
+
+func (s svc) GetKeywords(ctx context.Context, caseID string) ([]string, error) {
+	search, err := s.search(ctx, indexKeyword+"-"+caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var keywords []string
+	for _, hit := range search.Hits.Hits {
+		source, err := json.Marshal(hit.Source)
+		if err != nil {
+			return nil, fmt.Errorf("json.Marshal: %v", err)
+		}
+
+		var keyword api.Keyword
+		if err := json.Unmarshal(source, &keyword); err != nil {
+			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+		}
+
+		keywords = append(keywords, keyword.Name)
+	}
+
+	return keywords, nil
+}
+
 // ProcessIndex returns the elastic-index for the processes in the specified case
 func (svc) ProcessIndex(caseID string) string { return fmt.Sprintf("%s-%s", indexProcess, caseID) }
+
+// newIndex creates a new index
+func (s svc) newIndex(ctx context.Context, index string) error {
+	// Create a request
+	req, err := http.NewRequest(http.MethodPut, s.urls[0]+"/"+index, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create http-request: %v", err)
+	}
+	req.WithContext(ctx)
+
+	// Perform the request
+	res, err := s.es.Perform(req)
+	if err != nil {
+		return fmt.Errorf("Cannot get response: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return decodeErrorHTTP(res)
+	}
+
+	// Deserialize the response into a map.
+	var r internal.Response
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		return fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+
+	return nil
+}
 
 func (s svc) save(ctx context.Context, index, id string, data interface{}) error {
 	dataJSON, err := json.Marshal(data)
@@ -856,5 +965,20 @@ func decodeError(res *esapi.Response) error {
 		res.Status(),
 		e["error"].(map[string]interface{})["type"],
 		e["error"].(map[string]interface{})["reason"],
+	)
+}
+
+func decodeErrorHTTP(res *http.Response) error {
+	var e interface{}
+	if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+		return fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+	jsonData, err := json.Marshal(e)
+	if err != nil {
+		return fmt.Errorf("json.Marshal: %v", err)
+	}
+	return fmt.Errorf("[%d] %s",
+		res.StatusCode,
+		string(jsonData),
 	)
 }

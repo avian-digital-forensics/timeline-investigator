@@ -156,6 +156,58 @@ func (s *CaseService) Get(ctx context.Context, r CaseGetRequest) (*CaseGetRespon
 	return &response.CaseGetResponse, nil
 }
 
+// Keywords lists all the keywords for the case
+func (s *CaseService) Keywords(ctx context.Context, r CaseKeywordsRequest) (*CaseKeywordsResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Keywords: marshal CaseKeywordsRequest")
+	}
+	url := s.client.RemoteHost + "CaseService.Keywords"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Keywords: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Keywords")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		CaseKeywordsResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "CaseService.Keywords: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "CaseService.Keywords: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("CaseService.Keywords: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.CaseKeywordsResponse, nil
+}
+
 // List the cases for a specified user
 func (s *CaseService) List(ctx context.Context, r CaseListRequest) (*CaseListResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -480,6 +532,110 @@ func (s *EntityService) Get(ctx context.Context, r EntityGetRequest) (*EntityGet
 		return nil, errors.New(response.Error)
 	}
 	return &response.EntityGetResponse, nil
+}
+
+// KeywordsAdd to an entity
+func (s *EntityService) KeywordsAdd(ctx context.Context, r KeywordsAddRequest) (*KeywordsAddResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsAdd: marshal KeywordsAddRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.KeywordsAdd"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsAdd: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsAdd")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsAddResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.KeywordsAdd: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsAdd: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.KeywordsAdd: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsAddResponse, nil
+}
+
+// KeywordsRemove from an entity
+func (s *EntityService) KeywordsRemove(ctx context.Context, r KeywordsRemoveRequest) (*KeywordsRemoveResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsRemove: marshal KeywordsRemoveRequest")
+	}
+	url := s.client.RemoteHost + "EntityService.KeywordsRemove"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsRemove: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsRemove")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsRemoveResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EntityService.KeywordsRemove: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EntityService.KeywordsRemove: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EntityService.KeywordsRemove: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsRemoveResponse, nil
 }
 
 // List all entities
@@ -808,6 +964,110 @@ func (s *EventService) Get(ctx context.Context, r EventGetRequest) (*EventGetRes
 	return &response.EventGetResponse, nil
 }
 
+// KeywordsAdd to an event
+func (s *EventService) KeywordsAdd(ctx context.Context, r KeywordsAddRequest) (*KeywordsAddResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsAdd: marshal KeywordsAddRequest")
+	}
+	url := s.client.RemoteHost + "EventService.KeywordsAdd"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsAdd: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsAdd")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsAddResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.KeywordsAdd: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsAdd: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.KeywordsAdd: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsAddResponse, nil
+}
+
+// KeywordsRemove from an event
+func (s *EventService) KeywordsRemove(ctx context.Context, r KeywordsRemoveRequest) (*KeywordsRemoveResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsRemove: marshal KeywordsRemoveRequest")
+	}
+	url := s.client.RemoteHost + "EventService.KeywordsRemove"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsRemove: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsRemove")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsRemoveResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "EventService.KeywordsRemove: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "EventService.KeywordsRemove: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("EventService.KeywordsRemove: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsRemoveResponse, nil
+}
+
 // List all events
 func (s *EventService) List(ctx context.Context, r EventListRequest) (*EventListResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -976,6 +1236,110 @@ func (s *FileService) Delete(ctx context.Context, r FileDeleteRequest) (*FileDel
 		return nil, errors.New(response.Error)
 	}
 	return &response.FileDeleteResponse, nil
+}
+
+// KeywordsAdd to a file
+func (s *FileService) KeywordsAdd(ctx context.Context, r KeywordsAddRequest) (*KeywordsAddResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsAdd: marshal KeywordsAddRequest")
+	}
+	url := s.client.RemoteHost + "FileService.KeywordsAdd"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsAdd: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsAdd")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsAddResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.KeywordsAdd: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsAdd: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.KeywordsAdd: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsAddResponse, nil
+}
+
+// KeywordsRemove from a file
+func (s *FileService) KeywordsRemove(ctx context.Context, r KeywordsRemoveRequest) (*KeywordsRemoveResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsRemove: marshal KeywordsRemoveRequest")
+	}
+	url := s.client.RemoteHost + "FileService.KeywordsRemove"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsRemove: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsRemove")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsRemoveResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "FileService.KeywordsRemove: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "FileService.KeywordsRemove: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("FileService.KeywordsRemove: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsRemoveResponse, nil
 }
 
 // New uploads a file to the backend
@@ -1734,6 +2098,110 @@ func (s *PersonService) Get(ctx context.Context, r PersonGetRequest) (*PersonGet
 	return &response.PersonGetResponse, nil
 }
 
+// KeywordsAdd to a person
+func (s *PersonService) KeywordsAdd(ctx context.Context, r KeywordsAddRequest) (*KeywordsAddResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsAdd: marshal KeywordsAddRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.KeywordsAdd"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsAdd: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsAdd")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsAddResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.KeywordsAdd: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsAdd: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.KeywordsAdd: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsAddResponse, nil
+}
+
+// KeywordsRemove from a person
+func (s *PersonService) KeywordsRemove(ctx context.Context, r KeywordsRemoveRequest) (*KeywordsRemoveResponse, error) {
+	requestBodyBytes, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsRemove: marshal KeywordsRemoveRequest")
+	}
+	url := s.client.RemoteHost + "PersonService.KeywordsRemove"
+	s.client.Debug(fmt.Sprintf("POST %s", url))
+	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsRemove: NewRequest")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", s.token)
+	req = req.WithContext(ctx)
+	resp, err := s.client.HTTPClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsRemove")
+	}
+	defer resp.Body.Close()
+	var response struct {
+		KeywordsRemoveResponse
+		Error string
+	}
+	var bodyReader io.Reader = resp.Body
+	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+		decodedBody, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "PersonService.KeywordsRemove: new gzip reader")
+		}
+		defer decodedBody.Close()
+		bodyReader = decodedBody
+	}
+	respBodyBytes, err := ioutil.ReadAll(bodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "PersonService.KeywordsRemove: read response body")
+	}
+	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
+	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.Errorf("PersonService.KeywordsRemove: (%d) %v", resp.StatusCode, string(respBodyBytes))
+		}
+		return nil, err
+	}
+	if response.Error != "" {
+		return nil, errors.New(response.Error)
+	}
+	return &response.KeywordsRemoveResponse, nil
+}
+
 // List all entities for a case
 func (s *PersonService) List(ctx context.Context, r PersonListRequest) (*PersonListResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
@@ -2214,6 +2682,9 @@ type File struct {
 
 	// ProcessedAt is the unix-timestamp for when (if) the item was processed
 	ProcessedAt int64 `json:"processedAt"`
+
+	// The keywords for the file
+	Keywords []string `json:"keywords"`
 }
 
 // Process holds information about a job that processes data to app
@@ -2274,6 +2745,18 @@ type CaseGetResponse struct {
 	Case Case `json:"case"`
 }
 
+// CaseKeywordsRequest is the input-object for listing keywords for a case
+type CaseKeywordsRequest struct {
+	// ID for the case to get the keywords for
+	ID string `json:"id"`
+}
+
+// CaseKeywordsResponse is the output-object for listing keywords for a case
+type CaseKeywordsResponse struct {
+	// Existing keywords in the case
+	Keywords []string `json:"keywords"`
+}
+
 // CaseListRequest is the input-object for listing cases for a specified user
 type CaseListRequest struct {
 	// UserID of the user to list cases for
@@ -2328,15 +2811,6 @@ type CaseUpdateResponse struct {
 	Updated Case `json:"updated"`
 }
 
-// CaseUploadRequest is the input-object for uploading an evidence to the case
-type CaseUploadRequest struct {
-	// ID of the case to upload
-	ID string `json:"id"`
-
-	// Name of the item to upload
-	Name string `json:"name"`
-}
-
 // Entity is an object that can be of different types. For example, organization or
 // location
 type Entity struct {
@@ -2354,6 +2828,9 @@ type Entity struct {
 
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+
+	// The keywords for the entity
+	Keywords []string `json:"keywords"`
 }
 
 // EntityCreateRequest is the input-object for creating an entity
@@ -2418,6 +2895,40 @@ type EntityListResponse struct {
 	Entities []Entity `json:"entities"`
 }
 
+// KeywordsAddRequest is the input-object for adding keywords to an object
+type KeywordsAddRequest struct {
+	// ID of the object to add keywords to
+	ID string `json:"id"`
+
+	// CaseID of the case for where the object belongs
+	CaseID string `json:"caseID"`
+
+	// The keywords to add
+	Keywords []string `json:"keywords"`
+}
+
+// KeywordsAddResponse is the output-object for adding keywords to an object
+type KeywordsAddResponse struct {
+	// OK is set to true if the add was ok
+	OK bool `json:"oK"`
+}
+
+// KeywordsRemoveRequest is the input-object for removing keywords from an object
+type KeywordsRemoveRequest struct {
+	// ID of the object to remove keywords to
+	ID string `json:"id"`
+
+	// CaseID of the case for where the object belongs
+	CaseID string `json:"caseID"`
+
+	// The keywords to remove
+	Keywords []string `json:"keywords"`
+}
+
+// KeywordsRemoveResponse is the output-object for removing keywords from an object
+type KeywordsRemoveResponse struct {
+}
+
 // EntityTypesRequest is the input-object for getting all entity-types
 type EntityTypesRequest struct {
 }
@@ -2470,6 +2981,9 @@ type Event struct {
 
 	// ToDate is the unix-timestamp of when the event finished
 	ToDate int64 `json:"toDate"`
+
+	// The keywords for the event
+	Keywords []string `json:"keywords"`
 }
 
 // EventCreateRequest is the input-object for creating an event
@@ -2669,6 +3183,24 @@ type FileUpdateResponse struct {
 	Updated File `json:"updated"`
 }
 
+// Keyword represents a keyword in used for a case
+type Keyword struct {
+	// Name of the keyword
+	Name string `json:"name"`
+
+	// IDs of the events that holds the keyword
+	EventIDs []string `json:"eventIDs"`
+
+	// IDs of the persons that holds the keyword
+	PersonIDs []string `json:"personIDs"`
+
+	// IDs of the entities that holds the keyword
+	EntityIDs []string `json:"entityIDs"`
+
+	// IDs of the files that holds the keyword
+	FileIDs []string `json:"fileIDs"`
+}
+
 // Person is a human related to a case
 type Person struct {
 	Base
@@ -2693,6 +3225,9 @@ type Person struct {
 
 	// Custom is a free form with key-value pairs specified by the user.
 	Custom map[string]interface{} `json:"custom"`
+
+	// The keywords for the person
+	Keywords []string `json:"keywords"`
 }
 
 // Link is a link for an object between different objects

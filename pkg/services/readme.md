@@ -19,6 +19,7 @@
 | ------ | -------- | ----------- | ------- | -------- |
 | Delete | /CaseService.Delete | Delete deletes the specified case | CaseDeleteRequest | CaseDeleteResponse |
 | Get | /CaseService.Get | Get returns the requested case | CaseGetRequest | CaseGetResponse |
+| Keywords | /CaseService.Keywords | Keywords lists all the keywords for the case | CaseKeywordsRequest | CaseKeywordsResponse |
 | List | /CaseService.List | List the cases for a specified user | CaseListRequest | CaseListResponse |
 | New | /CaseService.New | New creates a new case | CaseNewRequest | CaseNewResponse |
 | Update | /CaseService.Update | Update updates the specified case | CaseUpdateRequest | CaseUpdateResponse |
@@ -140,6 +141,10 @@ for getting a specified case_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -168,6 +173,66 @@ for getting a specified case_
         ],
         "toDate": 1257894000
     }
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### Keywords
+
+Keywords lists all the keywords for the case
+
+##### Endpoint
+
+POST `/CaseService.Keywords`
+
+##### Request
+
+_CaseKeywordsRequest is the input-object
+for listing keywords for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID for the case to get the keywords for |  |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"id":""}' http://localhost:8080/api/CaseService.Keywords
+```
+
+```json
+{
+    "id": ""
+}
+```
+
+##### Response
+
+_CaseKeywordsResponse is the output-object
+for listing keywords for a case_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| keywords | []string | Existing keywords in the case | healthygreen |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "keywords": [
+        "healthy",
+        "green"
+    ]
 }
 ```
 
@@ -243,6 +308,10 @@ listing cases for a specified user_
                         "updatedAt": 0
                     },
                     "description": "This file contains evidence",
+                    "keywords": [
+                        "healthy",
+                        "green"
+                    ],
                     "mime": "@file/plain",
                     "name": "text-file.txt",
                     "path": "/filestore/text-file.txt",
@@ -352,6 +421,10 @@ for creating a new case_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -462,6 +535,10 @@ for updating an existing case_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -510,6 +587,8 @@ for updating an existing case_
 | Create | /EntityService.Create | Create creates a new entity | EntityCreateRequest | EntityCreateResponse |
 | Delete | /EntityService.Delete | Delete deletes an existing entity | EntityDeleteRequest | EntityDeleteResponse |
 | Get | /EntityService.Get | Get the specified entity | EntityGetRequest | EntityGetResponse |
+| KeywordsAdd | /EntityService.KeywordsAdd | KeywordsAdd to an entity | KeywordsAddRequest | KeywordsAddResponse |
+| KeywordsRemove | /EntityService.KeywordsRemove | KeywordsRemove from an entity | KeywordsRemoveRequest | KeywordsRemoveResponse |
 | List | /EntityService.List | List all entities | EntityListRequest | EntityListResponse |
 | Types | /EntityService.Types | Types returns the existing entity-types | EntityTypesRequest | EntityTypesResponse |
 | Update | /EntityService.Update | Update updates an existing entity | EntityUpdateRequest | EntityUpdateResponse |
@@ -575,6 +654,10 @@ for creating an entity_
             "updatedAt": 0
         },
         "custom": {},
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "photoURL": "api.google.com/logo.png",
         "title": "Avian APS",
         "type": "organization"
@@ -701,11 +784,140 @@ for getting an existing entity_
             "updatedAt": 0
         },
         "custom": {},
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "photoURL": "api.google.com/logo.png",
         "title": "Avian APS",
         "type": "organization"
     }
 }
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsAdd
+
+KeywordsAdd to an entity
+
+##### Endpoint
+
+POST `/EntityService.KeywordsAdd`
+
+##### Request
+
+_KeywordsAddRequest is the input-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to add keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to add | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/EntityService.KeywordsAdd
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsAddResponse is the output-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| oK | bool | OK is set to true if the add was ok | true |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "oK": true
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsRemove
+
+KeywordsRemove from an entity
+
+##### Endpoint
+
+POST `/EntityService.KeywordsRemove`
+
+##### Request
+
+_KeywordsRemoveRequest is the input-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to remove keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to remove | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/EntityService.KeywordsRemove
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsRemoveResponse is the output-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
 ```
 
 `500 Internal Server Error`
@@ -770,6 +982,10 @@ for updating an existing entity_
                 "updatedAt": 0
             },
             "custom": {},
+            "keywords": [
+                "healthy",
+                "green"
+            ],
             "photoURL": "api.google.com/logo.png",
             "title": "Avian APS",
             "type": "organization"
@@ -906,6 +1122,10 @@ for updating an existing entity_
             "updatedAt": 0
         },
         "custom": {},
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "photoURL": "api.google.com/logo.png",
         "title": "Avian APS",
         "type": "organization"
@@ -930,6 +1150,8 @@ for updating an existing entity_
 | Create | /EventService.Create | Create creates a new event | EventCreateRequest | EventCreateResponse |
 | Delete | /EventService.Delete | Delete deletes an existing event | EventDeleteRequest | EventDeleteResponse |
 | Get | /EventService.Get | Get the specified event | EventGetRequest | EventGetResponse |
+| KeywordsAdd | /EventService.KeywordsAdd | KeywordsAdd to an event | KeywordsAddRequest | KeywordsAddResponse |
+| KeywordsRemove | /EventService.KeywordsRemove | KeywordsRemove from an event | KeywordsRemoveRequest | KeywordsRemoveResponse |
 | List | /EventService.List | List all events | EventListRequest | EventListResponse |
 | Update | /EventService.Update | Update updates an existing event | EventUpdateRequest | EventUpdateResponse |
 
@@ -996,6 +1218,10 @@ for creating an event_
         "description": "This needs investigation.",
         "fromDate": 1100127600,
         "importance": 3,
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "toDate": 1257894000
     }
 }
@@ -1122,9 +1348,138 @@ for deleting an existing event_
         "description": "This needs investigation.",
         "fromDate": 1100127600,
         "importance": 3,
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "toDate": 1257894000
     }
 }
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsAdd
+
+KeywordsAdd to an event
+
+##### Endpoint
+
+POST `/EventService.KeywordsAdd`
+
+##### Request
+
+_KeywordsAddRequest is the input-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to add keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to add | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/EventService.KeywordsAdd
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsAddResponse is the output-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| oK | bool | OK is set to true if the add was ok | true |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "oK": true
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsRemove
+
+KeywordsRemove from an event
+
+##### Endpoint
+
+POST `/EventService.KeywordsRemove`
+
+##### Request
+
+_KeywordsRemoveRequest is the input-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to remove keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to remove | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/EventService.KeywordsRemove
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsRemoveResponse is the output-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
 ```
 
 `500 Internal Server Error`
@@ -1191,6 +1546,10 @@ for listing all existing events for a case_
             "description": "This needs investigation.",
             "fromDate": 1100127600,
             "importance": 3,
+            "keywords": [
+                "healthy",
+                "green"
+            ],
             "toDate": 1257894000
         }
     ]
@@ -1270,6 +1629,10 @@ for updating an existing event_
         "description": "This needs investigation.",
         "fromDate": 1100127600,
         "importance": 3,
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "toDate": 1257894000
     }
 }
@@ -1290,6 +1653,8 @@ for updating an existing event_
 | Method | Endpoint | Description | Request | Response |
 | ------ | -------- | ----------- | ------- | -------- |
 | Delete | /FileService.Delete | Delete deletes the specified file | FileDeleteRequest | FileDeleteResponse |
+| KeywordsAdd | /FileService.KeywordsAdd | KeywordsAdd to a file | KeywordsAddRequest | KeywordsAddResponse |
+| KeywordsRemove | /FileService.KeywordsRemove | KeywordsRemove from a file | KeywordsRemoveRequest | KeywordsRemoveResponse |
 | New | /FileService.New | New uploads a file to the backend | FileNewRequest | FileNewResponse |
 | Open | /FileService.Open | Open opens a file | FileOpenRequest | FileOpenResponse |
 | Process | /FileService.Process | Process processes a file | FileProcessRequest | FileProcessResponse |
@@ -1332,6 +1697,131 @@ curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d
 
 _FileDeleteResponse is the output-object
 for deleting a file_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsAdd
+
+KeywordsAdd to a file
+
+##### Endpoint
+
+POST `/FileService.KeywordsAdd`
+
+##### Request
+
+_KeywordsAddRequest is the input-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to add keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to add | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/FileService.KeywordsAdd
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsAddResponse is the output-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| oK | bool | OK is set to true if the add was ok | true |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "oK": true
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsRemove
+
+KeywordsRemove from a file
+
+##### Endpoint
+
+POST `/FileService.KeywordsRemove`
+
+##### Request
+
+_KeywordsRemoveRequest is the input-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to remove keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to remove | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/FileService.KeywordsRemove
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsRemoveResponse is the output-object
+for removing keywords from an object_
 
 **Fields**
 
@@ -1414,6 +1904,10 @@ for creating a new file_
             "updatedAt": 0
         },
         "description": "This file contains evidence",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "mime": "@file/plain",
         "name": "text-file.txt",
         "path": "/filestore/text-file.txt",
@@ -1545,6 +2039,10 @@ for processing a file in a case_
             "updatedAt": 0
         },
         "description": "This file contains evidence",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "mime": "@file/plain",
         "name": "text-file.txt",
         "path": "/filestore/text-file.txt",
@@ -1738,6 +2236,10 @@ for updating a files information_
             "updatedAt": 0
         },
         "description": "This file contains evidence",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "mime": "@file/plain",
         "name": "text-file.txt",
         "path": "/filestore/text-file.txt",
@@ -1846,6 +2348,10 @@ for linking objects with an event_
                     "updatedAt": 0
                 },
                 "custom": {},
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "photoURL": "api.google.com/logo.png",
                 "title": "Avian APS",
                 "type": "organization"
@@ -1862,6 +2368,10 @@ for linking objects with an event_
                 "description": "This needs investigation.",
                 "fromDate": 1100127600,
                 "importance": 3,
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "toDate": 1257894000
             }
         ],
@@ -1874,6 +2384,10 @@ for linking objects with an event_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -1893,6 +2407,10 @@ for linking objects with an event_
                 "custom": {},
                 "emailAddress": "sja@avian.dk",
                 "firstName": "Simon",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "lastName": "Jansson",
                 "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
                 "telephoneNo": "+46765550125",
@@ -1992,6 +2510,10 @@ for linking objects_
                     "updatedAt": 0
                 },
                 "custom": {},
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "photoURL": "api.google.com/logo.png",
                 "title": "Avian APS",
                 "type": "organization"
@@ -2008,6 +2530,10 @@ for linking objects_
                 "description": "This needs investigation.",
                 "fromDate": 1100127600,
                 "importance": 3,
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "toDate": 1257894000
             }
         ],
@@ -2020,6 +2546,10 @@ for linking objects_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -2039,6 +2569,10 @@ for linking objects_
                 "custom": {},
                 "emailAddress": "sja@avian.dk",
                 "firstName": "Simon",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "lastName": "Jansson",
                 "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
                 "telephoneNo": "+46765550125",
@@ -2176,6 +2710,10 @@ for getting a links for an object_
                     "updatedAt": 0
                 },
                 "custom": {},
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "photoURL": "api.google.com/logo.png",
                 "title": "Avian APS",
                 "type": "organization"
@@ -2192,6 +2730,10 @@ for getting a links for an object_
                 "description": "This needs investigation.",
                 "fromDate": 1100127600,
                 "importance": 3,
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "toDate": 1257894000
             }
         ],
@@ -2204,6 +2746,10 @@ for getting a links for an object_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -2223,6 +2769,10 @@ for getting a links for an object_
                 "custom": {},
                 "emailAddress": "sja@avian.dk",
                 "firstName": "Simon",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "lastName": "Jansson",
                 "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
                 "telephoneNo": "+46765550125",
@@ -2320,6 +2870,10 @@ for removing linked objects from a link objects_
                     "updatedAt": 0
                 },
                 "custom": {},
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "photoURL": "api.google.com/logo.png",
                 "title": "Avian APS",
                 "type": "organization"
@@ -2336,6 +2890,10 @@ for removing linked objects from a link objects_
                 "description": "This needs investigation.",
                 "fromDate": 1100127600,
                 "importance": 3,
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "toDate": 1257894000
             }
         ],
@@ -2348,6 +2906,10 @@ for removing linked objects from a link objects_
                     "updatedAt": 0
                 },
                 "description": "This file contains evidence",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "mime": "@file/plain",
                 "name": "text-file.txt",
                 "path": "/filestore/text-file.txt",
@@ -2367,6 +2929,10 @@ for removing linked objects from a link objects_
                 "custom": {},
                 "emailAddress": "sja@avian.dk",
                 "firstName": "Simon",
+                "keywords": [
+                    "healthy",
+                    "green"
+                ],
                 "lastName": "Jansson",
                 "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
                 "telephoneNo": "+46765550125",
@@ -2394,6 +2960,8 @@ for removing linked objects from a link objects_
 | Create | /PersonService.Create | Create creates a new person | PersonCreateRequest | PersonCreateResponse |
 | Delete | /PersonService.Delete | Delete deletes an existing person | PersonDeleteRequest | PersonDeleteResponse |
 | Get | /PersonService.Get | Get the specified person | PersonGetRequest | PersonGetResponse |
+| KeywordsAdd | /PersonService.KeywordsAdd | KeywordsAdd to a person | KeywordsAddRequest | KeywordsAddResponse |
+| KeywordsRemove | /PersonService.KeywordsRemove | KeywordsRemove from a person | KeywordsRemoveRequest | KeywordsRemoveResponse |
 | List | /PersonService.List | List all entities for a case | PersonListRequest | PersonListResponse |
 | Update | /PersonService.Update | Update updates an existing person | PersonUpdateRequest | PersonUpdateResponse |
 
@@ -2466,6 +3034,10 @@ for creating a person_
         "custom": {},
         "emailAddress": "sja@avian.dk",
         "firstName": "Simon",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "lastName": "Jansson",
         "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
         "telephoneNo": "+46765550125",
@@ -2595,12 +3167,141 @@ for getting an existing person_
         "custom": {},
         "emailAddress": "sja@avian.dk",
         "firstName": "Simon",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "lastName": "Jansson",
         "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
         "telephoneNo": "+46765550125",
         "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
     }
 }
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsAdd
+
+KeywordsAdd to a person
+
+##### Endpoint
+
+POST `/PersonService.KeywordsAdd`
+
+##### Request
+
+_KeywordsAddRequest is the input-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to add keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to add | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/PersonService.KeywordsAdd
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsAddResponse is the output-object
+for adding keywords to an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| oK | bool | OK is set to true if the add was ok | true |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{
+    "oK": true
+}
+```
+
+`500 Internal Server Error`
+
+```json
+{
+    "error": "something went wrong"
+}
+```
+
+#### KeywordsRemove
+
+KeywordsRemove from a person
+
+##### Endpoint
+
+POST `/PersonService.KeywordsRemove`
+
+##### Request
+
+_KeywordsRemoveRequest is the input-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| id | string | ID of the object to remove keywords to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | CaseID of the case for where the object belongs | 7a1713b0249d477d92f5e10124a59861 |
+| keywords | []string | The keywords to remove | healthygreen |
+
+```sh
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861","keywords":["healthy","green"]}' http://localhost:8080/api/PersonService.KeywordsRemove
+```
+
+```json
+{
+    "caseID": "7a1713b0249d477d92f5e10124a59861",
+    "id": "7a1713b0249d477d92f5e10124a59861",
+    "keywords": [
+        "healthy",
+        "green"
+    ]
+}
+```
+
+##### Response
+
+_KeywordsRemoveResponse is the output-object
+for removing keywords from an object_
+
+**Fields**
+
+| Name | Type | Description | Example |
+| ---- | ---- | ----------- | ------- |
+| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
+
+`200 OK`
+
+```json
+{}
 ```
 
 `500 Internal Server Error`
@@ -2667,6 +3368,10 @@ for listing all persons for a case_
             "custom": {},
             "emailAddress": "sja@avian.dk",
             "firstName": "Simon",
+            "keywords": [
+                "healthy",
+                "green"
+            ],
             "lastName": "Jansson",
             "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
             "telephoneNo": "+46765550125",
@@ -2755,6 +3460,10 @@ for updating an existing person_
         "custom": {},
         "emailAddress": "sja@avian.dk",
         "firstName": "Simon",
+        "keywords": [
+            "healthy",
+            "green"
+        ],
         "lastName": "Jansson",
         "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
         "telephoneNo": "+46765550125",

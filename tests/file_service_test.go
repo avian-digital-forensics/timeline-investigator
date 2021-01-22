@@ -76,9 +76,36 @@ func TestFileService(t *testing.T) {
 	is.Equal(updated.Updated.Mime, file.New.Mime)
 	is.Equal(updated.Updated.ProcessedAt, file.New.ProcessedAt)
 
-	if testing.Short() {
-		t.Skip("skipping for process in short mode.")
-	}
+	// Get all keywords for the case where the file belongs
+	keywords, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 0)
+
+	// Add two keywords to the first file
+	keywordsRequest := client.KeywordsAddRequest{ID: file.New.ID, CaseID: testCase.ID, Keywords: []string{"healthy", "green"}}
+	_, err = fileService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Get the keywords for the case again and make sure they have been added for the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 2)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+
+	// Get the file again and make sure the keywords has been added there as well
+	// Open the case againg and make sure the files has been added
+	gotten, err := caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Case.Files[0].Keywords), 2)
+	// make sure the rest of the data is valid as well
+	is.Equal(gotten.Case.Files[0].ID, updated.Updated.ID)
+	is.Equal(gotten.Case.Files[0].CreatedAt, updated.Updated.CreatedAt)
+	is.Equal(gotten.Case.Files[0].DeletedAt, updated.Updated.DeletedAt)
+	is.Equal(gotten.Case.Files[0].Description, updated.Updated.Description)
+	is.Equal(gotten.Case.Files[0].CreatedAt, updated.Updated.CreatedAt)
+	is.Equal(gotten.Case.Files[0].Mime, updated.Updated.Mime)
+	is.Equal(gotten.Case.Files[0].ProcessedAt, updated.Updated.ProcessedAt)
 
 	// Process the file
 	processed, err := fileService.Process(ctx, client.FileProcessRequest{ID: file.New.ID, CaseID: testCase.ID})
@@ -89,8 +116,8 @@ func TestFileService(t *testing.T) {
 	is.Equal(processed.Processed.Mime, updated.Updated.Mime)
 	is.Equal(false, processed.Processed.ProcessedAt == updated.Updated.ProcessedAt)
 
-	// Open the case and make sure the file is listed
-	gotten, err := caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	// Open the case and make sure the file has been updated from the processing
+	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(gotten.Case.Files), 1)
 	is.Equal(gotten.Case.Files[0], processed.Processed) // processed latest info for the first file
@@ -122,21 +149,74 @@ func TestFileService(t *testing.T) {
 	is.Equal(gotten.Case.Files[1], file2.New)
 	is.Equal(gotten.Case.Files[2], file3.New)
 
+	// Add the keywords + another one, to file2 as well
+	keywordsRequest.ID = file2.New.ID
+	keywordsRequest.Keywords = append(keywordsRequest.Keywords, "another one")
+	_, err = fileService.KeywordsAdd(ctx, keywordsRequest)
+	is.NoErr(err)
+
+	// Make sure the keywords has been added to file2
+	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Case.Files[1].Keywords), 3)
+	is.Equal(gotten.Case.Files[1].Keywords, keywordsRequest.Keywords)
+
+	// We should now have 3 (unqiue) keywords in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+	is.Equal(keywordsRequest.Keywords[0], keywords.Keywords[0])
+	is.Equal(keywordsRequest.Keywords[1], keywords.Keywords[1])
+	is.Equal(keywordsRequest.Keywords[2], keywords.Keywords[2])
+
+	// Remove the keyword first keyword from file2
+	removeRequest := client.KeywordsRemoveRequest{ID: file2.New.ID, CaseID: testCase.ID, Keywords: []string{keywords.Keywords[0]}}
+	_, err = fileService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from file2
+	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Case.Files[1].Keywords), 2)
+	is.Equal(gotten.Case.Files[1].Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(gotten.Case.Files[1].Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it is still available in the case
+	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords.Keywords), 3)
+
+	// Make sure it is still available in the first file
+	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Case.Files[0].Keywords), 2)
+	is.Equal(gotten.Case.Files[0].Keywords[0], keywordsRequest.Keywords[0])
+	is.Equal(gotten.Case.Files[0].Keywords[1], keywordsRequest.Keywords[1])
+
+	// Remove it from the first file as well
+	removeRequest.ID = file.New.ID
+	_, err = fileService.KeywordsRemove(ctx, removeRequest)
+	is.NoErr(err)
+
+	// Make sure it was removed from the case (since no file has the keyword anymore)
+	keywords5, err := caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(keywords5.Keywords), 2)
+	is.Equal(keywords5.Keywords[0], keywordsRequest.Keywords[1])
+	is.Equal(keywords5.Keywords[1], keywordsRequest.Keywords[2])
+
+	// Make sure it was removed from the first file as well
+	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
+	is.NoErr(err)
+	is.Equal(len(gotten.Case.Files[0].Keywords), 1)
+	is.Equal(gotten.Case.Files[0].Keywords[0], keywordsRequest.Keywords[1])
+
 	// Delete a file and make sure the file has been removed from the case
 	_, err = fileService.Delete(ctx, client.FileDeleteRequest{CaseID: testCase.ID, ID: file.New.ID})
 	is.NoErr(err)
 	gotten, err = caseService.Get(ctx, client.CaseGetRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(gotten.Case.Files), 2)
-	is.Equal(gotten.Case.Files[0], file2.New)
-	is.Equal(gotten.Case.Files[1], file3.New)
-
-	// Process the second file
-	processed2, err := fileService.Process(ctx, client.FileProcessRequest{ID: file2.New.ID, CaseID: testCase.ID})
-	is.NoErr(err)
-	is.Equal(processed2.Processed.ID, file2.New.ID)
-
-	// Get all processes for the case (should be two)
-	_, err = fileService.Processes(ctx, client.FileProcessesRequest{CaseID: testCase.ID})
-	is.NoErr(err)
+	is.Equal(gotten.Case.Files[0].ID, file2.New.ID)
+	is.Equal(gotten.Case.Files[1].ID, file3.New.ID)
 }
