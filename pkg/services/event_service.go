@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -111,14 +110,11 @@ func (s *EventService) Delete(ctx context.Context, r api.EventDeleteRequest) (*a
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
-	log.Println(event.Keywords)
 
 	// Delete the keywords for the event
-	log.Println("hej1")
 	if err := s.removeKeywords(ctx, r.CaseID, event, event.Keywords); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
-	log.Println("hej2")
 	if err := s.db.DeleteEvent(ctx, r.CaseID, event.ID); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
@@ -267,11 +263,8 @@ func (s *EventService) removeKeywords(ctx context.Context, caseID string, event 
 		return err
 	}
 
-	log.Println(keywords, event.Keywords, removeKeywords)
-
 	// check if all keywords in the event should be removed
 	if len(removeKeywords) == len(event.Keywords) && len(removeKeywords) == len(keywords) {
-		log.Println("remove all")
 		event.Keywords = nil
 	}
 

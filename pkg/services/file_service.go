@@ -326,7 +326,11 @@ func (s *FileService) removeKeywords(ctx context.Context, caseID string, file *a
 		return err
 	}
 
-	// Remove the keywords from the file
+	// check if all keywords in the file should be removed
+	if len(removeKeywords) == len(file.Keywords) && len(removeKeywords) == len(keywords) {
+		file.Keywords = nil
+	}
+
 	for i, keyword := range file.Keywords {
 		if keywordToRemove[keyword] {
 			file.Keywords = append(file.Keywords[:i], file.Keywords[i+1:]...)

@@ -244,7 +244,11 @@ func (s *PersonService) removeKeywords(ctx context.Context, caseID string, perso
 		return err
 	}
 
-	// Remove the keywords from the person
+	// check if all keywords in the person should be removed
+	if len(removeKeywords) == len(person.Keywords) && len(removeKeywords) == len(keywords) {
+		person.Keywords = nil
+	}
+
 	for i, keyword := range person.Keywords {
 		if keywordToRemove[keyword] {
 			person.Keywords = append(person.Keywords[:i], person.Keywords[i+1:]...)

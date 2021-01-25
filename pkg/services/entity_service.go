@@ -266,13 +266,17 @@ func (s *EntityService) removeKeywords(ctx context.Context, caseID string, entit
 		keywordToRemove[keyword] = true
 	}
 
-	// Get the keywords that should be removed from the entity
+	// Get the keywords that should be removed from the event
 	keywords, err := s.db.GetKeywordsByIDs(ctx, caseID, removeKeywords)
 	if err != nil {
 		return err
 	}
 
-	// Remove the keywords from the entity
+	// check if all keywords in the event should be removed
+	if len(removeKeywords) == len(entity.Keywords) && len(removeKeywords) == len(keywords) {
+		entity.Keywords = nil
+	}
+
 	for i, keyword := range entity.Keywords {
 		if keywordToRemove[keyword] {
 			entity.Keywords = append(entity.Keywords[:i], entity.Keywords[i+1:]...)

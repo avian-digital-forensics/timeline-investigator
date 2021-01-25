@@ -55,6 +55,10 @@ func TestKeywords(t *testing.T) {
 	is.NoErr(err)
 	is.Equal(len(keywords.Keywords), 0)
 
+	// Try to remove a non-existing keyword
+	_, err = eventService.KeywordsRemove(ctx, client.KeywordsRemoveRequest{ID: event1.ID, CaseID: testCase.ID, Keywords: []string{"healthy"}})
+	is.NoErr(err)
+
 	// Add two keywords to the first event
 	keywordsRequest1 := client.KeywordsAddRequest{ID: event1.ID, CaseID: testCase.ID, Keywords: []string{"healthy", "green"}}
 	_, err = eventService.KeywordsAdd(ctx, keywordsRequest1)
