@@ -204,6 +204,11 @@ func (s *FileService) Delete(ctx context.Context, r api.FileDeleteRequest) (*api
 		return nil, api.Error(err, api.ErrNotFound)
 	}
 
+	// Delete the keywords for the file
+	if err := s.removeKeywords(ctx, r.CaseID, file, file.Keywords); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
 	if err := s.db.DeleteFile(ctx, r.CaseID, file.ID); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
@@ -240,9 +245,9 @@ func (s *FileService) KeywordsAdd(ctx context.Context, r api.KeywordsAddRequest)
 	// Create a map of the keywords that were found from the db
 	// and add the File ID to each keyword
 	var keywordFound = make(map[string]bool)
-	for _, keyword := range keywords {
-		keywordFound[keyword.Name] = true
-		keyword.FileIDs = append(keyword.FileIDs, file.ID)
+	for i := range keywords {
+		keywordFound[keywords[i].Name] = true
+		keywords[i].FileIDs = append(keywords[i].FileIDs, file.ID)
 	}
 
 	// Add the keywords from the request to the file
@@ -281,22 +286,44 @@ func (s *FileService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveRe
 		return nil, api.ErrNotAllowed
 	}
 
-	// Create a map of the keywords to remove
-	var keywordToRemove = make(map[string]bool)
-	for _, keyword := range r.Keywords {
-		keywordToRemove[keyword] = true
-	}
-
 	// Get the file to remove the keywords from
 	file, err := s.db.GetFileByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
 
-	// Get the keywords that should be removed from the file
-	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
-	if err != nil {
+	// Delete the requested keywords for the file
+	if err := s.removeKeywords(ctx, r.CaseID, file, r.Keywords); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Update the file without the removed keyword
+	if err := s.db.UpdateFile(ctx, r.CaseID, file); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsRemoveResponse{}, nil
+}
+
+// Authenticate is a middleware
+// in the http-handler
+//
+// NOTE : Only for Go-servers
+func (s *FileService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
+	return s.caseService.Authenticate(ctx, r)
+}
+
+func (s *FileService) removeKeywords(ctx context.Context, caseID string, file *api.File, removeKeywords []string) error {
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range removeKeywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the keywords that should be removed from the file
+	keywords, err := s.db.GetKeywordsByIDs(ctx, caseID, removeKeywords)
+	if err != nil {
+		return err
 	}
 
 	// Remove the keywords from the file
@@ -325,28 +352,14 @@ func (s *FileService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveRe
 	for _, keyword := range keywords {
 		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
 		if toDelete {
-			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.DeleteKeyword(ctx, caseID, keyword.Name); err != nil {
+				return err
 			}
 		} else if !toDelete {
-			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.SaveKeyword(ctx, caseID, &keyword); err != nil {
+				return err
 			}
 		}
 	}
-
-	// Update the file without the removed keyword
-	if err := s.db.UpdateFile(ctx, r.CaseID, file); err != nil {
-		return nil, api.Error(err, api.ErrCannotPerformOperation)
-	}
-
-	return &api.KeywordsRemoveResponse{}, nil
-}
-
-// Authenticate is a middleware
-// in the http-handler
-//
-// NOTE : Only for Go-servers
-func (s *FileService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	return s.caseService.Authenticate(ctx, r)
+	return nil
 }

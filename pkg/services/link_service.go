@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -58,7 +57,6 @@ func (s *LinkService) Create(ctx context.Context, r api.LinkCreateRequest) (*api
 	if err := getObject(&from); err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
-	log.Println(from)
 
 	events, err := s.db.GetEventsByIDs(ctx, r.CaseID, r.EventIDs)
 	if err != nil {

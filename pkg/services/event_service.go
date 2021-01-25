@@ -106,7 +106,20 @@ func (s *EventService) Delete(ctx context.Context, r api.EventDeleteRequest) (*a
 		return nil, api.ErrNotAllowed
 	}
 
-	if err := s.db.DeleteEvent(ctx, r.CaseID, r.ID); err != nil {
+	// Get the event to delete
+	event, err := s.db.GetEventByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+	log.Println(event.Keywords)
+
+	// Delete the keywords for the event
+	log.Println("hej1")
+	if err := s.removeKeywords(ctx, r.CaseID, event, event.Keywords); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+	log.Println("hej2")
+	if err := s.db.DeleteEvent(ctx, r.CaseID, event.ID); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
@@ -174,9 +187,9 @@ func (s *EventService) KeywordsAdd(ctx context.Context, r api.KeywordsAddRequest
 	// Create a map of the keywords that were found from the db
 	// and add the Event ID to each keyword
 	var keywordFound = make(map[string]bool)
-	for _, keyword := range keywords {
-		keywordFound[keyword.Name] = true
-		keyword.EventIDs = append(keyword.EventIDs, event.ID)
+	for i := range keywords {
+		keywordFound[keywords[i].Name] = true
+		keywords[i].EventIDs = append(keywords[i].EventIDs, event.ID)
 	}
 
 	// Add the keywords from the request to the Event
@@ -215,25 +228,53 @@ func (s *EventService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveR
 		return nil, api.ErrNotAllowed
 	}
 
-	// Create a map of the keywords to remove
-	var keywordToRemove = make(map[string]bool)
-	for _, keyword := range r.Keywords {
-		keywordToRemove[keyword] = true
-	}
-
 	// Get the event to remove the keywords from
 	event, err := s.db.GetEventByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
 
-	// Get the keywords that should be removed from the event
-	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
-	if err != nil {
+	if err := s.removeKeywords(ctx, r.CaseID, event, r.Keywords); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
-	// Remove the keywords from the event
+	// Update the Event without the removed keyword
+	if err := s.db.UpdateEvent(ctx, r.CaseID, event); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsRemoveResponse{}, nil
+}
+
+// Authenticate is a middleware
+// in the http-handler
+//
+// NOTE : Only for Go-servers
+func (s *EventService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
+	return s.caseService.Authenticate(ctx, r)
+}
+
+func (s *EventService) removeKeywords(ctx context.Context, caseID string, event *api.Event, removeKeywords []string) error {
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range removeKeywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the keywords that should be removed from the event
+	keywords, err := s.db.GetKeywordsByIDs(ctx, caseID, removeKeywords)
+	if err != nil {
+		return err
+	}
+
+	log.Println(keywords, event.Keywords, removeKeywords)
+
+	// check if all keywords in the event should be removed
+	if len(removeKeywords) == len(event.Keywords) && len(removeKeywords) == len(keywords) {
+		log.Println("remove all")
+		event.Keywords = nil
+	}
+
 	for i, keyword := range event.Keywords {
 		if keywordToRemove[keyword] {
 			event.Keywords = append(event.Keywords[:i], event.Keywords[i+1:]...)
@@ -257,32 +298,16 @@ func (s *EventService) KeywordsRemove(ctx context.Context, r api.KeywordsRemoveR
 	// Save the keywords (or delete if empty)
 	// TODO/FIXME: use bulk indexer
 	for _, keyword := range keywords {
-		log.Println(keyword)
 		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
-		log.Println(toDelete)
 		if toDelete {
-			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.DeleteKeyword(ctx, caseID, keyword.Name); err != nil {
+				return err
 			}
 		} else if !toDelete {
-			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.SaveKeyword(ctx, caseID, &keyword); err != nil {
+				return err
 			}
 		}
 	}
-
-	// Update the Event without the removed keyword
-	if err := s.db.UpdateEvent(ctx, r.CaseID, event); err != nil {
-		return nil, api.Error(err, api.ErrCannotPerformOperation)
-	}
-
-	return &api.KeywordsRemoveResponse{}, nil
-}
-
-// Authenticate is a middleware
-// in the http-handler
-//
-// NOTE : Only for Go-servers
-func (s *EventService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	return s.caseService.Authenticate(ctx, r)
+	return nil
 }

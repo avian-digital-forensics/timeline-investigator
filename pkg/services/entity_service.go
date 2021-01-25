@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/avian-digital-forensics/timeline-investigator/pkg/api"
@@ -99,7 +98,18 @@ func (s *EntityService) Delete(ctx context.Context, r api.EntityDeleteRequest) (
 		return nil, api.ErrNotAllowed
 	}
 
-	if err := s.db.DeleteEntity(ctx, r.CaseID, r.ID); err != nil {
+	// Get the entity to delete
+	entity, err := s.db.GetEntityByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	// Delete the keywords for the entity
+	if err := s.removeKeywords(ctx, r.CaseID, entity, entity.Keywords); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	if err := s.db.DeleteEntity(ctx, r.CaseID, entity.ID); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
@@ -170,11 +180,11 @@ func (s *EntityService) KeywordsAdd(ctx context.Context, r api.KeywordsAddReques
 	}
 
 	// Create a map of the keywords that were found from the db
-	// and add the entity ID to each keyword
+	// and add the Entity ID to each keyword
 	var keywordFound = make(map[string]bool)
-	for _, keyword := range keywords {
-		keywordFound[keyword.Name] = true
-		keyword.EntityIDs = append(keyword.EntityIDs, entity.ID)
+	for i := range keywords {
+		keywordFound[keywords[i].Name] = true
+		keywords[i].EntityIDs = append(keywords[i].EntityIDs, entity.ID)
 	}
 
 	// Add the keywords from the request to the entity
@@ -213,60 +223,14 @@ func (s *EntityService) KeywordsRemove(ctx context.Context, r api.KeywordsRemove
 		return nil, api.ErrNotAllowed
 	}
 
-	// Create a map of the keywords to remove
-	var keywordToRemove = make(map[string]bool)
-	for _, keyword := range r.Keywords {
-		keywordToRemove[keyword] = true
-	}
-
 	// Get the entity to remove the keywords from
 	entity, err := s.db.GetEntityByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
 
-	// Get the keywords that should be removed from the entity
-	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
-	if err != nil {
+	if err := s.removeKeywords(ctx, r.CaseID, entity, r.Keywords); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
-	}
-
-	// Remove the keywords from the entity
-	for i, keyword := range entity.Keywords {
-		if keywordToRemove[keyword] {
-			entity.Keywords = append(entity.Keywords[:i], entity.Keywords[i+1:]...)
-		}
-	}
-
-	// Remove the entityID from the keywords
-	for ki, keyword := range keywords {
-		if keywordToRemove[keyword.Name] {
-			for ei, id := range keyword.EntityIDs {
-				if id == entity.ID {
-					keywords[ki].EntityIDs = append(
-						keyword.EntityIDs[:ei],
-						keyword.EntityIDs[ei+1:]...,
-					)
-				}
-			}
-		}
-	}
-
-	// Save the keywords (or delete if empty)
-	// TODO/FIXME: use bulk indexer
-	for _, keyword := range keywords {
-		log.Println(keyword)
-		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
-		log.Println(toDelete)
-		if toDelete {
-			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
-			}
-		} else if !toDelete {
-			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
-			}
-		}
 	}
 
 	// Update the entity without the removed keyword
@@ -293,4 +257,55 @@ func (s *EntityService) validType(entityType string) bool {
 		}
 	}
 	return false
+}
+
+func (s *EntityService) removeKeywords(ctx context.Context, caseID string, entity *api.Entity, removeKeywords []string) error {
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range removeKeywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the keywords that should be removed from the entity
+	keywords, err := s.db.GetKeywordsByIDs(ctx, caseID, removeKeywords)
+	if err != nil {
+		return err
+	}
+
+	// Remove the keywords from the entity
+	for i, keyword := range entity.Keywords {
+		if keywordToRemove[keyword] {
+			entity.Keywords = append(entity.Keywords[:i], entity.Keywords[i+1:]...)
+		}
+	}
+
+	// Remove the EntityID from the keywords
+	for ki, keyword := range keywords {
+		if keywordToRemove[keyword.Name] {
+			for ei, id := range keyword.EntityIDs {
+				if id == entity.ID {
+					keywords[ki].EntityIDs = append(
+						keyword.EntityIDs[:ei],
+						keyword.EntityIDs[ei+1:]...,
+					)
+				}
+			}
+		}
+	}
+
+	// Save the keywords (or delete if empty)
+	// TODO/FIXME: use bulk indexer
+	for _, keyword := range keywords {
+		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
+		if toDelete {
+			if err := s.db.DeleteKeyword(ctx, caseID, keyword.Name); err != nil {
+				return err
+			}
+		} else if !toDelete {
+			if err := s.db.SaveKeyword(ctx, caseID, &keyword); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

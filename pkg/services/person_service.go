@@ -86,7 +86,17 @@ func (s *PersonService) Delete(ctx context.Context, r api.PersonDeleteRequest) (
 		return nil, api.ErrNotAllowed
 	}
 
-	if err := s.db.DeletePerson(ctx, r.CaseID, r.ID); err != nil {
+	// Get the person to delete
+	person, err := s.db.GetPersonByID(ctx, r.CaseID, r.ID)
+	if err != nil {
+		return nil, api.Error(err, api.ErrNotFound)
+	}
+
+	if err := s.removeKeywords(ctx, r.CaseID, person, person.Keywords); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	if err := s.db.DeletePerson(ctx, r.CaseID, person.ID); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
@@ -154,9 +164,9 @@ func (s *PersonService) KeywordsAdd(ctx context.Context, r api.KeywordsAddReques
 	// Create a map of the keywords that were found from the db
 	// and add the Person ID to each keyword
 	var keywordFound = make(map[string]bool)
-	for _, keyword := range keywords {
-		keywordFound[keyword.Name] = true
-		keyword.PersonIDs = append(keyword.PersonIDs, person.ID)
+	for i := range keywords {
+		keywordFound[keywords[i].Name] = true
+		keywords[i].PersonIDs = append(keywords[i].PersonIDs, person.ID)
 	}
 
 	// Add the keywords from the request to the Person
@@ -195,22 +205,43 @@ func (s *PersonService) KeywordsRemove(ctx context.Context, r api.KeywordsRemove
 		return nil, api.ErrNotAllowed
 	}
 
-	// Create a map of the keywords to remove
-	var keywordToRemove = make(map[string]bool)
-	for _, keyword := range r.Keywords {
-		keywordToRemove[keyword] = true
-	}
-
 	// Get the Person to remove the keywords from
 	person, err := s.db.GetPersonByID(ctx, r.CaseID, r.ID)
 	if err != nil {
 		return nil, api.Error(err, api.ErrNotFound)
 	}
 
-	// Get the keywords that should be removed from the person
-	keywords, err := s.db.GetKeywordsByIDs(ctx, r.CaseID, r.Keywords)
-	if err != nil {
+	if err := s.removeKeywords(ctx, r.CaseID, person, r.Keywords); err != nil {
 		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	// Update the person without the removed keyword
+	if err := s.db.UpdatePerson(ctx, r.CaseID, person); err != nil {
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
+	}
+
+	return &api.KeywordsRemoveResponse{}, nil
+}
+
+// Authenticate is a middleware
+// in the http-handler
+//
+// NOTE : Only for Go-servers
+func (s *PersonService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
+	return s.caseService.Authenticate(ctx, r)
+}
+
+func (s *PersonService) removeKeywords(ctx context.Context, caseID string, person *api.Person, removeKeywords []string) error {
+	// Create a map of the keywords to remove
+	var keywordToRemove = make(map[string]bool)
+	for _, keyword := range removeKeywords {
+		keywordToRemove[keyword] = true
+	}
+
+	// Get the keywords that should be removed from the person
+	keywords, err := s.db.GetKeywordsByIDs(ctx, caseID, removeKeywords)
+	if err != nil {
+		return err
 	}
 
 	// Remove the keywords from the person
@@ -239,28 +270,14 @@ func (s *PersonService) KeywordsRemove(ctx context.Context, r api.KeywordsRemove
 	for _, keyword := range keywords {
 		toDelete := len(keyword.EntityIDs) == 0 && len(keyword.PersonIDs) == 0 && len(keyword.EventIDs) == 0 && len(keyword.FileIDs) == 0
 		if toDelete {
-			if err := s.db.DeleteKeyword(ctx, r.CaseID, keyword.Name); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.DeleteKeyword(ctx, caseID, keyword.Name); err != nil {
+				return err
 			}
 		} else if !toDelete {
-			if err := s.db.SaveKeyword(ctx, r.CaseID, &keyword); err != nil {
-				return nil, api.Error(err, api.ErrCannotPerformOperation)
+			if err := s.db.SaveKeyword(ctx, caseID, &keyword); err != nil {
+				return err
 			}
 		}
 	}
-
-	// Update the person without the removed keyword
-	if err := s.db.UpdatePerson(ctx, r.CaseID, person); err != nil {
-		return nil, api.Error(err, api.ErrCannotPerformOperation)
-	}
-
-	return &api.KeywordsRemoveResponse{}, nil
-}
-
-// Authenticate is a middleware
-// in the http-handler
-//
-// NOTE : Only for Go-servers
-func (s *PersonService) Authenticate(ctx context.Context, r *http.Request) (context.Context, error) {
-	return s.caseService.Authenticate(ctx, r)
+	return nil
 }

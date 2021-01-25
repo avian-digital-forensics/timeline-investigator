@@ -783,12 +783,14 @@ func (s svc) searchByIDs(ctx context.Context, index string, ids []string) ([]byt
 	}
 
 	// Perform the search request.
+	scrollDuration := time.Minute
 	res, err := s.es.Search(
 		s.es.Search.WithContext(ctx),
 		s.es.Search.WithIndex(index),
 		s.es.Search.WithBody(bytes.NewReader(queryJSON)),
-		//es.Search.WithTrackTotalHits(true),
-		//es.Search.WithPretty(),
+		s.es.Search.WithSort("_doc"),
+		s.es.Search.WithSize(10),
+		s.es.Search.WithScroll(scrollDuration),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get response: %v", err)
@@ -814,6 +816,30 @@ func (s svc) searchByIDs(ctx context.Context, index string, ids []string) ([]byt
 	for _, hit := range search.Hits.Hits {
 		if idMap[hit.ID] {
 			data = append(data, hit.Source)
+		}
+	}
+
+	// Perform the scroll requests in sequence
+	for len(search.Hits.Hits) > 0 {
+		// Perform the scroll request and pass the scrollID and scroll duration
+		res, err := s.es.Scroll(s.es.Scroll.WithScrollID(search.ScrollID), s.es.Scroll.WithScroll(scrollDuration))
+		if err != nil {
+			return nil, fmt.Errorf("search scrolling failed: %v", err)
+		}
+		defer res.Body.Close()
+
+		if res.IsError() {
+			return nil, decodeError(res)
+		}
+
+		if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+			return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+		}
+
+		for _, hit := range search.Hits.Hits {
+			if idMap[hit.ID] {
+				data = append(data, hit.Source)
+			}
 		}
 	}
 
