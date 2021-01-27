@@ -2306,32 +2306,32 @@ func (s *PersonService) Update(ctx context.Context, r PersonUpdateRequest) (*Per
 	return &response.PersonUpdateResponse, nil
 }
 
-// ProcessService is the API - that handles evidence-processing
-type ProcessService struct {
+// SearchService is the API to handle searches in the Timeline-Investigator
+type SearchService struct {
 	client *Client
 	token  string
 }
 
-// NewProcessService makes a new client for accessing ProcessService services.
-func NewProcessService(client *Client, token string) *ProcessService {
-	return &ProcessService{
+// NewSearchService makes a new client for accessing SearchService services.
+func NewSearchService(client *Client, token string) *SearchService {
+	return &SearchService{
 		client: client,
 		token:  token,
 	}
 }
 
-// Abort aborts the specified processing-job
-func (s *ProcessService) Abort(ctx context.Context, r ProcessAbortRequest) (*ProcessAbortResponse, error) {
+// SearchWithText returns data in the case that is related to the text
+func (s *SearchService) SearchWithText(ctx context.Context, r SearchTextRequest) (*SearchTextResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Abort: marshal ProcessAbortRequest")
+		return nil, errors.Wrap(err, "SearchService.SearchWithText: marshal SearchTextRequest")
 	}
-	url := s.client.RemoteHost + "ProcessService.Abort"
+	url := s.client.RemoteHost + "SearchService.SearchWithText"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Abort: NewRequest")
+		return nil, errors.Wrap(err, "SearchService.SearchWithText: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -2339,51 +2339,51 @@ func (s *ProcessService) Abort(ctx context.Context, r ProcessAbortRequest) (*Pro
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Abort")
+		return nil, errors.Wrap(err, "SearchService.SearchWithText")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		ProcessAbortResponse
+		SearchTextResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "ProcessService.Abort: new gzip reader")
+			return nil, errors.Wrap(err, "SearchService.SearchWithText: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Abort: read response body")
+		return nil, errors.Wrap(err, "SearchService.SearchWithText: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("ProcessService.Abort: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("SearchService.SearchWithText: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.ProcessAbortResponse, nil
+	return &response.SearchTextResponse, nil
 }
 
-// Jobs returns the status of all processing-jobs in the specified case
-func (s *ProcessService) Jobs(ctx context.Context, r ProcessJobsRequest) (*ProcessJobsResponse, error) {
+// SearchWithTimespan returns events from the selected timespan
+func (s *SearchService) SearchWithTimespan(ctx context.Context, r SearchTimespanRequest) (*SearchTimespanResponse, error) {
 	requestBodyBytes, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Jobs: marshal ProcessJobsRequest")
+		return nil, errors.Wrap(err, "SearchService.SearchWithTimespan: marshal SearchTimespanRequest")
 	}
-	url := s.client.RemoteHost + "ProcessService.Jobs"
+	url := s.client.RemoteHost + "SearchService.SearchWithTimespan"
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Jobs: NewRequest")
+		return nil, errors.Wrap(err, "SearchService.SearchWithTimespan: NewRequest")
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -2391,141 +2391,37 @@ func (s *ProcessService) Jobs(ctx context.Context, r ProcessJobsRequest) (*Proce
 	req = req.WithContext(ctx)
 	resp, err := s.client.HTTPClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Jobs")
+		return nil, errors.Wrap(err, "SearchService.SearchWithTimespan")
 	}
 	defer resp.Body.Close()
 	var response struct {
-		ProcessJobsResponse
+		SearchTimespanResponse
 		Error string
 	}
 	var bodyReader io.Reader = resp.Body
 	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
 		decodedBody, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, errors.Wrap(err, "ProcessService.Jobs: new gzip reader")
+			return nil, errors.Wrap(err, "SearchService.SearchWithTimespan: new gzip reader")
 		}
 		defer decodedBody.Close()
 		bodyReader = decodedBody
 	}
 	respBodyBytes, err := ioutil.ReadAll(bodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Jobs: read response body")
+		return nil, errors.Wrap(err, "SearchService.SearchWithTimespan: read response body")
 	}
 	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
 	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
 		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("ProcessService.Jobs: (%d) %v", resp.StatusCode, string(respBodyBytes))
+			return nil, errors.Errorf("SearchService.SearchWithTimespan: (%d) %v", resp.StatusCode, string(respBodyBytes))
 		}
 		return nil, err
 	}
 	if response.Error != "" {
 		return nil, errors.New(response.Error)
 	}
-	return &response.ProcessJobsResponse, nil
-}
-
-// Pause pauses the specified processing-job
-func (s *ProcessService) Pause(ctx context.Context, r ProcessPauseRequest) (*ProcessPauseResponse, error) {
-	requestBodyBytes, err := json.Marshal(r)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Pause: marshal ProcessPauseRequest")
-	}
-	url := s.client.RemoteHost + "ProcessService.Pause"
-	s.client.Debug(fmt.Sprintf("POST %s", url))
-	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Pause: NewRequest")
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Authorization", s.token)
-	req = req.WithContext(ctx)
-	resp, err := s.client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Pause")
-	}
-	defer resp.Body.Close()
-	var response struct {
-		ProcessPauseResponse
-		Error string
-	}
-	var bodyReader io.Reader = resp.Body
-	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
-		decodedBody, err := gzip.NewReader(resp.Body)
-		if err != nil {
-			return nil, errors.Wrap(err, "ProcessService.Pause: new gzip reader")
-		}
-		defer decodedBody.Close()
-		bodyReader = decodedBody
-	}
-	respBodyBytes, err := ioutil.ReadAll(bodyReader)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Pause: read response body")
-	}
-	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
-	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
-		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("ProcessService.Pause: (%d) %v", resp.StatusCode, string(respBodyBytes))
-		}
-		return nil, err
-	}
-	if response.Error != "" {
-		return nil, errors.New(response.Error)
-	}
-	return &response.ProcessPauseResponse, nil
-}
-
-// Start starts a processing with the specified files
-func (s *ProcessService) Start(ctx context.Context, r ProcessStartRequest) (*ProcessStartResponse, error) {
-	requestBodyBytes, err := json.Marshal(r)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Start: marshal ProcessStartRequest")
-	}
-	url := s.client.RemoteHost + "ProcessService.Start"
-	s.client.Debug(fmt.Sprintf("POST %s", url))
-	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Start: NewRequest")
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Authorization", s.token)
-	req = req.WithContext(ctx)
-	resp, err := s.client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Start")
-	}
-	defer resp.Body.Close()
-	var response struct {
-		ProcessStartResponse
-		Error string
-	}
-	var bodyReader io.Reader = resp.Body
-	if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
-		decodedBody, err := gzip.NewReader(resp.Body)
-		if err != nil {
-			return nil, errors.Wrap(err, "ProcessService.Start: new gzip reader")
-		}
-		defer decodedBody.Close()
-		bodyReader = decodedBody
-	}
-	respBodyBytes, err := ioutil.ReadAll(bodyReader)
-	if err != nil {
-		return nil, errors.Wrap(err, "ProcessService.Start: read response body")
-	}
-	s.client.Debug(fmt.Sprintf("<< %s", string(respBodyBytes)))
-	if err := json.Unmarshal(respBodyBytes, &response); err != nil {
-		if resp.StatusCode != http.StatusOK {
-			return nil, errors.Errorf("ProcessService.Start: (%d) %v", resp.StatusCode, string(respBodyBytes))
-		}
-		return nil, err
-	}
-	if response.Error != "" {
-		return nil, errors.New(response.Error)
-	}
-	return &response.ProcessStartResponse, nil
+	return &response.SearchTimespanResponse, nil
 }
 
 // TestService is used for testing-purposes
@@ -3520,6 +3416,43 @@ type ProcessStartRequest struct {
 // ProcessStartResponse is the output-object for starting a processing-job
 type ProcessStartResponse struct {
 	Started Process `json:"started"`
+}
+
+// SearchTextRequest is the input-object for searching items
+type SearchTextRequest struct {
+	// ID for the case to search in
+	CaseID string `json:"caseID"`
+
+	// Text to search for
+	Text string `json:"text"`
+}
+
+// SearchTextResponse is the output-object for searching items
+type SearchTextResponse struct {
+	Events []Event `json:"events"`
+
+	Entities []Entity `json:"entities"`
+
+	Persons []Person `json:"persons"`
+
+	Files []File `json:"files"`
+}
+
+// SearchTimespanRequest is the input-object for searching items
+type SearchTimespanRequest struct {
+	// ID for the case to search in
+	CaseID string `json:"caseID"`
+
+	// FromDate is the unix-timestamp of where the timespan starts
+	FromDate int64 `json:"fromDate"`
+
+	// ToDate is the unix-timestamp of where the timespan finishes
+	ToDate int64 `json:"toDate"`
+}
+
+// SearchTimespanResponse is the output-object for searching items
+type SearchTimespanResponse struct {
+	Events []Event `json:"events"`
 }
 
 // TestCreateUserRequest is the input-object for creating a test-user

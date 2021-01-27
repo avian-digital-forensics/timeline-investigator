@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -78,6 +79,7 @@ type Service interface {
 	GetKeywordByID(ctx context.Context, caseID string, id string) (*api.Keyword, error)
 	GetKeywordsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Keyword, error)
 	GetKeywords(ctx context.Context, caseID string) ([]string, error)
+	SearchKeywords(ctx context.Context, caseID, name string) ([]api.Keyword, error)
 
 	// Process-methods
 	ProcessIndex(caseID string) string
@@ -677,6 +679,19 @@ func (s svc) GetKeywords(ctx context.Context, caseID string) ([]string, error) {
 	return keywords, nil
 }
 
+func (s svc) SearchKeywords(ctx context.Context, caseID, prefix string) ([]api.Keyword, error) {
+	search, err := s.searchWithPrefix(ctx, indexKeyword+"-"+caseID, "name", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	var keywords []api.Keyword
+	if err := json.Unmarshal(search, &keywords); err != nil {
+		return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+	}
+	return keywords, nil
+}
+
 // ProcessIndex returns the elastic-index for the processes in the specified case
 func (svc) ProcessIndex(caseID string) string { return fmt.Sprintf("%s-%s", indexProcess, caseID) }
 
@@ -767,6 +782,86 @@ func (s svc) delete(ctx context.Context, index, id string) error {
 	}
 
 	return nil
+}
+
+func (s svc) searchWithPrefix(ctx context.Context, index, field, prefix string) ([]byte, error) {
+	query := internal.QueryRequest{
+		Query: internal.Query{
+			Bool: internal.Bool{
+				Must: []internal.Must{{
+					MatchPhrasePrefix: map[string]interface{}{
+						field: map[string]string{
+							"query": prefix,
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(string(queryJSON))
+
+	// Perform the search request.
+	scrollDuration := time.Minute
+	res, err := s.es.Search(
+		s.es.Search.WithContext(ctx),
+		s.es.Search.WithIndex(index),
+		s.es.Search.WithBody(bytes.NewReader(queryJSON)),
+		s.es.Search.WithSort("_doc"),
+		s.es.Search.WithSize(10),
+		s.es.Search.WithScroll(scrollDuration),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get response: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, decodeError(res)
+	}
+
+	var search internal.Response
+	if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+		return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+
+	var hits []interface{}
+	for _, hit := range search.Hits.Hits {
+		hits = append(hits, hit.Source)
+	}
+
+	// Perform the scroll requests in sequence
+	for len(search.Hits.Hits) > 0 {
+		// Perform the scroll request and pass the scrollID and scroll duration
+		res, err := s.es.Scroll(s.es.Scroll.WithScrollID(search.ScrollID), s.es.Scroll.WithScroll(scrollDuration))
+		if err != nil {
+			return nil, fmt.Errorf("search scrolling failed: %v", err)
+		}
+		defer res.Body.Close()
+
+		if res.IsError() {
+			return nil, decodeError(res)
+		}
+
+		if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+			return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+		}
+
+		for _, hit := range search.Hits.Hits {
+			hits = append(hits, hit.Source)
+		}
+	}
+
+	dataJSON, err := json.Marshal(hits)
+	if err != nil {
+		return nil, fmt.Errorf("json.Marshal: %v", err)
+	}
+	return dataJSON, nil
 }
 
 func (s svc) searchByIDs(ctx context.Context, index string, ids []string) ([]byte, error) {

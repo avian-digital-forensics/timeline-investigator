@@ -187,21 +187,14 @@ type PersonService interface {
 	Authenticate(*http.Request) context.Context
 }
 
-// ProcessService is the API -
-// that handles evidence-processing
-type ProcessService interface {
-	// Start starts a processing with the specified files
-	Start(ProcessStartRequest) ProcessStartResponse
+// SearchService is the API to handle
+// searches in the Timeline-Investigator
+type SearchService interface {
+	// SearchWithTimespan returns events from the selected timespan
+	SearchWithTimespan(SearchTimespanRequest) SearchTimespanResponse
 
-	// Jobs returns the status of all processing-jobs
-	// in the specified case
-	Jobs(ProcessJobsRequest) ProcessJobsResponse
-
-	// Abort aborts the specified processing-job
-	Abort(ProcessAbortRequest) ProcessAbortResponse
-
-	// Pause pauses the specified processing-job
-	Pause(ProcessPauseRequest) ProcessPauseResponse
+	// SearchWithText returns data in the case that is related to the text
+	SearchWithText(SearchTextRequest) SearchTextResponse
 
 	// Authenticate is a middleware
 	// in the http-handler
@@ -1521,6 +1514,56 @@ type KeywordsRemoveRequest struct {
 // KeywordsRemoveResponse is the output-object
 // for removing keywords from an object
 type KeywordsRemoveResponse struct{}
+
+// SearchTimespanRequest is the input-object
+// for searching items
+type SearchTimespanRequest struct {
+	// ID for the case to search in
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// FromDate is the unix-timestamp of where
+	// the timespan starts
+	//
+	// example: 1100127600
+	FromDate int64
+
+	// ToDate is the unix-timestamp of where
+	// the timespan finishes
+	//
+	// example: 1257894000
+	ToDate int64
+}
+
+// SearchTimespanResponse is the output-object
+// for searching items
+type SearchTimespanResponse struct {
+	Events []Event
+}
+
+// SearchTextRequest is the input-object
+// for searching items
+type SearchTextRequest struct {
+	// ID for the case to search in
+	//
+	// example: "7a1713b0249d477d92f5e10124a59861"
+	CaseID string
+
+	// Text to search for
+	//
+	// example: "gre"
+	Text string
+}
+
+// SearchTextResponse is the output-object
+// for searching items
+type SearchTextResponse struct {
+	Events   []Event
+	Entities []Entity
+	Persons  []Person
+	Files    []File
+}
 
 // Base model for the database
 type Base struct {

@@ -43,6 +43,15 @@ type Query struct {
 	Match    interface{} `json:"match,omitempty"`
 	Wildcard interface{} `json:"wildcard,omitempty"`
 	IDs      interface{} `json:"ids,omitempty"`
+	Bool     Bool        `json:"bool,omitempty"`
+}
+
+type Bool struct {
+	Must []Must `json:"must,omitempty"`
+}
+
+type Must struct {
+	MatchPhrasePrefix interface{} `json:"match_phrase_prefix,omitempty"`
 }
 
 // NewID generates a new ID

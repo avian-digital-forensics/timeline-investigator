@@ -8,7 +8,7 @@
 | FileService | FileService is the API for handling files |
 | LinkService | LinkService is a API for creating links between objects |
 | PersonService | PersonService is the API to handle entities |
-| ProcessService | ProcessService is the API - that handles evidence-processing |
+| SearchService | SearchService is the API to handle searches in the Timeline-Investigator |
 | TestService | TestService is used for testing-purposes |
 
 ## CaseService
@@ -3480,133 +3480,66 @@ for updating an existing person_
 }
 ```
 
-## ProcessService
+## SearchService
 
 ### Methods
 
 | Method | Endpoint | Description | Request | Response |
 | ------ | -------- | ----------- | ------- | -------- |
-| Abort | /ProcessService.Abort | Abort aborts the specified processing-job | ProcessAbortRequest | ProcessAbortResponse |
-| Jobs | /ProcessService.Jobs | Jobs returns the status of all processing-jobs in the specified case | ProcessJobsRequest | ProcessJobsResponse |
-| Pause | /ProcessService.Pause | Pause pauses the specified processing-job | ProcessPauseRequest | ProcessPauseResponse |
-| Start | /ProcessService.Start | Start starts a processing with the specified files | ProcessStartRequest | ProcessStartResponse |
+| SearchWithText | /SearchService.SearchWithText | SearchWithText returns data in the case that is related to the text | SearchTextRequest | SearchTextResponse |
+| SearchWithTimespan | /SearchService.SearchWithTimespan | SearchWithTimespan returns events from the selected timespan | SearchTimespanRequest | SearchTimespanResponse |
 
-#### Abort
+#### SearchWithText
 
-Abort aborts the specified processing-job
+SearchWithText returns data in the case that is related to the text
 
 ##### Endpoint
 
-POST `/ProcessService.Abort`
+POST `/SearchService.SearchWithText`
 
 ##### Request
 
-_ProcessAbortRequest is the input-object
-for aborting a processing-job_
+_SearchTextRequest is the input-object
+for searching items_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| id | string | ID of the processing-job to abort | 7a1713b0249d477d92f5e10124a59861 |
-| caseID | string | CaseID of the case the processing-job belongs to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | ID for the case to search in | 7a1713b0249d477d92f5e10124a59861 |
+| text | string | Text to search for | gre |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/ProcessService.Abort
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","text":"gre"}' http://localhost:8080/api/SearchService.SearchWithText
 ```
 
 ```json
 {
     "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "id": "7a1713b0249d477d92f5e10124a59861"
+    "text": "gre"
 }
 ```
 
 ##### Response
 
-_ProcessAbortResponse is the output-object
-for aborting a processing-job_
+_SearchTextResponse is the output-object
+for searching items_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| aborted | Process |  |  |
+| events | []Event |  |  |
+| entities | []Entity |  |  |
+| persons | []Person |  |  |
+| files | []File |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "aborted": {
-        "base": {
-            "createdAt": 1257894000,
-            "deletedAt": 0,
-            "id": "7a1713b0249d477d92f5e10124a59861",
-            "updatedAt": 0
-        },
-        "files": [
-            "text"
-        ]
-    }
-}
-```
-
-`500 Internal Server Error`
-
-```json
-{
-    "error": "something went wrong"
-}
-```
-
-#### Jobs
-
-Jobs returns the status of all processing-jobs
-in the specified case
-
-##### Endpoint
-
-POST `/ProcessService.Jobs`
-
-##### Request
-
-_ProcessJobsRequest is the input-object
-for getting all processing-jobs for a case_
-
-**Fields**
-
-| Name | Type | Description | Example |
-| ---- | ---- | ----------- | ------- |
-| caseID | string | CaseID of the case to get the processing-jobs for | 7a1713b0249d477d92f5e10124a59861 |
-
-```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/ProcessService.Jobs
-```
-
-```json
-{
-    "caseID": "7a1713b0249d477d92f5e10124a59861"
-}
-```
-
-##### Response
-
-_ProcessJobsResponse is the output-object
-for getting all processing-jobs for a case_
-
-**Fields**
-
-| Name | Type | Description | Example |
-| ---- | ---- | ----------- | ------- |
-| processes | []Process |  |  |
-| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
-
-`200 OK`
-
-```json
-{
-    "processes": [
+    "entities": [
         {
             "base": {
                 "createdAt": 1257894000,
@@ -3614,9 +3547,73 @@ for getting all processing-jobs for a case_
                 "id": "7a1713b0249d477d92f5e10124a59861",
                 "updatedAt": 0
             },
-            "files": [
-                "text"
-            ]
+            "custom": {},
+            "keywords": [
+                "healthy",
+                "green"
+            ],
+            "photoURL": "api.google.com/logo.png",
+            "title": "Avian APS",
+            "type": "organization"
+        }
+    ],
+    "events": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "keywords": [
+                "healthy",
+                "green"
+            ],
+            "toDate": 1257894000
+        }
+    ],
+    "files": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This file contains evidence",
+            "keywords": [
+                "healthy",
+                "green"
+            ],
+            "mime": "@file/plain",
+            "name": "text-file.txt",
+            "path": "/filestore/text-file.txt",
+            "processedAt": 1257894000,
+            "size": 450060
+        }
+    ],
+    "persons": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "custom": {},
+            "emailAddress": "sja@avian.dk",
+            "firstName": "Simon",
+            "keywords": [
+                "healthy",
+                "green"
+            ],
+            "lastName": "Jansson",
+            "postalAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark",
+            "telephoneNo": "+46765550125",
+            "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
         }
     ]
 }
@@ -3630,136 +3627,73 @@ for getting all processing-jobs for a case_
 }
 ```
 
-#### Pause
+#### SearchWithTimespan
 
-Pause pauses the specified processing-job
+SearchWithTimespan returns events from the selected timespan
 
 ##### Endpoint
 
-POST `/ProcessService.Pause`
+POST `/SearchService.SearchWithTimespan`
 
 ##### Request
 
-_ProcessPauseRequest is the input-object
-for pausing a processing-job_
+_SearchTimespanRequest is the input-object
+for searching items_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| id | string | ID of the processing-job to pause | 7a1713b0249d477d92f5e10124a59861 |
-| caseID | string | CaseID of the case the processing-job belongs to | 7a1713b0249d477d92f5e10124a59861 |
+| caseID | string | ID for the case to search in | 7a1713b0249d477d92f5e10124a59861 |
+| fromDate | int64 | FromDate is the unix-timestamp of where the timespan starts | 1.1001276e+09 |
+| toDate | int64 | ToDate is the unix-timestamp of where the timespan finishes | 1.257894e+09 |
 
 ```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","id":"7a1713b0249d477d92f5e10124a59861"}' http://localhost:8080/api/ProcessService.Pause
+curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","fromDate":1100127600,"toDate":1257894000}' http://localhost:8080/api/SearchService.SearchWithTimespan
 ```
 
 ```json
 {
     "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "id": "7a1713b0249d477d92f5e10124a59861"
+    "fromDate": 1100127600,
+    "toDate": 1257894000
 }
 ```
 
 ##### Response
 
-_ProcessPauseResponse is the output-object
-for pausing a processing-job_
+_SearchTimespanResponse is the output-object
+for searching items_
 
 **Fields**
 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
-| paused | Process |  |  |
+| events | []Event |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
 
 ```json
 {
-    "paused": {
-        "base": {
-            "createdAt": 1257894000,
-            "deletedAt": 0,
-            "id": "7a1713b0249d477d92f5e10124a59861",
-            "updatedAt": 0
-        },
-        "files": [
-            "text"
-        ]
-    }
-}
-```
-
-`500 Internal Server Error`
-
-```json
-{
-    "error": "something went wrong"
-}
-```
-
-#### Start
-
-Start starts a processing with the specified files
-
-##### Endpoint
-
-POST `/ProcessService.Start`
-
-##### Request
-
-_ProcessStartRequest is the input-object
-for starting a processing-job_
-
-**Fields**
-
-| Name | Type | Description | Example |
-| ---- | ---- | ----------- | ------- |
-| caseID | string | CaseID of the case to start the processing for | 7a1713b0249d477d92f5e10124a59861 |
-| fileIDs | []string | FileIDs of the files to process | 7a1713b0249d477d92f5e10124a598617a1713b0249d477d92f5e10124a59861 |
-
-```sh
-curl -H "Content-Type: application/json" -X POST -d '{"caseID":"7a1713b0249d477d92f5e10124a59861","fileIDs":["7a1713b0249d477d92f5e10124a59861","7a1713b0249d477d92f5e10124a59861"]}' http://localhost:8080/api/ProcessService.Start
-```
-
-```json
-{
-    "caseID": "7a1713b0249d477d92f5e10124a59861",
-    "fileIDs": [
-        "7a1713b0249d477d92f5e10124a59861",
-        "7a1713b0249d477d92f5e10124a59861"
+    "events": [
+        {
+            "base": {
+                "createdAt": 1257894000,
+                "deletedAt": 0,
+                "id": "7a1713b0249d477d92f5e10124a59861",
+                "updatedAt": 0
+            },
+            "description": "This needs investigation.",
+            "fromDate": 1100127600,
+            "importance": 3,
+            "keywords": [
+                "healthy",
+                "green"
+            ],
+            "toDate": 1257894000
+        }
     ]
-}
-```
-
-##### Response
-
-_ProcessStartResponse is the output-object
-for starting a processing-job_
-
-**Fields**
-
-| Name | Type | Description | Example |
-| ---- | ---- | ----------- | ------- |
-| started | Process |  |  |
-| error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
-
-`200 OK`
-
-```json
-{
-    "started": {
-        "base": {
-            "createdAt": 1257894000,
-            "deletedAt": 0,
-            "id": "7a1713b0249d477d92f5e10124a59861",
-            "updatedAt": 0
-        },
-        "files": [
-            "text"
-        ]
-    }
 }
 ```
 

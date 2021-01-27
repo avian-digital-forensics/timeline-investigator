@@ -5,9 +5,9 @@ package api
 import (
 	"github.com/pacedotdev/oto/otohttp"
 
-	context "context"
-
 	http "net/http"
+
+	context "context"
 )
 
 // CaseService is the API to handle cases
@@ -130,18 +130,14 @@ type PersonService interface {
 	Update(context.Context, PersonUpdateRequest) (*PersonUpdateResponse, error)
 }
 
-// ProcessService is the API - that handles evidence-processing
-type ProcessService interface {
-	// Abort aborts the specified processing-job
-	Abort(context.Context, ProcessAbortRequest) (*ProcessAbortResponse, error)
+// SearchService is the API to handle searches in the Timeline-Investigator
+type SearchService interface {
 	// Authenticate is a middleware in the http-handler
 	Authenticate(context.Context, *http.Request) (context.Context, error)
-	// Jobs returns the status of all processing-jobs in the specified case
-	Jobs(context.Context, ProcessJobsRequest) (*ProcessJobsResponse, error)
-	// Pause pauses the specified processing-job
-	Pause(context.Context, ProcessPauseRequest) (*ProcessPauseResponse, error)
-	// Start starts a processing with the specified files
-	Start(context.Context, ProcessStartRequest) (*ProcessStartResponse, error)
+	// SearchWithText returns data in the case that is related to the text
+	SearchWithText(context.Context, SearchTextRequest) (*SearchTextResponse, error)
+	// SearchWithTimespan returns events from the selected timespan
+	SearchWithTimespan(context.Context, SearchTimespanRequest) (*SearchTimespanResponse, error)
 }
 
 // TestService is used for testing-purposes
@@ -1208,37 +1204,35 @@ func (s *personServiceServer) handleUpdate(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-type processServiceServer struct {
-	server         *otohttp.Server
-	processService ProcessService
-	test           bool
+type searchServiceServer struct {
+	server        *otohttp.Server
+	searchService SearchService
+	test          bool
 }
 
-// Register adds the ProcessService to the otohttp.Server.
-func RegisterProcessService(server *otohttp.Server, processService ProcessService) {
-	handler := &processServiceServer{
-		server:         server,
-		processService: processService,
+// Register adds the SearchService to the otohttp.Server.
+func RegisterSearchService(server *otohttp.Server, searchService SearchService) {
+	handler := &searchServiceServer{
+		server:        server,
+		searchService: searchService,
 	}
-	server.Register("ProcessService", "Abort", handler.handleAbort)
 
-	server.Register("ProcessService", "Jobs", handler.handleJobs)
-	server.Register("ProcessService", "Pause", handler.handlePause)
-	server.Register("ProcessService", "Start", handler.handleStart)
+	server.Register("SearchService", "SearchWithText", handler.handleSearchWithText)
+	server.Register("SearchService", "SearchWithTimespan", handler.handleSearchWithTimespan)
 }
 
-func (s *processServiceServer) handleAbort(w http.ResponseWriter, r *http.Request) {
-	var request ProcessAbortRequest
+func (s *searchServiceServer) handleSearchWithText(w http.ResponseWriter, r *http.Request) {
+	var request SearchTextRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	ctx, err := s.processService.Authenticate(r.Context(), r)
+	ctx, err := s.searchService.Authenticate(r.Context(), r)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.processService.Abort(ctx, request)
+	response, err := s.searchService.SearchWithText(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -1249,62 +1243,18 @@ func (s *processServiceServer) handleAbort(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (s *processServiceServer) handleJobs(w http.ResponseWriter, r *http.Request) {
-	var request ProcessJobsRequest
+func (s *searchServiceServer) handleSearchWithTimespan(w http.ResponseWriter, r *http.Request) {
+	var request SearchTimespanRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	ctx, err := s.processService.Authenticate(r.Context(), r)
+	ctx, err := s.searchService.Authenticate(r.Context(), r)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.processService.Jobs(ctx, request)
-	if err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-}
-
-func (s *processServiceServer) handlePause(w http.ResponseWriter, r *http.Request) {
-	var request ProcessPauseRequest
-	if err := otohttp.Decode(r, &request); err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	ctx, err := s.processService.Authenticate(r.Context(), r)
-	if err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	response, err := s.processService.Pause(ctx, request)
-	if err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-}
-
-func (s *processServiceServer) handleStart(w http.ResponseWriter, r *http.Request) {
-	var request ProcessStartRequest
-	if err := otohttp.Decode(r, &request); err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	ctx, err := s.processService.Authenticate(r.Context(), r)
-	if err != nil {
-		s.server.OnErr(w, r, err)
-		return
-	}
-	response, err := s.processService.Start(ctx, request)
+	response, err := s.searchService.SearchWithTimespan(ctx, request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -2146,8 +2096,6 @@ type ProcessAbortRequest struct {
 // ProcessAbortResponse is the output-object for aborting a processing-job
 type ProcessAbortResponse struct {
 	Aborted Process `json:"aborted"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
 }
 
 // ProcessJobsRequest is the input-object for getting all processing-jobs for a
@@ -2161,8 +2109,6 @@ type ProcessJobsRequest struct {
 // case
 type ProcessJobsResponse struct {
 	Processes []Process `json:"processes"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
 }
 
 // ProcessPauseRequest is the input-object for pausing a processing-job
@@ -2176,8 +2122,6 @@ type ProcessPauseRequest struct {
 // ProcessPauseResponse is the output-object for pausing a processing-job
 type ProcessPauseResponse struct {
 	Paused Process `json:"paused"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
 }
 
 // ProcessStartRequest is the input-object for starting a processing-job
@@ -2191,6 +2135,39 @@ type ProcessStartRequest struct {
 // ProcessStartResponse is the output-object for starting a processing-job
 type ProcessStartResponse struct {
 	Started Process `json:"started"`
+}
+
+// SearchTextRequest is the input-object for searching items
+type SearchTextRequest struct {
+	// ID for the case to search in
+	CaseID string `json:"caseID"`
+	// Text to search for
+	Text string `json:"text"`
+}
+
+// SearchTextResponse is the output-object for searching items
+type SearchTextResponse struct {
+	Events   []Event  `json:"events"`
+	Entities []Entity `json:"entities"`
+	Persons  []Person `json:"persons"`
+	Files    []File   `json:"files"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+// SearchTimespanRequest is the input-object for searching items
+type SearchTimespanRequest struct {
+	// ID for the case to search in
+	CaseID string `json:"caseID"`
+	// FromDate is the unix-timestamp of where the timespan starts
+	FromDate int64 `json:"fromDate"`
+	// ToDate is the unix-timestamp of where the timespan finishes
+	ToDate int64 `json:"toDate"`
+}
+
+// SearchTimespanResponse is the output-object for searching items
+type SearchTimespanResponse struct {
+	Events []Event `json:"events"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
