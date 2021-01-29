@@ -1296,8 +1296,15 @@ func (s svc) search(ctx context.Context, index string) (*internal.Response, erro
 		hits = append(hits, search.Hits.Hits...)
 	}
 
-	// set the hits to the response
-	search.Hits.Hits = hits
+	// Make sure the hits are unique
+	var found = make(map[string]bool)
+	search.Hits.Hits = nil
+	for i := range hits {
+		if !found[hits[i].ID] {
+			search.Hits.Hits = append(search.Hits.Hits, hits[i])
+		}
+		found[hits[i].ID] = true
+	}
 
 	return &search, nil
 }
