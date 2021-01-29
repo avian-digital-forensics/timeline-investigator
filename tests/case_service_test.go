@@ -28,7 +28,7 @@ func TestCaseService(t *testing.T) {
 
 	// Create a new case request
 	newRequest := client.CaseNewRequest{
-		Name:        "Simon",
+		Name:        "Pighvar",
 		Description: "New case",
 		FromDate:    time.Now().Unix(),
 		ToDate:      time.Now().AddDate(1, 0, 0).Unix(),
@@ -43,27 +43,33 @@ func TestCaseService(t *testing.T) {
 	is.Equal(caze.New.ToDate, newRequest.ToDate)
 
 	// Get the case
-	gotten, err := service.Get(ctx, client.CaseGetRequest{ID: caze.New.ID})
+	getResponse, err := service.Get(ctx, client.CaseGetRequest{ID: caze.New.ID})
 	is.NoErr(err)
-	is.Equal(gotten.Case.ID, caze.New.ID)
-	is.Equal(gotten.Case.CreatedAt, caze.New.CreatedAt)
-	is.Equal(gotten.Case.UpdatedAt, caze.New.UpdatedAt)
-	is.Equal(gotten.Case.DeletedAt, caze.New.DeletedAt)
-	is.Equal(gotten.Case.Name, caze.New.Name)
-	is.Equal(gotten.Case.Description, caze.New.Description)
-	is.Equal(gotten.Case.FromDate, caze.New.FromDate)
-	is.Equal(gotten.Case.ToDate, caze.New.ToDate)
+	is.Equal(getResponse.Case.ID, caze.New.ID)
+	is.Equal(getResponse.Case.CreatedAt, caze.New.CreatedAt)
+	is.Equal(getResponse.Case.UpdatedAt, caze.New.UpdatedAt)
+	is.Equal(getResponse.Case.DeletedAt, caze.New.DeletedAt)
+	is.Equal(getResponse.Case.Name, caze.New.Name)
+	is.Equal(getResponse.Case.Description, caze.New.Description)
+	is.Equal(getResponse.Case.FromDate, caze.New.FromDate)
+	is.Equal(getResponse.Case.ToDate, caze.New.ToDate)
 
 	// Get all cases for the test-user
 	all, err := service.List(ctx, client.CaseListRequest{UserID: testUser.ID})
 	is.NoErr(err)
 	is.Equal(len(all.Cases), 1)
-	is.Equal(all.Cases[0].ID, gotten.Case.ID)
-	is.Equal(all.Cases[0].CreatedAt, gotten.Case.CreatedAt)
-	is.Equal(all.Cases[0].UpdatedAt, gotten.Case.UpdatedAt)
-	is.Equal(all.Cases[0].DeletedAt, gotten.Case.DeletedAt)
-	is.Equal(all.Cases[0].Name, gotten.Case.Name)
-	is.Equal(all.Cases[0].Description, gotten.Case.Description)
-	is.Equal(all.Cases[0].FromDate, gotten.Case.FromDate)
-	is.Equal(all.Cases[0].ToDate, gotten.Case.ToDate)
+	is.Equal(all.Cases[0].ID, getResponse.Case.ID)
+	is.Equal(all.Cases[0].CreatedAt, getResponse.Case.CreatedAt)
+	is.Equal(all.Cases[0].UpdatedAt, getResponse.Case.UpdatedAt)
+	is.Equal(all.Cases[0].DeletedAt, getResponse.Case.DeletedAt)
+	is.Equal(all.Cases[0].Name, getResponse.Case.Name)
+	is.Equal(all.Cases[0].Description, getResponse.Case.Description)
+	is.Equal(all.Cases[0].FromDate, getResponse.Case.FromDate)
+	is.Equal(all.Cases[0].ToDate, getResponse.Case.ToDate)
+
+	// Delete the case.
+	_, err = service.Delete(ctx, client.CaseDeleteRequest{ID: caze.New.ID})
+	is.NoErr(err)
+	_, getError := service.Get(ctx, client.CaseGetRequest{ID: caze.New.ID})
+	is.True(getError != nil)
 }

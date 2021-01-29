@@ -33,6 +33,7 @@ type Service interface {
 	UpdateCase(ctx context.Context, caze *api.Case) error
 	GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error)
 	GetCase(ctx context.Context, id string) (*api.Case, error)
+	DeleteCase(ctx context.Context, id string) error
 
 	// Event-methods
 	CreateEvent(ctx context.Context, caseID string, event *api.Event) error
@@ -132,6 +133,7 @@ func (s svc) UpdateCase(ctx context.Context, caze *api.Case) error {
 	return nil
 }
 
+// Returns all cases with a investigator with the given email.
 func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, error) {
 	search, err := s.search(ctx, indexCase)
 	if err != nil {
@@ -172,6 +174,60 @@ func (s svc) GetCase(ctx context.Context, id string) (*api.Case, error) {
 	}
 
 	return &caze, nil
+}
+
+// Deletes the case with the given ID.
+// Returns an error if no such case exists.
+func (s svc) DeleteCase(ctx context.Context, id string) error {
+	caze, err := s.GetCase(ctx, id)
+	if err != nil {
+		return fmt.Errorf("Cannot find case: %w", err)
+	}
+
+	events, err := s.GetEvents(ctx, id)
+	if err == nil {
+		for _, event := range events {
+			s.DeleteEvent(ctx, id, event.ID)
+		}
+	}
+
+	entities, err := s.GetEntities(ctx, id)
+	if err == nil {
+		for _, entity := range entities {
+			s.DeleteEntity(ctx, id, entity.ID)
+		}
+	}
+
+	for _, file := range caze.Files {
+		s.DeleteEvent(ctx, id, file.ID)
+	}
+
+	links, err := s.GetLinks(ctx, id)
+	if err == nil {
+		for _, link := range links {
+			s.DeleteLink(ctx, id, link.ID)
+		}
+	}
+
+	persons, err := s.GetPersons(ctx, id)
+	if err == nil {
+		for _, person := range persons {
+			s.DeletePerson(ctx, id, person.ID)
+		}
+	}
+
+	keywords, err := s.GetKeywords(ctx, id)
+	if err == nil {
+		for _, keyword := range keywords {
+			s.DeleteKeyword(ctx, id, keyword)
+		}
+	}
+
+	err = s.delete(ctx, indexCase, id)
+	if err != nil {
+		return fmt.Errorf("Error deleting case: %w", err)
+	}
+	return nil
 }
 
 func (s svc) CreateEvent(ctx context.Context, caseID string, event *api.Event) error {
@@ -778,6 +834,33 @@ func (s svc) GetLinksByIDs(ctx context.Context, caseID string, ids []string) ([]
 	var links []api.Link
 	if err := json.Unmarshal(resp, &links); err != nil {
 		return nil, fmt.Errorf("Link json.Unmarshal: %v", err)
+	}
+
+	return links, nil
+}
+
+// Returns all links in the specified case.
+func (s svc) GetLinks(ctx context.Context, caseID string) ([]api.Link, error) {
+	// Search in the service for links in the case.
+	searchResponse, err := s.search(ctx, indexLink+"-"+caseID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert the hits to links.
+	var links []api.Link
+	for _, hit := range searchResponse.Hits.Hits {
+		source, err := json.Marshal(hit.Source)
+		if err != nil {
+			return nil, fmt.Errorf("json.Marshal: %v", err)
+		}
+
+		var link api.Link
+		if err := json.Unmarshal(source, &link); err != nil {
+			return nil, fmt.Errorf("Keyword json.Unmarshal: %v", err)
+		}
+
+		links = append(links, link)
 	}
 
 	return links, nil
