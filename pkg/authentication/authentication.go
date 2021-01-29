@@ -53,7 +53,7 @@ func New(ctx context.Context, credentialsFile, apiKey string) (Service, error) {
 // Verify validates the token
 func (s svc) Verify(ctx context.Context, idToken string) error {
 	if _, err := s.getUserID(ctx, idToken); err != nil {
-		return err
+		return fmt.Errorf("failed to get user id: %v", err)
 	}
 	return nil
 }
@@ -66,13 +66,13 @@ func (s svc) Create(ctx context.Context, uid, email, name, password string) (*au
 	user.DisplayName(name)
 	created, err := s.auth.CreateUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create user: %v", err)
 	}
 
 	// Set testClaims - so we know that the user was created from a test
 	testClaims := map[string]interface{}{"TestAt": time.Now(), "Test": true}
 	if err := s.auth.SetCustomUserClaims(ctx, created.UID, testClaims); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to set custom user claims: %v", err)
 	}
 
 	return created, nil
