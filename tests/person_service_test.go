@@ -152,7 +152,7 @@ func TestPersonService(t *testing.T) {
 	is.Equal(len(gotten.Person.Keywords), 3)
 	is.Equal(gotten.Person.Keywords, keywordsRequest.Keywords)
 
-	// We should now have 3 (unqiue) keywords in the case
+	// We should now have 3 (unique) keywords in the case
 	keywords, err = caseService.Keywords(ctx, client.CaseKeywordsRequest{ID: testCase.ID})
 	is.NoErr(err)
 	is.Equal(len(keywords.Keywords), 3)

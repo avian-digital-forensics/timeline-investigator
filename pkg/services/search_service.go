@@ -106,7 +106,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 			eventIDs = append(eventIDs[:i], eventIDs[i+1:]...)
 		}
 	}
-	// Get the unqiue events from the keywords
+	// Get the unique events from the keywords
 	keywordEvents, err := s.db.GetEventsByIDs(ctx, r.CaseID, eventIDs)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 			entityIDs = append(entityIDs[:i], entityIDs[i+1:]...)
 		}
 	}
-	// Get the unqiue entities from the keywords
+	// Get the unique entities from the keywords
 	keywordEntities, err := s.db.GetEntitiesByIDs(ctx, r.CaseID, entityIDs)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 			personIDs = append(personIDs[:i], personIDs[i+1:]...)
 		}
 	}
-	// Get the unqiue persons from the keywords
+	// Get the unique persons from the keywords
 	keywordPersons, err := s.db.GetPersonsByIDs(ctx, r.CaseID, personIDs)
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 		}
 		//fileFound[fileIDs[i]] = true
 	}
-	// Get the unqiue files from the keywords
+	// Get the unique files from the keywords
 	keywordFiles, err := s.db.GetFilesByIDs(ctx, r.CaseID, fileIDs)
 	if err != nil {
 		return nil, err
