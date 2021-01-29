@@ -1559,10 +1559,11 @@ type SearchTextRequest struct {
 // SearchTextResponse is the output-object
 // for searching items
 type SearchTextResponse struct {
-	Events   []Event
-	Entities []Entity
-	Persons  []Person
-	Files    []File
+	Events    []Event
+	Entities  []Entity
+	Persons   []Person
+	Files     []File
+	Processed interface{}
 }
 
 // Base model for the database

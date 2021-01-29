@@ -3436,6 +3436,8 @@ type SearchTextResponse struct {
 	Persons []Person `json:"persons"`
 
 	Files []File `json:"files"`
+
+	Processed interface{} `json:"processed"`
 }
 
 // SearchTimespanRequest is the input-object for searching items

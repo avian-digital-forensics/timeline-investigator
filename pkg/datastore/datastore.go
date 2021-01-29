@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -42,6 +41,7 @@ type Service interface {
 	GetEventByID(ctx context.Context, caseID, eventID string) (*api.Event, error)
 	GetEventsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Event, error)
 	GetEvents(ctx context.Context, caseID string) ([]api.Event, error)
+	SearchEvents(ctx context.Context, caseID, prefix string) ([]api.Event, error)
 
 	// Entity-methods
 	CreateEntity(ctx context.Context, caseID string, entity *api.Entity) error
@@ -50,6 +50,7 @@ type Service interface {
 	GetEntityByID(ctx context.Context, caseID, entityID string) (*api.Entity, error)
 	GetEntitiesByIDs(ctx context.Context, caseID string, ids []string) ([]api.Entity, error)
 	GetEntities(ctx context.Context, caseID string) ([]api.Entity, error)
+	SearchEntities(ctx context.Context, caseID, prefix string) ([]api.Entity, error)
 
 	// File-methods
 	CreateFile(ctx context.Context, caseID string, file *api.File) error
@@ -57,6 +58,7 @@ type Service interface {
 	DeleteFile(ctx context.Context, caseID, fileID string) error
 	GetFileByID(ctx context.Context, caseID, fileID string) (*api.File, error)
 	GetFilesByIDs(ctx context.Context, caseID string, ids []string) ([]api.File, error)
+	SearchFiles(ctx context.Context, caseID, prefix string) ([]api.File, error)
 
 	// Link-methods
 	CreateLink(ctx context.Context, caseID string, link *api.Link) error
@@ -72,6 +74,7 @@ type Service interface {
 	GetPersonByID(ctx context.Context, caseID, personID string) (*api.Person, error)
 	GetPersonsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Person, error)
 	GetPersons(ctx context.Context, caseID string) ([]api.Person, error)
+	SearchPersons(ctx context.Context, caseID, prefix string) ([]api.Person, error)
 
 	// Keyword-methods
 	SaveKeyword(ctx context.Context, caseID string, keyword *api.Keyword) error
@@ -85,6 +88,8 @@ type Service interface {
 	ProcessIndex(caseID string) string
 	GetProcessedFiles(ctx context.Context, caseID string) (interface{}, error)
 	GetProcessedFile(ctx context.Context, caseID, id string) (interface{}, error)
+	GetProcessedFilesByIDs(ctx context.Context, caseID string, ids []string) (interface{}, error)
+	SearchProcessedFiles(ctx context.Context, caseID, wildcard string) (interface{}, error)
 	// CreateProcess(ctx context.Context, process *api.Process) error
 	// UpdateProcess(ctx context.Context, process *api.Process) error
 	// GetProcess(ctx context.Context, id string) (*api.Process, error)
@@ -158,7 +163,7 @@ func (s svc) GetCasesByEmail(ctx context.Context, email string) ([]api.Case, err
 func (s svc) GetCase(ctx context.Context, id string) (*api.Case, error) {
 	resp, err := s.searchByID(ctx, indexCase, id)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot find Event in Case: %v", err)
+		return nil, fmt.Errorf("Cannot find Case: %v", err)
 	}
 
 	var caze api.Case
@@ -203,6 +208,10 @@ func (s svc) GetEventByID(ctx context.Context, caseID, eventID string) (*api.Eve
 }
 
 func (s svc) GetEventsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Event, error) {
+	if len(ids) == 0 {
+		return []api.Event{}, nil
+	}
+
 	resp, err := s.searchByIDs(ctx, indexEvent+"-"+caseID, ids)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
@@ -210,7 +219,7 @@ func (s svc) GetEventsByIDs(ctx context.Context, caseID string, ids []string) ([
 
 	var events []api.Event
 	if err := json.Unmarshal(resp, &events); err != nil {
-		return nil, fmt.Errorf("Event json.Unmarshal: %v", err)
+		return nil, fmt.Errorf("Events json.Unmarshal: %v", err)
 	}
 
 	return events, nil
@@ -235,6 +244,19 @@ func (s svc) GetEvents(ctx context.Context, caseID string) ([]api.Event, error) 
 		}
 
 		events = append(events, event)
+	}
+	return events, nil
+}
+
+func (s svc) SearchEvents(ctx context.Context, caseID, prefix string) ([]api.Event, error) {
+	search, err := s.searchWithPrefix(ctx, indexKeyword+"-"+caseID, "description", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []api.Event
+	if err := json.Unmarshal(search, &events); err != nil {
+		return nil, fmt.Errorf("Events json.Unmarshal: %v", err)
 	}
 	return events, nil
 }
@@ -281,6 +303,10 @@ func (s svc) GetEntityByID(ctx context.Context, caseID, entityID string) (*api.E
 }
 
 func (s svc) GetEntitiesByIDs(ctx context.Context, caseID string, ids []string) ([]api.Entity, error) {
+	if len(ids) == 0 {
+		return []api.Entity{}, nil
+	}
+
 	resp, err := s.searchByIDs(ctx, indexEntity+"-"+caseID, ids)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
@@ -309,7 +335,7 @@ func (s svc) GetEntities(ctx context.Context, caseID string) ([]api.Entity, erro
 
 		var entity api.Entity
 		if err := json.Unmarshal(source, &entity); err != nil {
-			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+			return nil, fmt.Errorf("Entity json.Unmarshal: %v", err)
 		}
 
 		entities = append(entities, entity)
@@ -323,6 +349,19 @@ func (s svc) DeleteEntity(ctx context.Context, caseID, entityID string) error {
 		return fmt.Errorf("cannot delete Entity: %v", err)
 	}
 	return nil
+}
+
+func (s svc) SearchEntities(ctx context.Context, caseID, prefix string) ([]api.Entity, error) {
+	search, err := s.searchWithPrefix(ctx, indexEntity+"-"+caseID, "title", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	var entities []api.Entity
+	if err := json.Unmarshal(search, &entities); err != nil {
+		return nil, fmt.Errorf("Entities json.Unmarshal: %v", err)
+	}
+	return entities, nil
 }
 
 func (s svc) CreatePerson(ctx context.Context, caseID string, person *api.Person) error {
@@ -359,14 +398,18 @@ func (s svc) GetPersonByID(ctx context.Context, caseID, personID string) (*api.P
 }
 
 func (s svc) GetPersonsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Person, error) {
+	if len(ids) == 0 {
+		return []api.Person{}, nil
+	}
+
 	resp, err := s.searchByIDs(ctx, indexPerson+"-"+caseID, ids)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot find  in Case: %v", err)
+		return nil, fmt.Errorf("Cannot find Persons in Case: %v", err)
 	}
 
 	var persons []api.Person
 	if err := json.Unmarshal(resp, &persons); err != nil {
-		return nil, fmt.Errorf("Person json.Unmarshal: %v", err)
+		return nil, fmt.Errorf("PersonsByIDs json.Unmarshal: %v", err)
 	}
 
 	return persons, nil
@@ -387,7 +430,7 @@ func (s svc) GetPersons(ctx context.Context, caseID string) ([]api.Person, error
 
 		var person api.Person
 		if err := json.Unmarshal(source, &person); err != nil {
-			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+			return nil, fmt.Errorf("Person json.Unmarshal: %v", err)
 		}
 
 		persons = append(persons, person)
@@ -401,6 +444,58 @@ func (s svc) DeletePerson(ctx context.Context, caseID, personID string) error {
 		return fmt.Errorf("cannot delete Person: %v", err)
 	}
 	return nil
+}
+
+func (s svc) SearchPersons(ctx context.Context, caseID, prefix string) ([]api.Person, error) {
+	// search with the prefix for firstname
+	search, err := s.searchWithPrefix(ctx, indexPerson+"-"+caseID, "firstName", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// search with the prefix for lastname
+	search2, err := s.searchWithPrefix(ctx, indexPerson+"-"+caseID, "lastName", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// search with the prefix for emailAddress
+	search3, err := s.searchWithPrefix(ctx, indexPerson+"-"+caseID, "emailAddress", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// append the byte-slices to the first
+	if bytes.Equal(search, []byte("null")) {
+		search = nil
+	}
+	if !bytes.Equal(search2, []byte("null")) {
+		search = append(search, search2...)
+	}
+	if !bytes.Equal(search3, []byte("null")) {
+		search = append(search, search3...)
+	}
+
+	if search == nil {
+		return []api.Person{}, nil
+	}
+
+	// unmarshal the data to structs
+	var persons []api.Person
+	if err := json.Unmarshal(search, &persons); err != nil {
+		return nil, fmt.Errorf("Persons json.Unmarshal: %v", err)
+	}
+
+	// Remove the duplicates from the response
+	var found = make(map[string]bool)
+	for i := range persons {
+		if found[persons[i].ID] {
+			persons = append(persons[:i], persons[i+1:]...)
+		}
+		found[persons[i].ID] = true
+	}
+
+	return persons, nil
 }
 
 func (s svc) CreateFile(ctx context.Context, caseID string, file *api.File) error {
@@ -474,6 +569,10 @@ func (s svc) GetFileByID(ctx context.Context, caseID, fileID string) (*api.File,
 }
 
 func (s svc) GetFilesByIDs(ctx context.Context, caseID string, ids []string) ([]api.File, error) {
+	if len(ids) == 0 {
+		return []api.File{}, nil
+	}
+
 	caze, err := s.GetCase(ctx, caseID)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get case for file: %v", err)
@@ -490,6 +589,48 @@ func (s svc) GetFilesByIDs(ctx context.Context, caseID string, ids []string) ([]
 		if idMap[f.ID] {
 			files = append(files, f)
 		}
+	}
+
+	return files, nil
+}
+
+func (s svc) SearchFiles(ctx context.Context, caseID, prefix string) ([]api.File, error) {
+	// search with the prefix for name
+	search, err := s.searchWithPrefix(ctx, indexProcess+"-"+caseID, "name", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// search with the wildcard for description
+	search2, err := s.searchWithWildcard(ctx, indexProcess+"-"+caseID, "description", prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	if bytes.Equal(search, []byte("null")) {
+		search = nil
+	}
+	if !bytes.Equal(search2, []byte("null")) {
+		search = append(search, search2...)
+	}
+
+	if search == nil {
+		return nil, nil
+	}
+
+	// unmarshal the data to an interface
+	var files []api.File
+	if err := json.Unmarshal(search, &files); err != nil {
+		return nil, fmt.Errorf("Files json.Unmarshal: %v", err)
+	}
+
+	// exclude the duplicate files
+	var exists = make(map[string]bool)
+	for i := range files {
+		if exists[files[i].ID] {
+			files = append(files[:i], files[i+1:]...)
+		}
+		exists[files[i].ID] = true
 	}
 
 	return files, nil
@@ -528,6 +669,24 @@ func (s svc) GetProcessedFiles(ctx context.Context, caseID string) (interface{},
 	return &processes, nil
 }
 
+func (s svc) GetProcessedFilesByIDs(ctx context.Context, caseID string, ids []string) (interface{}, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	search, err := s.searchByIDs(ctx, s.ProcessIndex(caseID), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	var processes interface{}
+	if err := json.Unmarshal(search, &processes); err != nil {
+		return nil, fmt.Errorf("Processes json.Unmarshal: %v", err)
+	}
+
+	return &processes, nil
+}
+
 func (s svc) CreateProcess(ctx context.Context, process *api.Process) error {
 	process.ID = internal.NewID()
 	process.CreatedAt = time.Now().Unix()
@@ -543,6 +702,22 @@ func (s svc) UpdateProcess(ctx context.Context, process *api.Process) error {
 		return fmt.Errorf("failed to save Process : %v", err)
 	}
 	return nil
+}
+
+func (s svc) SearchProcessedFiles(ctx context.Context, caseID, wildcard string) (interface{}, error) {
+	// search with the wildcard for content
+	search, err := s.searchWithWildcard(ctx, indexProcess+"-"+caseID, "content", wildcard)
+	if err != nil {
+		return nil, err
+	}
+
+	// unmarshal the data to an interface
+	var processes interface{}
+	if err := json.Unmarshal(search, &processes); err != nil {
+		return nil, fmt.Errorf("Processes json.Unmarshal: %v", err)
+	}
+
+	return processes, nil
 }
 
 func (s svc) GetProcess(ctx context.Context, id string) (*api.Process, error) {
@@ -591,6 +766,10 @@ func (s svc) GetLinkByID(ctx context.Context, caseID, id string) (*api.Link, err
 }
 
 func (s svc) GetLinksByIDs(ctx context.Context, caseID string, ids []string) ([]api.Link, error) {
+	if len(ids) == 0 {
+		return []api.Link{}, nil
+	}
+
 	resp, err := s.searchByIDs(ctx, indexLink+"-"+caseID, ids)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot find Links in Case: %v", err)
@@ -642,6 +821,10 @@ func (s svc) GetKeywordByID(ctx context.Context, caseID, id string) (*api.Keywor
 }
 
 func (s svc) GetKeywordsByIDs(ctx context.Context, caseID string, ids []string) ([]api.Keyword, error) {
+	if len(ids) == 0 {
+		return []api.Keyword{}, nil
+	}
+
 	resp, err := s.searchByIDs(ctx, indexKeyword+"-"+caseID, ids)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot find Keywords in Case: %v", err)
@@ -670,7 +853,7 @@ func (s svc) GetKeywords(ctx context.Context, caseID string) ([]string, error) {
 
 		var keyword api.Keyword
 		if err := json.Unmarshal(source, &keyword); err != nil {
-			return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+			return nil, fmt.Errorf("Keyword json.Unmarshal: %v", err)
 		}
 
 		keywords = append(keywords, keyword.Name)
@@ -687,7 +870,7 @@ func (s svc) SearchKeywords(ctx context.Context, caseID, prefix string) ([]api.K
 
 	var keywords []api.Keyword
 	if err := json.Unmarshal(search, &keywords); err != nil {
-		return nil, fmt.Errorf("Case json.Unmarshal: %v", err)
+		return nil, fmt.Errorf("Keywords json.Unmarshal: %v", err)
 	}
 	return keywords, nil
 }
@@ -787,7 +970,7 @@ func (s svc) delete(ctx context.Context, index, id string) error {
 func (s svc) searchWithPrefix(ctx context.Context, index, field, prefix string) ([]byte, error) {
 	query := internal.QueryRequest{
 		Query: internal.Query{
-			Bool: internal.Bool{
+			Bool: &internal.Bool{
 				Must: []internal.Must{{
 					MatchPhrasePrefix: map[string]interface{}{
 						field: map[string]string{
@@ -804,7 +987,83 @@ func (s svc) searchWithPrefix(ctx context.Context, index, field, prefix string) 
 		return nil, err
 	}
 
-	log.Println(string(queryJSON))
+	// Perform the search request.
+	scrollDuration := time.Minute
+	res, err := s.es.Search(
+		s.es.Search.WithContext(ctx),
+		s.es.Search.WithIndex(index),
+		s.es.Search.WithBody(bytes.NewReader(queryJSON)),
+		s.es.Search.WithSort("_doc"),
+		s.es.Search.WithSize(10),
+		s.es.Search.WithScroll(scrollDuration),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get response: %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, decodeError(res)
+	}
+
+	var search internal.Response
+	if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+		return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+	}
+
+	var hits []interface{}
+	for _, hit := range search.Hits.Hits {
+		hits = append(hits, hit.Source)
+	}
+
+	// Perform the scroll requests in sequence
+	for len(search.Hits.Hits) > 0 {
+		// Perform the scroll request and pass the scrollID and scroll duration
+		res, err := s.es.Scroll(s.es.Scroll.WithScrollID(search.ScrollID), s.es.Scroll.WithScroll(scrollDuration))
+		if err != nil {
+			return nil, fmt.Errorf("search scrolling failed: %v", err)
+		}
+		defer res.Body.Close()
+
+		if res.IsError() {
+			return nil, decodeError(res)
+		}
+
+		if err := json.NewDecoder(res.Body).Decode(&search); err != nil {
+			return nil, fmt.Errorf("Cannot parse the response body: %v", err)
+		}
+
+		for _, hit := range search.Hits.Hits {
+			hits = append(hits, hit.Source)
+		}
+	}
+
+	dataJSON, err := json.Marshal(hits)
+	if err != nil {
+		return nil, fmt.Errorf("json.Marshal: %v", err)
+	}
+	return dataJSON, nil
+}
+
+func (s svc) searchWithWildcard(ctx context.Context, index, field, wildcard string) ([]byte, error) {
+	query := internal.QueryRequest{
+		Query: internal.Query{
+			Bool: &internal.Bool{
+				Must: []internal.Must{{
+					Wildcard: map[string]interface{}{
+						field: map[string]string{
+							"value": wildcard,
+						},
+					},
+				}},
+			},
+		},
+	}
+
+	queryJSON, err := json.Marshal(query)
+	if err != nil {
+		return nil, err
+	}
 
 	// Perform the search request.
 	scrollDuration := time.Minute
@@ -866,7 +1125,7 @@ func (s svc) searchWithPrefix(ctx context.Context, index, field, prefix string) 
 
 func (s svc) searchByIDs(ctx context.Context, index string, ids []string) ([]byte, error) {
 	if len(ids) == 0 {
-		return []byte{}, nil
+		return nil, nil
 	}
 
 	var query internal.QueryRequest

@@ -4,6 +4,7 @@ package api
 
 import (
 	"github.com/pacedotdev/oto/otohttp"
+	"log"
 
 	http "net/http"
 
@@ -172,20 +173,24 @@ func RegisterCaseService(server *otohttp.Server, caseService CaseService) {
 func (s *caseServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request CaseDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -194,20 +199,24 @@ func (s *caseServiceServer) handleDelete(w http.ResponseWriter, r *http.Request)
 func (s *caseServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	var request CaseGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.Get(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -216,20 +225,24 @@ func (s *caseServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 func (s *caseServiceServer) handleKeywords(w http.ResponseWriter, r *http.Request) {
 	var request CaseKeywordsRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.Keywords(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -238,20 +251,24 @@ func (s *caseServiceServer) handleKeywords(w http.ResponseWriter, r *http.Reques
 func (s *caseServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 	var request CaseListRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.List(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -260,20 +277,24 @@ func (s *caseServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 func (s *caseServiceServer) handleNew(w http.ResponseWriter, r *http.Request) {
 	var request CaseNewRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.New(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -282,20 +303,24 @@ func (s *caseServiceServer) handleNew(w http.ResponseWriter, r *http.Request) {
 func (s *caseServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	var request CaseUpdateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.caseService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.caseService.Update(ctx, request)
 	if err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("CaseService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -327,20 +352,24 @@ func RegisterEntityService(server *otohttp.Server, entityService EntityService) 
 func (s *entityServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var request EntityCreateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.Create(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -349,20 +378,24 @@ func (s *entityServiceServer) handleCreate(w http.ResponseWriter, r *http.Reques
 func (s *entityServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request EntityDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -371,20 +404,24 @@ func (s *entityServiceServer) handleDelete(w http.ResponseWriter, r *http.Reques
 func (s *entityServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	var request EntityGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.Get(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -393,20 +430,24 @@ func (s *entityServiceServer) handleGet(w http.ResponseWriter, r *http.Request) 
 func (s *entityServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.KeywordsAdd(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -415,20 +456,24 @@ func (s *entityServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.R
 func (s *entityServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsRemoveRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.KeywordsRemove(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -437,20 +482,24 @@ func (s *entityServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *htt
 func (s *entityServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 	var request EntityListRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.List(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -459,20 +508,24 @@ func (s *entityServiceServer) handleList(w http.ResponseWriter, r *http.Request)
 func (s *entityServiceServer) handleTypes(w http.ResponseWriter, r *http.Request) {
 	var request EntityTypesRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.Types(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -481,20 +534,24 @@ func (s *entityServiceServer) handleTypes(w http.ResponseWriter, r *http.Request
 func (s *entityServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	var request EntityUpdateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.entityService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.entityService.Update(ctx, request)
 	if err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EntityService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -525,20 +582,24 @@ func RegisterEventService(server *otohttp.Server, eventService EventService) {
 func (s *eventServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var request EventCreateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.Create(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -547,20 +608,24 @@ func (s *eventServiceServer) handleCreate(w http.ResponseWriter, r *http.Request
 func (s *eventServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request EventDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -569,20 +634,24 @@ func (s *eventServiceServer) handleDelete(w http.ResponseWriter, r *http.Request
 func (s *eventServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	var request EventGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.Get(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -591,20 +660,24 @@ func (s *eventServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 func (s *eventServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.KeywordsAdd(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -613,20 +686,24 @@ func (s *eventServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Re
 func (s *eventServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsRemoveRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.KeywordsRemove(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -635,20 +712,24 @@ func (s *eventServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http
 func (s *eventServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 	var request EventListRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.List(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -657,20 +738,24 @@ func (s *eventServiceServer) handleList(w http.ResponseWriter, r *http.Request) 
 func (s *eventServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	var request EventUpdateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.eventService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.eventService.Update(ctx, request)
 	if err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("EventService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -703,20 +788,24 @@ func RegisterFileService(server *otohttp.Server, fileService FileService) {
 func (s *fileServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request FileDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -725,20 +814,24 @@ func (s *fileServiceServer) handleDelete(w http.ResponseWriter, r *http.Request)
 func (s *fileServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.KeywordsAdd(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -747,20 +840,24 @@ func (s *fileServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Req
 func (s *fileServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsRemoveRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.KeywordsRemove(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -769,20 +866,24 @@ func (s *fileServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.
 func (s *fileServiceServer) handleNew(w http.ResponseWriter, r *http.Request) {
 	var request FileNewRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.New(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -791,20 +892,24 @@ func (s *fileServiceServer) handleNew(w http.ResponseWriter, r *http.Request) {
 func (s *fileServiceServer) handleOpen(w http.ResponseWriter, r *http.Request) {
 	var request FileOpenRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Open(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -813,20 +918,24 @@ func (s *fileServiceServer) handleOpen(w http.ResponseWriter, r *http.Request) {
 func (s *fileServiceServer) handleProcess(w http.ResponseWriter, r *http.Request) {
 	var request FileProcessRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Process(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -835,20 +944,24 @@ func (s *fileServiceServer) handleProcess(w http.ResponseWriter, r *http.Request
 func (s *fileServiceServer) handleProcessed(w http.ResponseWriter, r *http.Request) {
 	var request FileProcessedRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Processed(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -857,20 +970,24 @@ func (s *fileServiceServer) handleProcessed(w http.ResponseWriter, r *http.Reque
 func (s *fileServiceServer) handleProcesses(w http.ResponseWriter, r *http.Request) {
 	var request FileProcessesRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Processes(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -879,20 +996,24 @@ func (s *fileServiceServer) handleProcesses(w http.ResponseWriter, r *http.Reque
 func (s *fileServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	var request FileUpdateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.fileService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.fileService.Update(ctx, request)
 	if err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("FileService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -921,20 +1042,24 @@ func RegisterLinkService(server *otohttp.Server, linkService LinkService) {
 func (s *linkServiceServer) handleAdd(w http.ResponseWriter, r *http.Request) {
 	var request LinkAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.linkService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.linkService.Add(ctx, request)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -943,20 +1068,24 @@ func (s *linkServiceServer) handleAdd(w http.ResponseWriter, r *http.Request) {
 func (s *linkServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var request LinkCreateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.linkService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.linkService.Create(ctx, request)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -965,20 +1094,24 @@ func (s *linkServiceServer) handleCreate(w http.ResponseWriter, r *http.Request)
 func (s *linkServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request LinkDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.linkService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.linkService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -987,20 +1120,24 @@ func (s *linkServiceServer) handleDelete(w http.ResponseWriter, r *http.Request)
 func (s *linkServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	var request LinkGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.linkService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.linkService.Get(ctx, request)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1009,20 +1146,24 @@ func (s *linkServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 func (s *linkServiceServer) handleRemove(w http.ResponseWriter, r *http.Request) {
 	var request LinkRemoveRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.linkService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.linkService.Remove(ctx, request)
 	if err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("LinkService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1053,20 +1194,24 @@ func RegisterPersonService(server *otohttp.Server, personService PersonService) 
 func (s *personServiceServer) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var request PersonCreateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.Create(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1075,20 +1220,24 @@ func (s *personServiceServer) handleCreate(w http.ResponseWriter, r *http.Reques
 func (s *personServiceServer) handleDelete(w http.ResponseWriter, r *http.Request) {
 	var request PersonDeleteRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.Delete(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1097,20 +1246,24 @@ func (s *personServiceServer) handleDelete(w http.ResponseWriter, r *http.Reques
 func (s *personServiceServer) handleGet(w http.ResponseWriter, r *http.Request) {
 	var request PersonGetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.Get(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1119,20 +1272,24 @@ func (s *personServiceServer) handleGet(w http.ResponseWriter, r *http.Request) 
 func (s *personServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsAddRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.KeywordsAdd(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1141,20 +1298,24 @@ func (s *personServiceServer) handleKeywordsAdd(w http.ResponseWriter, r *http.R
 func (s *personServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *http.Request) {
 	var request KeywordsRemoveRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.KeywordsRemove(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1163,20 +1324,24 @@ func (s *personServiceServer) handleKeywordsRemove(w http.ResponseWriter, r *htt
 func (s *personServiceServer) handleList(w http.ResponseWriter, r *http.Request) {
 	var request PersonListRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.List(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1185,20 +1350,24 @@ func (s *personServiceServer) handleList(w http.ResponseWriter, r *http.Request)
 func (s *personServiceServer) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	var request PersonUpdateRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.personService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.personService.Update(ctx, request)
 	if err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("PersonService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1224,20 +1393,24 @@ func RegisterSearchService(server *otohttp.Server, searchService SearchService) 
 func (s *searchServiceServer) handleSearchWithText(w http.ResponseWriter, r *http.Request) {
 	var request SearchTextRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.searchService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.searchService.SearchWithText(ctx, request)
 	if err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1246,20 +1419,24 @@ func (s *searchServiceServer) handleSearchWithText(w http.ResponseWriter, r *htt
 func (s *searchServiceServer) handleSearchWithTimespan(w http.ResponseWriter, r *http.Request) {
 	var request SearchTimespanRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx, err := s.searchService.Authenticate(r.Context(), r)
 	if err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	response, err := s.searchService.SearchWithTimespan(ctx, request)
 	if err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("SearchService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1284,16 +1461,19 @@ func RegisterTestService(server *otohttp.Server, testService TestService) {
 func (s *testServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var request TestCreateUserRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx := r.Context()
 	response, err := s.testService.CreateUser(ctx, request)
 	if err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -1302,16 +1482,19 @@ func (s *testServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Requ
 func (s *testServiceServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	var request TestDeleteUserRequest
 	if err := otohttp.Decode(r, &request); err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	ctx := r.Context()
 	response, err := s.testService.DeleteUser(ctx, request)
 	if err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
 	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		log.Printf("TestService : %s", err.Error())
 		s.server.OnErr(w, r, err)
 		return
 	}
@@ -2147,10 +2330,11 @@ type SearchTextRequest struct {
 
 // SearchTextResponse is the output-object for searching items
 type SearchTextResponse struct {
-	Events   []Event  `json:"events"`
-	Entities []Entity `json:"entities"`
-	Persons  []Person `json:"persons"`
-	Files    []File   `json:"files"`
+	Events    []Event     `json:"events"`
+	Entities  []Entity    `json:"entities"`
+	Persons   []Person    `json:"persons"`
+	Files     []File      `json:"files"`
+	Processed interface{} `json:"processed"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

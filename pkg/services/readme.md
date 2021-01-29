@@ -3533,6 +3533,7 @@ for searching items_
 | entities | []Entity |  |  |
 | persons | []Person |  |  |
 | files | []File |  |  |
+| processed | interface{} |  |  |
 | error | string | Error is string explaining what went wrong. Empty if everything was fine. | something went wrong |
 
 `200 OK`
@@ -3615,7 +3616,8 @@ for searching items_
             "telephoneNo": "+46765550125",
             "workAddress": "Applebys Plads 7, 1411 Copenhagen, Denmark"
         }
-    ]
+    ],
+    "processed": {}
 }
 ```
 
