@@ -105,7 +105,7 @@ func (s *CaseService) Keywords(ctx context.Context, r api.CaseKeywordsRequest) (
 
 	keywords, err := s.db.GetKeywords(ctx, r.ID)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	return &api.CaseKeywordsResponse{Keywords: keywords}, nil

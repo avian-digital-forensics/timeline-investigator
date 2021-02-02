@@ -69,31 +69,31 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 	// Get events based on the search
 	events, err := s.db.SearchEvents(ctx, r.CaseID, r.Text)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	// Get entities based on the search
 	entities, err := s.db.SearchEntities(ctx, r.CaseID, r.Text)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	// Get persons based on the search
 	persons, err := s.db.SearchPersons(ctx, r.CaseID, r.Text)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	// Get files based on the search
 	files, err := s.db.SearchFiles(ctx, r.CaseID, r.Text)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	// Get processed-files based on the search
 	processed, err := s.db.SearchProcessedFiles(ctx, r.CaseID, r.Text)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 
 	// Get all unique eventIDs
@@ -109,7 +109,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 	// Get the unique events from the keywords
 	keywordEvents, err := s.db.GetEventsByIDs(ctx, r.CaseID, eventIDs)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 	// append the events to the first slice
 	events = append(events, keywordEvents...)
@@ -127,7 +127,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 	// Get the unique entities from the keywords
 	keywordEntities, err := s.db.GetEntitiesByIDs(ctx, r.CaseID, entityIDs)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 	// append the entities to the first slice
 	entities = append(entities, keywordEntities...)
@@ -145,7 +145,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 	// Get the unique persons from the keywords
 	keywordPersons, err := s.db.GetPersonsByIDs(ctx, r.CaseID, personIDs)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 	// append the persons to the first slice
 	persons = append(persons, keywordPersons...)
@@ -164,7 +164,7 @@ func (s *SearchService) SearchWithText(ctx context.Context, r api.SearchTextRequ
 	// Get the unique files from the keywords
 	keywordFiles, err := s.db.GetFilesByIDs(ctx, r.CaseID, fileIDs)
 	if err != nil {
-		return nil, err
+		return nil, api.Error(err, api.ErrCannotPerformOperation)
 	}
 	// append the files to the first slice
 	files = append(files, keywordFiles...)
