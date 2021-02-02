@@ -14,6 +14,6 @@ config:
     api_key: ${AUTH_API_KEY}
     credentials_file: ${AUTH_CREDENTIALS_FILE}
   filestore:
-    base_path: ./filestore_data
+    base_path: ./
   indexing:
     fscrawler_url: http://fscrawler:8890/fscrawler
