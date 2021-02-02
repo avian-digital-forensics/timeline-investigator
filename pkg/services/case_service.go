@@ -68,7 +68,7 @@ func (s *CaseService) Update(ctx context.Context, r api.CaseUpdateRequest) (*api
 
 // Delete deletes the specified case
 func (s *CaseService) Delete(ctx context.Context, r api.CaseDeleteRequest) (*api.CaseDeleteResponse, error) {
-	return nil, errors.New("Not implemented yet")
+	return nil, s.db.DeleteCase(ctx, r.ID)
 }
 
 // List the cases for a specified user
